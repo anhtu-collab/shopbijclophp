@@ -42,4 +42,17 @@ public function decrease_cart_quantity($rowId) {
     Cart::instance('cart')->update($rowId, $qty);
     return redirect()->back();
 }
+// Hàm xóa 1 sản phẩm cụ thể
+public function remove_item($rowId) {
+    // Sử dụng phương thức remove() với rowId [00:01:11]
+    Cart::instance('cart')->remove($rowId);
+    return redirect()->back();
+}
+
+// Hàm xóa sạch giỏ hàng
+public function empty_cart() {
+    // Sử dụng phương thức destroy() để xóa toàn bộ [00:07:26]
+    Cart::instance('cart')->destroy();
+    return redirect()->back();
+}
 }
