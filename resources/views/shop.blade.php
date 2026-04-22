@@ -468,70 +468,57 @@
 @push('scripts')
 <script>
   $(function() {
-    $("#pagesize").on("change", function() {
-        $("#size").val($(this).val()); // Gán giá trị vào form ẩn
-        setTimeout(() => {
-    $("#frmfilter").submit();
-}, 50);     // Gửi form
-    });
+      $("#pagesize").on("change", function() {
+          $("#size").val($(this).val());
+          setTimeout(() => {
+              $("#frmfilter").submit();
+          }, 50);
+      });
 
-    // Khi thay đổi kiểu sắp xếp
-    $("#orderby").on("change", function() {
-        $("#order").val($(this).val()); // Gán giá trị vào form ẩn
-        setTimeout(() => {
-    $("#frmfilter").submit();
-}, 50);      // Gửi form
-    });
-    $("input[name='brands']").on("change", function() {
-    var brands = "";
-    $("input[name='brands']:checked").each(function() {
-        if (brands == "") {
-            brands += $(this).val();
-        } else {
-            brands += "," + $(this).val();
-        }
-    });
-    $("#hdnBrands").val(brands);
-    setTimeout(() => {
-    $("#frmfilter").submit();
-}, 50);
+      $("#orderby").on("change", function() {
+          $("#order").val($(this).val());
+          setTimeout(() => {
+              $("#frmfilter").submit();
+          }, 50);
+      });
 
+      $("input[name='brands']").on("change", function() {
+          var brands = "";
+          $("input[name='brands']:checked").each(function() {
+              brands += (brands === "" ? "" : ",") + $(this).val();
+          });
+          $("#hdnBrands").val(brands);
+          setTimeout(() => {
+              $("#frmfilter").submit();
+          }, 50);
+      });
+
+      $("input[name='categories']").on("change", function() {
+          var categories = "";
+          $("input[name='categories']:checked").each(function() {
+              categories += (categories === "" ? "" : ",") + $(this).val();
+          });
+          $("#hdnCategories").val(categories);
+          setTimeout(() => {
+              $("#frmfilter").submit();
+          }, 50);
+      });
+
+      $(".price-range-slider").on("slideStop", function(e) {
+          var value = e.value;
+          console.log("Selected price range: ", value);
+          if (Array.isArray(value)) {
+              $("#hdnMinPrice").val(value[0]);
+              $("#hdnMaxPrice").val(value[1]);
+          } else {
+              var parts = value.toString().split(',');
+              if (parts.length === 2) {
+                  $("#hdnMinPrice").val(parseInt(parts[0]));
+                  $("#hdnMaxPrice").val(parseInt(parts[1]));
+              }
+          }
+          $("#frmfilter").submit();
+      });
   });
-
-    $("input[name='categories']").on("change", function() {
-    var categories = "";
-    $("input[name='categories']:checked").each(function() {
-        if (categories == "") {
-            categories += $(this).val();
-        } else {
-            categories += "," + $(this).val();
-        }
-    });
-    $("#hdnCategories").val(categories);
-    setTimeout(() => {
-    $("#frmfilter").submit();
-}, 50);
-});
-
-document.addEventListener('DOMContentLoaded', function() {
-  const priceSlider = document.querySelector('.price-range-slider');
-  if (priceSlider) {
-    priceSlider.addEventListener('slideStop', function(e) {
-      const value = e.value;
-      if (Array.isArray(value)) {
-        $("#hdnMinPrice").val(value[0]);
-        $("#hdnMaxPrice").val(value[1]);
-      } else {
-        const parts = value.toString().split(',');
-        if (parts.length === 2) {
-          $("#hdnMinPrice").val(parseInt(parts[0]));
-          $("#hdnMaxPrice").val(parseInt(parts[1]));
-        }
-      }
-      $("#frmfilter").submit();
-    });
-  }
-});
-
 </script>
 @endpush
