@@ -1,25 +1,25 @@
 <!doctype html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
-    <meta charset="utf-8">
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <!-- CSRF Token -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title>{{ config('app.name', 'Laravel') }}</title>
-   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-  <meta name="author" content="BIJCLO" />
+  <meta name="author" content="BRIJCLO" />
   <link rel="shortcut icon" href="{{ asset('assets/images/favicon.png')}}" type="image/x-icon">
   <link rel="preconnect" href="https://fonts.gstatic.com/">
   <link
-    href="https://fonts.googleapis.com/css2?family=Jost:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&amp;display=swap"
+    href="https://fonts.googleapis.com/css2?:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&amp;display=swap"
     rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Allura&amp;display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ asset('assets/css/plugins/swiper.min.css') }}" type="text/css" />
   <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}" type="text/css" />
+  <link rel="stylesheet" type="text/css" href="{{ asset('css/sweetalert.min.css')}}">
   <link rel="stylesheet" href="{{ asset('assets/css/custom.css') }}" type="text/css" />
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
     integrity="sha512-SfTiTlX6kk+qitfevl/7LibUOeJWlt9rbyDn92a1DqWOw9vWG2MFoays0sgObmWazO5BQPiFucnnEAjpAB+/Sw=="
     crossorigin="anonymous" referrerpolicy="no-referrer">
@@ -258,6 +258,35 @@
     .logo__image {
       max-width: 220px;
     }
+    .product-item {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 15px;
+    transition: all 0.3s ease;
+    padding-right: 5px;
+}
+
+.product-item .image {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
+    gap: 10px;
+    flex-shrink: 0;
+    padding: 5px;
+    border-radius: 10px;
+    background: #EFF4F8;
+}
+
+#box-content-search li {
+    list-style: none;
+}
+
+#box-content-search .product-item {
+    margin-bottom: 10px;
+}
   </style>
   <div class="header-mobile header_sticky">
     <div class="container d-flex align-items-center h-100">
@@ -308,19 +337,19 @@
         <div class="overflow-hidden">
           <ul class="navigation__list list-unstyled position-relative">
             <li class="navigation__item">
-              <a href="{{route('home.index')}}" class="navigation__link">Home</a>
+              <a href="{{route('home.index')}}" class="navigation__link">TRANG CHỦ</a>
             </li>
             <li class="navigation__item">
-              <a href="{{route('shop.index')}}" class="navigation__link">Shop</a>
+              <a href="{{route('shop.index')}}" class="navigation__link">MUA SẮM</a>
             </li>
             <li class="navigation__item">
-              <a href="{{route('cart.index')}}" class="navigation__link">Cart</a>
+              <a href="{{route('cart.index')}}" class="navigation__link">GIỎ HÀNG</a>
             </li>
             <li class="navigation__item">
-              <a href="about.html" class="navigation__link">About</a>
+              <a href="about.html" class="navigation__link">GIỚI THIỆU</a>
             </li>
             <li class="navigation__item">
-              <a href="contact.html" class="navigation__link">Contact</a>
+              <a href="contact.html" class="navigation__link">LIÊN HỆ</a>
             </li>
           </ul>
         </div>
@@ -332,10 +361,8 @@
             xmlns="http://www.w3.org/2000/svg">
             <use href="#icon_user" />
           </svg>
-          <span class="d-inline-block ms-2 text-uppercase align-middle fw-medium">My Account</span>
+          <span class="d-inline-block ms-2 text-uppercase align-middle fw-medium">TÀI KHOẢN CỦA TÔI</span>
         </div>
-
-
 
         <ul class="container social-links list-unstyled d-flex flex-wrap mb-0">
           <li>
@@ -397,19 +424,19 @@
         <nav class="navigation">
           <ul class="navigation__list list-unstyled d-flex">
             <li class="navigation__item">
-              <a href="{{route('home.index')}}" class="navigation__link">Home</a>
+              <a href="{{route('home.index')}}" class="navigation__link">TRANG CHỦ</a>
             </li>
             <li class="navigation__item">
-              <a href="{{route('shop.index')}}" class="navigation__link">Shop</a>
+              <a href="{{route('shop.index')}}" class="navigation__link">MUA SẮM</a>
             </li>
             <li class="navigation__item">
-              <a href="{{route('cart.index')}}" class="navigation__link">Cart</a>
+              <a href="{{route('cart.index')}}" class="navigation__link">GIỎ HÀNG</a>
             </li>
             <li class="navigation__item">
-              <a href="about.html" class="navigation__link">About</a>
+              <a href="about.html" class="navigation__link">GIỚI THIỆU</a>
             </li>
             <li class="navigation__item">
-              <a href="contact.html" class="navigation__link">Contact</a>
+              <a href="{{route('home.contact')}}" class="navigation__link">LIÊN HỆ</a>
             </li>
           </ul>
         </nav>
@@ -428,10 +455,9 @@
 
             <div class="search-popup js-hidden-content">
               <form action="#" method="GET" class="search-field container">
-                <p class="text-uppercase text-secondary fw-medium mb-4">What are you looking for?</p>
+                <p class="text-uppercase text-secondary fw-medium mb-4">Bạn Đang Tìm Kiếm GÌ?</p>
                 <div class="position-relative">
-                  <input class="search-field__input search-popup__input w-100 fw-medium" type="text"
-                    name="search-keyword" placeholder="Search products" />
+                  <input class="search-field__input search-popup__input w-100 fw-medium" type="text" name="search-keyword" id="search-input" placeholder="Search products" />
                   <button class="btn-icon search-popup__submit" type="submit">
                     <svg class="d-block" width="20" height="20" viewBox="0 0 20 20" fill="none"
                       xmlns="http://www.w3.org/2000/svg">
@@ -442,20 +468,8 @@
                 </div>
 
                 <div class="search-popup__results">
-                  <div class="sub-menu search-suggestion">
-                    <h6 class="sub-menu__title fs-base">Quicklinks</h6>
-                    <ul class="sub-menu__list list-unstyled">
-                      <li class="sub-menu__item"><a href="shop2.html" class="menu-link menu-link_us-s">New Arrivals</a>
-                      </li>
-                      <li class="sub-menu__item"><a href="#" class="menu-link menu-link_us-s">Dresses</a></li>
-                      <li class="sub-menu__item"><a href="shop3.html" class="menu-link menu-link_us-s">Accessories</a>
-                      </li>
-                      <li class="sub-menu__item"><a href="#" class="menu-link menu-link_us-s">Footwear</a></li>
-                      <li class="sub-menu__item"><a href="#" class="menu-link menu-link_us-s">Sweatshirt</a></li>
-                    </ul>
-                  </div>
-
-                  <div class="search-result row row-cols-5"></div>
+                  <ul id="box-content-search">
+                  </ul>
                 </div>
               </form>
             </div>
@@ -481,10 +495,14 @@
             </a>  
           @endguest
 
-          <a href="wishlist.html" class="header-tools__item">
+          <a href="{{route('wishlist.index')}}" class="header-tools__item header-tools__cart">
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
               <use href="#icon_heart" />
             </svg>
+            @if(Cart::instance('wishlist')->content()->count() > 0)
+    <span class="cart-amount d-block position-absolute js-cart-items-count">{{ Cart::instance('wishlist')->content()->count() }}
+    </span>
+@endif    
           </a>
 
           <a href="{{ route('cart.index') }}" class="header-tools__item-link">
@@ -514,13 +532,12 @@
         <div class="footer-column footer-store-info col-12 mb-4 mb-lg-0">
           <div class="logo">
             <a href="{{route('home.index')}}">
-              <img src="{{ asset('assets/images/logo.jpg') }}" alt="Bijclo" class="logo__image d-block" />
+              <img src="{{ asset('assets/images/logo.jpg') }}" alt="BRijclo" class="logo__image d-block" />
             </a>
           </div>
-          <p class="footer-address">123 Beach Avenue,Bijclo City, CA 00000</p>
-          <p class="m-0"><strong class="fw-medium">contact@Bijclo.in</strong></p>
-          <p><strong class="fw-medium">+1 000-000-0000</strong></p>
-
+         <p class="footer-address">123 Đường Biển, TP. BRijclo, California</p>
+        <p class="m-0"><strong class="fw-medium">Email: contact@bRijclo.vn</strong></p>
+        <p><strong class="fw-medium">Hotline: +84 000 000 000</strong></p>
           <ul class="social-links list-unstyled d-flex flex-wrap mb-0">
             <li>
               <a href="#" class="footer__social-link d-block">
@@ -566,62 +583,59 @@
           </ul>
         </div>
 
-        <div class="footer-column footer-menu mb-4 mb-lg-0">
-          <h6 class="sub-menu__title text-uppercase">Company</h6>
-          <ul class="sub-menu__list list-unstyled">
-            <li class="sub-menu__item"><a href="about-2.html" class="menu-link menu-link_us-s">About Us</a></li>
-            <li class="sub-menu__item"><a href="#" class="menu-link menu-link_us-s">Careers</a></li>
-            <li class="sub-menu__item"><a href="#" class="menu-link menu-link_us-s">Affiliates</a></li>
-            <li class="sub-menu__item"><a href="blog_list1.html" class="menu-link menu-link_us-s">Blog</a></li>
-            <li class="sub-menu__item"><a href="contact-2.html" class="menu-link menu-link_us-s">Contact Us</a></li>
-          </ul>
-        </div>
+  <div class="footer-column footer-menu mb-4 mb-lg-0">
+  <h6 class="sub-menu__title text-uppercase">Công ty</h6>
+  <ul class="sub-menu__list list-unstyled">
+    <li class="sub-menu__item"><a href="about-2.html" class="menu-link menu-link_us-s">Về chúng tôi</a></li>
+    <li class="sub-menu__item"><a href="#" class="menu-link menu-link_us-s">Tuyển dụng</a></li>
+    <li class="sub-menu__item"><a href="#" class="menu-link menu-link_us-s">Đối tác liên kết</a></li>
+    <li class="sub-menu__item"><a href="blog_list1.html" class="menu-link menu-link_us-s">Bài viết</a></li>
+    <li class="sub-menu__item"><a href="contact-2.html" class="menu-link menu-link_us-s">Liên hệ</a></li>
+  </ul>
+</div>
 
-        <div class="footer-column footer-menu mb-4 mb-lg-0">
-          <h6 class="sub-menu__title text-uppercase">Shop</h6>
-          <ul class="sub-menu__list list-unstyled">
-            <li class="sub-menu__item"><a href="shop2.html" class="menu-link menu-link_us-s">New Arrivals</a></li>
-            <li class="sub-menu__item"><a href="shop3.html" class="menu-link menu-link_us-s">Accessories</a></li>
-            <li class="sub-menu__item"><a href="shop4.html" class="menu-link menu-link_us-s">Men</a></li>
-            <li class="sub-menu__item"><a href="shop5.html" class="menu-link menu-link_us-s">Women</a></li>
-            <li class="sub-menu__item"><a href="shop1.html" class="menu-link menu-link_us-s">Shop All</a></li>
-          </ul>
-        </div>
+<div class="footer-column footer-menu mb-4 mb-lg-0">
+  <h6 class="sub-menu__title text-uppercase">MUA SẮM</h6>
+  <ul class="sub-menu__list list-unstyled">
+    <li class="sub-menu__item"><a href="shop2.html" class="menu-link menu-link_us-s">Hàng mới về</a></li>
+    <li class="sub-menu__item"><a href="shop3.html" class="menu-link menu-link_us-s">Phụ kiện</a></li>
+    <li class="sub-menu__item"><a href="shop4.html" class="menu-link menu-link_us-s">Nam</a></li>
+    <li class="sub-menu__item"><a href="shop5.html" class="menu-link menu-link_us-s">Nữ</a></li>
+    <li class="sub-menu__item"><a href="shop1.html" class="menu-link menu-link_us-s">Tất cả sản phẩm</a></li>
+  </ul>
+</div>
 
-        <div class="footer-column footer-menu mb-4 mb-lg-0">
-          <h6 class="sub-menu__title text-uppercase">Help</h6>
-          <ul class="sub-menu__list list-unstyled">
-            <li class="sub-menu__item"><a href="#" class="menu-link menu-link_us-s">Customer Service</a></li>
-            <li class="sub-menu__item"><a href="account_dashboard.html" class="menu-link menu-link_us-s">My Account</a>
-            </li>
-            <li class="sub-menu__item"><a href="store_location.html" class="menu-link menu-link_us-s">Find a Store</a>
-            </li>
-            <li class="sub-menu__item"><a href="#" class="menu-link menu-link_us-s">Legal & Privacy</a></li>
-            <li class="sub-menu__item"><a href="#" class="menu-link menu-link_us-s">Gift Card</a></li>
-          </ul>
-        </div>
+<div class="footer-column footer-menu mb-4 mb-lg-0">
+  <h6 class="sub-menu__title text-uppercase">Hỗ trợ</h6>
+  <ul class="sub-menu__list list-unstyled">
+    <li class="sub-menu__item"><a href="#" class="menu-link menu-link_us-s">Chăm sóc khách hàng</a></li>
+    <li class="sub-menu__item"><a href="account_dashboard.html" class="menu-link menu-link_us-s">Tài khoản của tôi</a></li>
+    <li class="sub-menu__item"><a href="store_location.html" class="menu-link menu-link_us-s">Tìm MUA SẮM</a></li>
+    <li class="sub-menu__item"><a href="#" class="menu-link menu-link_us-s">Pháp lý & quyền riêng tư</a></li>
+    <li class="sub-menu__item"><a href="#" class="menu-link menu-link_us-s">Thẻ quà tặng</a></li>
+  </ul>
+</div>
 
-        <div class="footer-column footer-menu mb-4 mb-lg-0">
-          <h6 class="sub-menu__title text-uppercase">Categories</h6>
-          <ul class="sub-menu__list list-unstyled">
-            <li class="sub-menu__item"><a href="#" class="menu-link menu-link_us-s">Shirts</a></li>
-            <li class="sub-menu__item"><a href="#" class="menu-link menu-link_us-s">Jeans</a></li>
-            <li class="sub-menu__item"><a href="#" class="menu-link menu-link_us-s">Shoes</a></li>
-            <li class="sub-menu__item"><a href="#" class="menu-link menu-link_us-s">Bags</a></li>
-            <li class="sub-menu__item"><a href="#" class="menu-link menu-link_us-s">Shop All</a></li>
-          </ul>
-        </div>
-      </div>
-    </div>
+<div class="footer-column footer-menu mb-4 mb-lg-0">
+  <h6 class="sub-menu__title text-uppercase">Danh mục</h6>
+  <ul class="sub-menu__list list-unstyled">
+    <li class="sub-menu__item"><a href="#" class="menu-link menu-link_us-s">Áo sơ mi</a></li>
+    <li class="sub-menu__item"><a href="#" class="menu-link menu-link_us-s">Quần jean</a></li>
+    <li class="sub-menu__item"><a href="#" class="menu-link menu-link_us-s">Giày dép</a></li>
+    <li class="sub-menu__item"><a href="#" class="menu-link menu-link_us-s">Túi xách</a></li>
+    <li class="sub-menu__item"><a href="#" class="menu-link menu-link_us-s">Tất cả sản phẩm</a></li>
+  </ul>
+</div>
 
     <div class="footer-bottom">
       <div class="container d-md-flex align-items-center">
-        <span class="footer-copyright me-auto">©2024 Surfside Media</span>
-        <div class="footer-settings d-md-flex align-items-center">
-          <a href="privacy-policy.html">Privacy Policy</a> &nbsp;|&nbsp; <a href="terms-conditions.html">Terms &amp;
-            Conditions</a>
-        </div>
+        <span class="footer-copyright me-auto">©2026 Surfside Media</span>
+        <div class="footer-settings d-md-flex align-items-center gap-2">
+        <a href="privacy-policy.html">Chính sách bảo mật</a>
+        <span>|</span>
+        <a href="terms-conditions.html">Điều khoản &amp; Điều kiện</a>
       </div>
+            </div>
     </div>
   </footer>
 
@@ -634,7 +648,7 @@
             xmlns="http://www.w3.org/2000/svg">
             <use href="#icon_home" />
           </svg>
-          <span>Home</span>
+          <span>Trang chủ</span>
         </a>
       </div>
 
@@ -644,7 +658,7 @@
             xmlns="http://www.w3.org/2000/svg">
             <use href="#icon_hanger" />
           </svg>
-          <span>Shop</span>
+          <span>Mua Sắm</span>
         </a>
       </div>
 
@@ -657,7 +671,7 @@
             </svg>
             <span class="wishlist-amount d-block position-absolute js-wishlist-count">3</span>
           </div>
-         <span>Wishlist</span>
+         <span>Yêu thích</span>
         </a>
       </div>
     </div>
@@ -669,8 +683,55 @@
   <script src="{{ asset('assets/js/plugins/jquery.min.js') }}"></script>
   <script src="{{ asset('assets/js/plugins/bootstrap.bundle.min.js') }}"></script>
   <script src="{{ asset('assets/js/plugins/bootstrap-slider.min.js') }}"></script>
+  <script src="{{ asset ('js/sweetalert.min.js') }}"></script>  
   <script src="{{ asset('assets/js/plugins/swiper.min.js') }}"></script>
   <script src="{{ asset('assets/js/plugins/countdown.js') }}"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- Script của bạn -->
+  <script>
+    $(function() {
+    $('#search-input').on('keyup', function() {
+        var searchQuery = $(this).val();
+        if (searchQuery.length > 2) 
+        {
+            $.ajax({
+                type: "GET",
+                url: "{{ route('home.search') }}",
+                data: { query: searchQuery },
+                dataType: 'json',
+                success: function(data) {
+                    $("#box-content-search").html('');
+                    $.each(data, function(index, item) {
+                       var url = "{{ route('shop.product.details', ['product_slug' => 'product_slug_pls']) }}";
+                       var link = url.replace('product_slug_pls', item.slug);
+                       
+                        $("#box-content-search").append(`
+                           <li>
+                            <ul>
+                                <li class="product-item gap14 mb-10">
+                                    <div class="image no-bg">
+                                        <img src="{{asset('uploads/products/thumbnails')}}/${item.image}" alt="${item.name}">
+                                    </div>
+                                    <div class="flex items-center justify-between gap20 flex-grow">
+                                        <div class="name">
+                                            <a href="${link}" class="body-text">${item.name}</a>
+                                        </div>
+                                    </div>
+                                </li>
+                                <li class="mb-10">
+                                    <div class="divider"></div>
+                                </li>
+                            </ul>
+                        </li>
+                        `);
+                    });                  
+                }
+            });
+          }
+    });
+});
+  </script>
   <script src="{{ asset('assets/js/theme.js') }}"></script>
   @stack("scripts")
 </body>

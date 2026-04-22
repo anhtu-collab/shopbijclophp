@@ -6157,12 +6157,6 @@ select.h40 {
   .form-style-2 .left {
     max-width: 150px !important;
   }
-  .header-user {
-    width: unset;
-  }
-  .header-user > div:last-child {
-    display: none;
-  }
   .new-page-wrap {
     flex-wrap: wrap;
   }

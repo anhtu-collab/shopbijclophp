@@ -1,29 +1,42 @@
 @extends('layouts.app')
 @section('content')
+<style>
+    .text-success {
+        color: #278c04 !important;
+    }
+    .text-danger {
+    color: #d61808 !important;    
+}
+
+.qty-control:focus-within {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+</style>
 <main class="pt-90">
     <div class="mb-4 pb-4"></div>
     <section class="shop-checkout container">
-      <h2 class="page-title">Cart</h2>
+      <h2 class="page-title">Giỏ Hàng</h2>
       <div class="checkout-steps">
         <a href="javascript:void(0)" class="checkout-steps__item active">
           <span class="checkout-steps__item-number">01</span>
           <span class="checkout-steps__item-title">
-            <span>Shopping Bag</span>
-            <em>Manage Your Items List</em>
+            <span>Giỏ hàng</span>
+            <em>Quản lý danh sách sản phẩm</em>
           </span>
         </a>
         <a href="javascript:void(0)" class="checkout-steps__item">
           <span class="checkout-steps__item-number">02</span>
           <span class="checkout-steps__item-title">
-            <span>Shipping and Checkout</span>
-            <em>Checkout Your Items List</em>
+           <span>Thanh toán</span>
+            <em>Tiến hành đặt hàng</em>
           </span>
         </a>
         <a href="javascript:void(0)" class="checkout-steps__item">
           <span class="checkout-steps__item-number">03</span>
           <span class="checkout-steps__item-title">
-            <span>Confirmation</span>
-            <em>Review And Submit Your Order</em>
+            <span>Xác nhận</span>
+            <em>Kiểm tra và gửi đơn hàng</em>
           </span>
         </a>
       </div>
@@ -33,11 +46,12 @@
           <table class="cart-table">
             <thead>
               <tr>
-                <th>Product</th>
-                <th></th>
-                <th>Price</th>
-                <th>Quantity</th>
-                <th>Subtotal</th>
+               <th>Sản phẩm</th>
+                <th>Hình ảnh</th>
+                <th>Giá</th>
+                <th>Số lượng</th>
+                <th>Tạm tính</th>
+                <th>Xóa</th>
                 <th></th>
               </tr>
             </thead>
@@ -53,35 +67,43 @@
                   <div class="shopping-cart__product-item__detail">
                     <h4>{{$item->name}}</h4>
                     <ul class="shopping-cart__product-item__options">
-                      <li>Color: Yellow</li>
-                      <li>Size: L</li>
+                      <li>Màu Sắc: {{ $item->options['color'] ?? '-' }}</li>
+                      <li>Size: {{ $item->options['size'] ?? '-' }}</li>
                     </ul>
                   </div>
                 </td>
                 <td>
-                  <span class="shopping-cart__product-price">{{$item->price}}</span>
+                  <span class="shopping-cart__product-price">{{ number_format($item->price, 0, ',', '.') }} đ</span>
                 </td>
                 <td>
+
+          {{-- <div class="qty-control position-relative qty-initialized">
+                      
+                      <input type="number" name="quantity" value="1" min="1" class="qty-control__number text-center" fdprocessedid="6bt6ff" data-has-listeners="true">
+                      <div class="qty-control__reduce">-</div>
+                      <div class="qty-control__increase">+</div>
+                  </div> --}}
+
                   <div class="qty-control d-flex align-items-center">
+                    <form method="POST" action="{{ route('cart.qty.decrease', ['rowId' => $item->rowId]) }}">
+                        @csrf
+                        @method('PUT')
+                        <button type="submit" class="qty-btn">-</button>
+                    </form>
 
-    <form method="POST" action="{{ route('cart.qty.decrease', ['rowId' => $item->rowId]) }}">
-        @csrf
-        @method('PUT')
-        <button type="submit" class="qty-btn">-</button>
-    </form>
+                    <input type="text" value="{{ $item->qty }}" readonly class="qty-input">
+                    
+                      <form method="POST" action="{{ route('cart.qty.increase', ['rowId' => $item->rowId]) }}">
+                          @csrf
+                          @method('PUT')
+                          <button type="submit" class="qty-btn">+</button>
+                      </form>
 
-    <input type="text" value="{{ $item->qty }}" readonly class="qty-input">
+                  </div> 
 
-    <form method="POST" action="{{ route('cart.qty.increase', ['rowId' => $item->rowId]) }}">
-        @csrf
-        @method('PUT')
-        <button type="submit" class="qty-btn">+</button>
-    </form>
-
-</div>
                 </td>
                 <td>
-                  <span class="shopping-cart__subtotal">{{$item->subtotal()}}</span>
+                  <span class="shopping-cart__subtotal">{{ number_format($item->subtotal, 0, ',', '.') }} đ</span>
                 </td>
                 <td>
                   <form method="POST" action="{{ route('cart.item.remove', ['rowId' => $item->rowId]) }}">
@@ -100,56 +122,133 @@
               
             </tbody>
           </table>
-          <div class="cart-table-footer">
-            <form action="#" class="position-relative bg-body">
-              <input class="form-control" type="text" name="coupon_code" placeholder="Coupon Code">
-              <input class="btn-link fw-medium position-absolute top-0 end-0 h-100 px-4" type="submit"
-                value="APPLY COUPON">
-            </form>
-            <form method="POST" action="{{ route('cart.empty') }}">
+          <div class="cart-table-footer"> 
+
+            @if(!Session::has('coupon'))
+            <form action="{{route('cart.coupon.apply')}}" method="POST" class="position-relative bg-body">
+              @csrf
+              <input class="form-control" type="text" name="coupon_code" placeholder="Mã Giảm Giá" value="">
+              <input class="btn-link fw-medium position-absolute top-0 end-0 h-100 px-4" type="submit" value="ÁP DỤNG MÃ">
+          </form>   
+            @else
+            <form action="{{route('cart.coupon.remove')}}" method="POST" class="position-relative bg-body">
+              @csrf
+              @method('DELETE')
+              <input class="form-control" type="text" name="coupon_code" placeholder="Coupon Code" value="@if(Session::has('coupon')) {{Session::get('coupon')['code']}} Applied! @endif">
+              <input class="btn-link fw-medium position-absolute top-0 end-0 h-100 px-4" type="submit" value="XÓA MÃ GIẢM GIÁ">
+          </form>   
+          @endif
+          <form method="POST" action="{{ route('cart.empty') }}">
              @csrf
                @method('DELETE')
-              <button type="submit" class="btn btn-light">CLEAR CART</button>
+              <button type="submit" class="btn btn-light">XÓA TOÀN BỘ GIỎ HÀNG</button>
                  </form>
+          </div>
+          <div>
+             @if(Session::has('success'))
+             <p class="text-success">{{ Session::get('success') }}</p>
+             @elseif(Session::has('error'))
+                 <p class="text-danger">{{ Session::get('error') }}</p>
+             @endif
           </div>
         </div>
         <div class="shopping-cart__totals-wrapper">
           <div class="sticky-content">
-            <div class="shopping-cart__totals">
-              <h3>Cart Totals</h3>
-              <table class="cart-totals">
-                <tbody>
-                  <tr>
-                    <th>Subtotal</th>
-                    <td>${{ Cart::instance('cart')->subtotal()}}</td>
-                  </tr>
-                  <tr>
-                    <th>Shipping</th>
-                    <td>Free</td>
-                  </tr>
-                  <tr>
-                    <th>VAT</th>
-                    <td>${{ Cart::instance('cart')->tax()}}</td>
-                  </tr>
-                  <tr>
-                    <th>Total</th>
-                    <td>${{ Cart::instance('cart')->total()}}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <div class="mobile_fixed-btn_wrapper">
-              <div class="button-wrapper container">
-                <a href="checkout.html" class="btn btn-primary btn-checkout">PROCEED TO CHECKOUT</a>
-              </div>
-            </div>
-          </div>
+           <div class="shopping-cart__totals">
+                    <h3>Tổng Giỏ Hàng</h3>
+
+                    @if(Session::has('discounts'))
+                        <table class="cart-totals">
+                            <tbody>
+                                <tr>
+                                    <th>Tạm Tính</th>
+                                    <td class="text-right">
+                                        {{ number_format((float) str_replace(',', '', Cart::instance('cart')->subtotal()), 0, ',', '.') }} đ
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <th>Giảm Giá {{ Session::get('coupon')['code'] ?? '' }}</th>
+                                    <td class="text-success text-right">
+                                        -{{ number_format(Session::get('discounts')['discount'] ?? 0, 0, ',', '.') }} đ
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <th>Tạm Tính Sau Giảm</th>
+                                    <td class="text-right">
+                                        {{ number_format(Session::get('discounts')['subtotal'] ?? 0, 0, ',', '.') }} đ
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <th>Phí Vận Chuyển</th>
+                                    <td class="text-right">Miễn Phí</td>
+                                </tr>
+
+                                <tr>
+                                    <th>Thuế</th>
+                                    <td class="text-right">
+                                        {{ number_format(Session::get('discounts')['tax'] ?? 0, 0, ',', '.') }} đ
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <th>Tổng Cộng</th>
+                                    <td class="text-right">
+                                        <strong>
+                                            {{ number_format(Session::get('discounts')['total'] ?? 0, 0, ',', '.') }} đ
+                                        </strong>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    @else
+                        <table class="cart-totals">
+                            <tbody>
+                                <tr>
+                                    <th>Tạm Tính</th>
+                                    <td>
+                                        {{ number_format((float) str_replace(',', '', Cart::instance('cart')->subtotal()), 0, ',', '.') }} đ
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <th>Phí Vận Chuyển</th>
+                                    <td>Miễn Phí</td>
+                                </tr>
+
+                                <tr>
+                                    <th>Thuế</th>
+                                    <td>
+                                        {{ number_format((float) str_replace(',', '', Cart::instance('cart')->tax()), 0, ',', '.') }} đ
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <th>Tổng Cộng</th>
+                                    <td>
+                                        {{ number_format((float) str_replace(',', '', Cart::instance('cart')->total()), 0, ',', '.') }} đ
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    @endif
+                </div>
+
+                <div class="mobile_fixed-btn_wrapper">
+                    <div class="button-wrapper container">
+                        <a href="{{ route('cart.checkout') }}" class="btn btn-primary btn-checkout">
+                            Tiến Hành Thanh Toán
+                        </a>
+                    </div>
+                </div>
         </div>
         @else
         <div class="row">
            <div class="col-md 12 text-center-center pt-5 bp-5">
-            <p>No item found in your cart</p>
-            <a href="{{route('shop.index')}}" class="btn btn-info">Shop Now</a>
+            <p>Chưa Có Sản Phẩm Nào Trong Giỏ Hàng</p>
+            <a href="{{route('shop.index')}}" class="btn btn-info">Mua Sắm Ngay</a>
         </div>
 
         @endif

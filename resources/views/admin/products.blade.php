@@ -3,18 +3,18 @@
   <div class="main-content-inner">
                             <div class="main-content-wrap">
                                 <div class="flex items-center flex-wrap justify-between gap20 mb-27">
-                                    <h3>All Products</h3>
+                                    <h3>TẤT CẢ SẢN PHẨM</h3>
                                     <ul class="breadcrumbs flex items-center flex-wrap justify-start gap10">
                                         <li>
                                             <a href="{{route('admin.index')}}">
-                                                <div class="text-tiny">Dashboard</div>
+                                                <div class="text-tiny">Bảng Điều Khiển</div>
                                             </a>
                                         </li>
                                         <li>
                                             <i class="icon-chevron-right"></i>
                                         </li>
                                         <li>
-                                            <div class="text-tiny">All Products</div>
+                                            <div class="text-tiny">Tất Cả Sản Phẩm</div>
                                         </li>
                                     </ul>
                                 </div>
@@ -24,7 +24,7 @@
                                         <div class="wg-filter flex-grow">
                                             <form class="form-search">
                                                 <fieldset class="name">
-                                                    <input type="text" placeholder="Search here..." class="" name="name"
+                                                    <input type="text" placeholder="Tìm Kiếm..." class="" name="name"
                                                         tabindex="2" value="" aria-required="true" required="">
                                                 </fieldset>
                                                 <div class="button-submit">
@@ -33,23 +33,25 @@
                                             </form>
                                         </div>
                                         <a class="tf-button style-1 w208" href="{{ route('admin.product.add') }}"><i
-                                                class="icon-plus"></i>Add new</a>
+                                                class="icon-plus"></i>Thêm</a>
                                     </div>
                                     <div class="table-responsive">
                                         <table class="table table-striped table-bordered">
                                             <thead>
                                                 <tr>
-                                                    <th>#</th>
-                                                    <th>Name</th>
-                                                    <th>Price</th>
-                                                    <th>SalePrice</th>
-                                                    <th>SKU</th>
-                                                    <th>Category</th>
-                                                    <th>Brand</th>
-                                                    <th>Featured</th>
-                                                    <th>Stock</th>
-                                                    <th>Quantity</th>
-                                                    <th>Action</th>
+                                                    <th class="text-center">Thứ Tự</th>
+                                                    <th class="text-center">Tên SẢn Phẩm</th>
+                                                    <th class="text-center" >Giá Gốc</th>
+                                                    <th class="text-center" >Giảm Giá</th>
+                                                    <th class="text-center" >Mã</th>
+                                                    <th class="text-center" >Danh Mục</th>
+                                                    <th class="text-center" >Thương Hiệu</th>
+                                                    <th class="text-center" >Size</th>
+                                                    <th class="text-center" >Màu</th>
+                                                    <th class="text-center" >Mở Bán</th>
+                                                    <th class="text-center" >Trạng Thái</th>
+                                                    <th class="text-center" >Số Lượng Hàng</th>
+                                                    <th class="text-center" >Hoạt Động</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -65,12 +67,22 @@
                                                             <div class="text-tiny mt-3">{{$product->slug}}</div>
                                                         </div>
                                                     </td>
-                                                    <td>${{$product->regular_price}}</td>
-                                                    <td>${{$product->sale_price}}</td>
+                                                    <td>{{ number_format($product->regular_price, 0, ',', '.') }} đ</td>
+                                                    <td>{{ number_format($product->sale_price, 0, ',', '.') }} đ</td>
                                                     <td>{{$product->SKU}}</td>
                                                     <td>{{$product->Category->name}}</td>
                                                     <td>{{$product->brand->name}}</td>
-                                                    <td>{{$product->featured == 0 ? "No":"Yes"}}</td>
+                                                  <td>
+                                                      @php
+                                                          $sizes = json_decode($product->sizes, true) ?? [];
+                                                      @endphp
+                                                  
+                                                      {{ implode(', ', array_map('strtoupper', $sizes)) }}
+                                                  </td>
+                                                  <td>
+                                                      {{ implode(', ', json_decode($product->colors, true) ?? []) }}
+                                                  </td>     
+                                                    <td>{{$product->featured == 0? "không":"có"}}</td>
                                                     <td>{{$product->stock_status}}</td>
                                                     <td>{{$product->quantity}}</td>
                                                     <td>
@@ -118,10 +130,10 @@
         e.preventDefault();
         var selectedForm = $(this).closest('form');
         swal({
-            title: "Are you sure?",
-            text: "You want to delete this record?",
-            type: "warning",
-            buttons: ["No", "Yes"],
+            title: "Bạn Chắc chắn?",
+            text: "Muốn Xóa Không?",
+            type:"Cảnh Báo",
+            buttons:["Không","Có"],
             confirmButtonColor: '#dc3545',
         }).then(function (result) {
             if (result) {

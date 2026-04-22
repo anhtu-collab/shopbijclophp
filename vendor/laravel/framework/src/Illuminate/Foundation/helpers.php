@@ -41,7 +41,6 @@ use League\Uri\Contracts\UriInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\Cookie;
 use Symfony\Component\HttpFoundation\Response;
-
 use function Illuminate\Support\enum_value;
 
 if (! function_exists('abort')) {

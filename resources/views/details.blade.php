@@ -1,5 +1,33 @@
 @extends('layouts.app')
 @section('content')
+<style>
+    .filled-heart {
+        color: orange;
+    }
+    #sizeError,
+#colorError {
+    color: red !important;
+    font-weight: 600;
+    font-size: 13px;
+position: absolute;
+    font-size: 12px;
+    margin-top: 2px;
+}
+
+.product-single__addtocart .mb-2 {
+    position: relative;
+    padding-bottom: 18px;
+}
+.qty-control{
+    margin-top: -20px;
+
+}
+.product-single__addtocart select,
+.qty-control__number{
+    height: 66px;
+}
+
+</style>
 <main class="pt-90">
     <div class="mb-md-1 pb-md-3"></div>
     <section class="product-single container">
@@ -58,9 +86,9 @@
         <div class="col-lg-5">
           <div class="d-flex justify-content-between mb-4 pb-md-2">
             <div class="breadcrumb mb-0 d-none d-md-block flex-grow-1">
-              <a href="#" class="menu-link menu-link_us-s text-uppercase fw-medium">Home</a>
+              <a href="#" class="menu-link menu-link_us-s text-uppercase fw-medium">Trang Chủ</a>
               <span class="breadcrumb-separator menu-link fw-medium ps-1 pe-1">/</span>
-              <a href="#" class="menu-link menu-link_us-s text-uppercase fw-medium">The Shop</a>
+              <a href="#" class="menu-link menu-link_us-s text-uppercase fw-medium">Mua Sắm</a>
             </div><!-- /.breadcrumb -->
 
             <div
@@ -68,12 +96,12 @@
               <a href="#" class="text-uppercase fw-medium"><svg width="10" height="10" viewBox="0 0 25 25"
                   xmlns="http://www.w3.org/2000/svg">
                   <use href="#icon_prev_md" />
-                </svg><span class="menu-link menu-link_us-s">Prev</span></a>
-              <a href="#" class="text-uppercase fw-medium"><span class="menu-link menu-link_us-s">Next</span><svg
+                </svg><span class="menu-link menu-link_us-s">Trước</span></a>
+              <a href="#" class="text-uppercase fw-medium"><span class="menu-link menu-link_us-s">Sau</span><svg
                   width="10" height="10" viewBox="0 0 25 25" xmlns="http://www.w3.org/2000/svg">
                   <use href="#icon_next_md" />
                 </svg></a>
-            </div><!-- /.shop-acs -->
+            </div>
           </div>
      <h1 class="product-single__name">{{ $product->name }}</h1>
 <div class="d-flex align-items-center mt-1">
@@ -82,11 +110,12 @@
       </div>
           <div class="product-single__price">
             <span class="current-price">
-                @if($product->sale_price)
-            <s>${{$product->regular_price}}</s> ${{$product->sale_price}}
-          @else
-            ${{$product->regular_price}}
-          @endif
+             @if($product->sale_price)
+    <s>{{ number_format($product->regular_price, 0, ',', '.') }} đ </s> 
+    {{ number_format($product->sale_price, 0, ',', '.') }} đ 
+@else
+    {{ number_format($product->regular_price, 0, ',', '.') }} đ
+@endif
             </span>
           </div>
           <div class="product-single__short-desc">
@@ -94,11 +123,35 @@
           </div>
    {{-- Thay thế form cũ bằng form này --}}
    @if(Cart::instance('cart')->content()->where('id', $product->id)->count() > 0)
-    <a href="{{ route('cart.index') }}" class="btn btn-warning mb-3">Go to Cart</a>
+    <a href="{{ route('cart.index') }}" class="btn btn-warning mb-3">Đi đến trang giỏ hàng</a>
    @else
 <form action="{{ route('cart.add') }}" method="POST">
     @csrf
     <div class="product-single__addtocart">
+          <div class="mb-2">
+        <select name="size" id="size" class="form-control">
+          <option value="">--Chọn Kích Thước--</option>
+          @foreach(json_decode($product->sizes ?? '[]') as $size)
+              <option value="{{ $size }}">{{ $size }}</option>
+          @endforeach
+      </select>   
+      <small id="sizeError" class="text-danger d-none">
+  Vui lòng chọn kích thước
+</small>  
+    </div>
+
+    {{-- COLOR --}}
+    <div class="mb-2">
+        <select name="color" id="color" class="form-control">
+          <option value="">--Chọn Màu--</option>
+          @foreach(json_decode($product->colors ?? '[]') as $color)
+              <option value="{{ $color }}">{{ $color }}</option>
+          @endforeach  
+      </select>
+       <small id="colorError" class="text-danger d-none">
+  Vui lòng chọn màu
+</small>      
+    </div>
         <div class="qty-control position-relative">
             {{-- Ô nhập số lượng --}}
             <input type="number" name="quantity" value="1" min="1" class="qty-control__number text-center">
@@ -109,23 +162,42 @@
         <input type="hidden" name="name" value="{{ $product->name }}">
         <input type="hidden" name="price" value="{{ $product->sale_price ? $product->sale_price : $product->regular_price }}">
 
-        <button type="submit" class="btn btn-primary btn-addtocart m px-5">
-            Add to Cart
-        </button>
+        <button type="submit" class="btn btn-primary btn-addtocart m px-5">THÊM VÀO GIỎ HÀNG</button>
     </div>
 </form>
 @endif
           <div class="product-single__addtolinks">
-            <a href="#" class="menu-link menu-link_us-s add-to-wishlist"><svg width="16" height="16" viewBox="0 0 20 20"
+              @if(Cart::instance('wishlist')->content()->where('id', $product->id)->count() > 0)
+              <form method="POST" action="{{ route('wishlist.item.remove',['rowId'=>Cart::instance('wishlist')->content()->where('id', $product->id)->first()->rowId])}}" id="frm-remove-item">
+                @csrf
+                @method('DELETE')
+            <a href="javascript:void(0)" class="menu-link menu-link_us-s add-to-wishlist filled-heart" onclick="document.getElementById('frm-remove-item').submit();"><svg width="16" height="16" viewBox="0 0 20 20"
                 fill="none" xmlns="http://www.w3.org/2000/svg">
                 <use href="#icon_heart" />
-              </svg><span>Add to Wishlist</span></a>
+              </svg><span>Xoá Khỏi Danh Sách Yêu Thích</span></a>
+              </form>
+              @else
+                <form method="POST" action="{{ route('wishlist.add') }}" id="wishlist-form">
+               @csrf
+               <input type="hidden" name="id" value="{{ $product->id }}" />
+               <input type="hidden" name="name" value="{{ $product->name }}" />
+               <input type="hidden" name="price" value="{{ $product->sale_price == '' ? $product->regular_price : $product->sale_price }}" />
+               <input type="hidden" name="quantity" value="1" />
+              
+               <a href="javascript:void(0)" class="menu-link menu-link_us-s add-to-wishlist " onclick="document.getElementById('wishlist-form').submit();"><svg width="16" height="16" viewBox="0 0 20 20"
+                fill="none" xmlns="http://www.w3.org/2000/svg">
+                <use href="#icon_heart" />
+              </svg><span>Thêm Vào Danh Sách Yêu Thích</span></a>
+                </form>
+              @endif
+
+
             <share-button class="share-button">
               <button class="menu-link menu-link_us-s to-share border-0 bg-transparent d-flex align-items-center">
                 <svg width="16" height="19" viewBox="0 0 16 19" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <use href="#icon_sharing" />
                 </svg>
-                <span>Share</span>
+                <span>Chia Sẻ</span>
               </button>
               <details id="Details-share-template__main" class="m-1 xl:m-1.5" hidden="">
                 <summary class="btn-solid m-1 xl:m-1.5 pt-3.5 pb-3 px-5">+</summary>
@@ -144,7 +216,7 @@
                         d="M2 1a1 1 0 011-1h7a1 1 0 011 1v9a1 1 0 01-1 1V1H2zM1 2a1 1 0 00-1 1v9a1 1 0 001 1h7a1 1 0 001-1V3a1 1 0 00-1-1H1zm0 10V3h7v9H1z"
                         fill="currentColor"></path>
                     </svg>
-                    <span class="sr-only">Copy link</span>
+                    <span class="sr-only">Sao Chép link</span>
                   </button>
                 </div>
               </details>
@@ -154,11 +226,11 @@
           </div>
           <div class="product-single__meta-info">
     <div class="meta-item">
-        <label>SKU:</label>
+        <label>Mã sp:</label>
         <span>{{ $product->SKU }}</span>
     </div>
     <div class="meta-item">
-        <label>Categories:</label>
+        <label>Danh muc:</label>
         <span>{{ $product->category->name }}</span>
     </div>
     <div class="meta-item">
@@ -172,16 +244,16 @@
         <ul class="nav nav-tabs" id="myTab" role="tablist">
           <li class="nav-item" role="presentation">
             <a class="nav-link nav-link_underscore active" id="tab-description-tab" data-bs-toggle="tab"
-              href="#tab-description" role="tab" aria-controls="tab-description" aria-selected="true">Description</a>
+              href="#tab-description" role="tab" aria-controls="tab-description" aria-selected="true">MÔ TẢ</a>
           </li>
           <li class="nav-item" role="presentation">
             <a class="nav-link nav-link_underscore" id="tab-additional-info-tab" data-bs-toggle="tab"
               href="#tab-additional-info" role="tab" aria-controls="tab-additional-info"
-              aria-selected="false">Additional Information</a>
+              aria-selected="false">THÔNG TIN SẢN PHẨM</a>
           </li>
           <li class="nav-item" role="presentation">
             <a class="nav-link nav-link_underscore" id="tab-reviews-tab" data-bs-toggle="tab" href="#tab-reviews"
-              role="tab" aria-controls="tab-reviews" aria-selected="false">Reviews (2)</a>
+              role="tab" aria-controls="tab-reviews" aria-selected="false">ĐÁNH GIÁ</a>
           </li>
         </ul>
         <div class="tab-content">
@@ -217,7 +289,7 @@
             </div>
           </div>
           <div class="tab-pane fade" id="tab-reviews" role="tabpanel" aria-labelledby="tab-reviews-tab">
-            <h2 class="product-single__reviews-title">Reviews</h2>
+            <h2 class="product-single__reviews-title">TOÀN BỘ ĐÁNH GIÁ</h2>
             <div class="product-single__reviews-list">
               <div class="product-single__reviews-item">
                 <div class="customer-avatar">
@@ -286,10 +358,9 @@
             </div>
             <div class="product-single__review-form">
               <form name="customer-review-form">
-                <h5>Be the first to review “Message Cotton T-Shirt”</h5>
-                <p>Your email address will not be published. Required fields are marked *</p>
-                <div class="select-star-rating">
-                  <label>Your rating *</label>
+               <h5>Hãy là người đầu tiên đánh giá</h5>
+              <p>Email của bạn sẽ không được hiển thị công khai. Các trường bắt buộc được đánh dấu *</p>
+                  <label>Đánh giá của bạn *</label>
                   <span class="star-rating">
                     <svg class="star-rating__star-icon" width="12" height="12" fill="#ccc" viewBox="0 0 12 12"
                       xmlns="http://www.w3.org/2000/svg">
@@ -320,25 +391,25 @@
                   <input type="hidden" id="form-input-rating" value="" />
                 </div>
                 <div class="mb-4">
-                  <textarea id="form-input-review" class="form-control form-control_gray" placeholder="Your Review"
+                  <textarea id="form-input-review" class="form-control form-control_gray" placeholder="Điền nội dung..."
                     cols="30" rows="8"></textarea>
                 </div>
                 <div class="form-label-fixed mb-4">
-                  <label for="form-input-name" class="form-label">Name *</label>
+                  <label for="form-input-name" class="form-label">Họ Và Tên*</label>
                   <input id="form-input-name" class="form-control form-control-md form-control_gray">
                 </div>
                 <div class="form-label-fixed mb-4">
-                  <label for="form-input-email" class="form-label">Email address *</label>
+                  <label for="form-input-email" class="form-label">Email*</label>
                   <input id="form-input-email" class="form-control form-control-md form-control_gray">
                 </div>
                 <div class="form-check mb-4">
                   <input class="form-check-input form-check-input_fill" type="checkbox" value="" id="remember_checkbox">
                   <label class="form-check-label" for="remember_checkbox">
-                    Save my name, email, and website in this browser for the next time I comment.
+                    Lưu tên, email và trang web của tôi trong trình duyệt này cho lần bình luận tiếp theo của tôi.
                   </label>
                 </div>
                 <div class="form-action">
-                  <button type="submit" class="btn btn-primary">Submit</button>
+                  <button type="submit" class="btn btn-primary">Lưu</button>
                 </div>
               </form>
             </div>
@@ -347,7 +418,7 @@
       </div>
     </section>
     <section class="products-carousel container">
-      <h2 class="h3 text-uppercase mb-4 pb-xl-2 mb-xl-4">Related <strong>Products</strong></h2>
+      <h2 class="h3 text-uppercase mb-4 pb-xl-2 mb-xl-4">SẢN PHẨM<strong> ĐỀ XUẤT</strong></h2>
 
       <div id="related_products" class="position-relative">
         <div class="swiper-container js-swiper-slider" data-settings='{
@@ -389,13 +460,12 @@
         <div class="pc__img-wrapper">
             <a href="{{ route('shop.product.details', ['product_slug' => $rproduct->slug]) }}">
                 <img loading="lazy" src="{{ asset('uploads/products/' . $rproduct->image) }}" width="330" height="400" alt="{{ $rproduct->name }}" class="pc__img">
-                {{-- Nếu bạn muốn ảnh thứ 2 khi hover, lấy ảnh đầu tiên trong gallery --}}
                 @php $gimages = explode(',', $rproduct->images); @endphp
                 @if(count($gimages) > 0 && $gimages[0] != '')
                     <img loading="lazy" src="{{ asset('uploads/products/' . trim($gimages[0])) }}" width="330" height="400" alt="{{ $rproduct->name }}" class="pc__img pc__img-second">
                 @endif
             </a>
-            <button class="pc__atc btn ...">Add To Cart</button>
+            <button class="pc__atc btn ...">Thêm Vào Giỏ Hàng</button>
         </div>
         <div class="pc__info position-relative">
             <p class="pc__category">{{ $rproduct->category->name }}</p>
@@ -403,7 +473,7 @@
                 <a href="{{ route('shop.product.details', ['product_slug' => $rproduct->slug]) }}">{{ $rproduct->name }}</a>
             </h6>
             <div class="product-card__price d-flex">
-                <span class="money price">${{ $rproduct->regular_price }}</span>
+                <span class="money price">{{ number_format((int)$rproduct->regular_price, 0, ',', '.') }}  đ</span>
             </div>
         </div>
     </div>
@@ -428,4 +498,32 @@
 
     </section><!-- /.products-carousel container -->
   </main>
+  <script>
+document.querySelector("form[action='{{ route('cart.add') }}']").addEventListener("submit", function(e) {
+    let size = document.getElementById("size").value;
+    let color = document.getElementById("color").value;
+
+    let hasError = false;
+
+    // reset
+    document.getElementById("sizeError").classList.add("d-none");
+    document.getElementById("colorError").classList.add("d-none");
+
+    // check size
+    if (size === "") {
+        document.getElementById("sizeError").classList.remove("d-none");
+        hasError = true;
+    }
+
+    // check color
+    if (color === "") {
+        document.getElementById("colorError").classList.remove("d-none");
+        hasError = true;
+    }
+
+    if (hasError) {
+        e.preventDefault(); // CHẶN SUBMIT
+    }
+});
+</script>
 @endsection
