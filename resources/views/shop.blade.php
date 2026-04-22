@@ -512,18 +512,25 @@
     $("#frmfilter").submit();
 }, 50);
 });
-$('.price-range-slider').on('slideStop', function () {
 
-    let value = $(this).val().toString().split(',');
-
-    let min = parseInt(value[0]);
-    let max = parseInt(value[1]);
-
-    $("#hdnMinPrice").val(min);
-    $("#hdnMaxPrice").val(max);
-
-    $("#frmfilter").submit();
-});
+document.addEventListener('DOMContentLoaded', function() {
+  const priceSlider = document.querySelector('.price-range-slider');
+  if (priceSlider) {
+    priceSlider.addEventListener('slideStop', function(e) {
+      const value = e.value;
+      if (Array.isArray(value)) {
+        $("#hdnMinPrice").val(value[0]);
+        $("#hdnMaxPrice").val(value[1]);
+      } else {
+        const parts = value.toString().split(',');
+        if (parts.length === 2) {
+          $("#hdnMinPrice").val(parseInt(parts[0]));
+          $("#hdnMaxPrice").val(parseInt(parts[1]));
+        }
+      }
+      $("#frmfilter").submit();
+    });
+  }
 });
 
 </script>
