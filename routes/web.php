@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\ResetPasswordController;
+use App\Http\Controllers\ManaController;
 Auth::routes();
 
 // Password Reset Routes
@@ -35,6 +36,8 @@ Route::delete('/cart/clear', [CartController::class, 'empty_cart'])->name('cart.
 
 Route::post('/cart/apply-coupon', [CartController::class, 'apply_coupon_code'])->name('cart.coupon.apply');
 Route::delete('/cart/remove-coupon', [CartController::class, 'remove_coupon_code'])->name('cart.coupon.remove');
+
+Route::post('/buy-now', [ShopController::class, 'buyNow'])->name('buy.now');
 
 
 Route::post('/wishlist/add', [WishlistController::class, 'add_to_wishlist'])->name('wishlist.add');
@@ -117,13 +120,56 @@ Route::middleware(['auth'])->group(function() {
     Route::get('/admin/contacts', [AdminController::class, 'contacts'])->name('admin.contacts');
     Route::delete('/admin/contact/{id}/delete', [AdminController::class, 'contact_delete'])->name('admin.contact.delete');
 
+    Route::get('/admin/reviews', [AdminController::class, 'reviews'])->name('admin.reviews');
+    Route::put('/admin/review/{id}/status', [AdminController::class, 'review_update_status'])->name('admin.review.status');
+    Route::delete('/admin/review/{id}/delete', [AdminController::class, 'review_delete'])->name('admin.review.delete');
+
     Route::get('/admin/search', [AdminController::class, 'search'])->name('admin.search');
         });
     
 
         //cổng thanh toán
-    Route::get('/vnpay/return', [PaymentController::class, 'vnpayReturn'])->name('payment.vnpay.return');
-    Route::get('/vnpay_payment',[PaymentController::class, 'vnpay_payment'])->name('payment.vnpay');
+    Route::get('/admin/users', [AdminController::class, 'users'])->name('admin.users');
+    Route::get('/admin/user/{id}/detail', [AdminController::class, 'user_detail'])->name('admin.users.detail');
+    Route::get('/admin/users/add', [AdminController::class, 'users_add'])->name('admin.users.add');
+    Route::post('/admin/users/store', [AdminController::class, 'users_store'])->name('admin.users.store');
+    Route::get('/admin/users/{id}/edit', [AdminController::class, 'users_edit'])->name('admin.users.edit');
+    Route::put('/admin/users/update', [AdminController::class, 'users_update'])->name('admin.users.update');
+    Route::delete('/admin/users/{id}/delete', [AdminController::class, 'users_delete'])->name('admin.users.delete'); 
+
+    Route::get('/blogs', [HomeController::class, 'blogs'])->name('views.blogs');
+    Route::get('/blogs/{slug}', [HomeController::class, 'blog_detail'])->name('views.blog.detail');
+        
+    Route::prefix('admin')->group(function () {
+    Route::get('/blogs', [AdminController::class, 'blogs'])->name('admin.blogs');
+    Route::get('/blog/add', [AdminController::class, 'blog_add'])->name('admin.blog.add');
+    Route::post('/blog/store', [AdminController::class, 'blog_store'])->name('admin.blog.store');
+    Route::get('/blog/edit/{id}', [AdminController::class, 'blog_edit'])->name('admin.blog.edit');
+    Route::put('/blog/update', [AdminController::class, 'blog_update'])->name('admin.blog.update');
+    Route::delete('/blog/delete/{id}', [AdminController::class, 'blog_delete'])->name('admin.blog.delete');
+
+
+});
+
+        //cổng thanh toán
+    // // Route::get('/vnpay/return', [PaymentController::class, 'vnpayReturn'])->name('payment.vnpay.return');
+    // Route::get('/vnpay_payment',[PaymentController::class, 'vnpay_payment'])->name('payment.vnpay');
+
+    // routes/web.php
+    Route::get('/payment/vnpay', [PaymentController::class, 'vnpay_payment'])->name('payment.vnpay');
+     Route::get('/payment/vnpay/return', [PaymentController::class, 'vnpay_return'])->name('payment.vnpay.return');
+    
+
+     Route::middleware(['auth','mana'])->group(function(){
+     Route::get('/mana',[ManaController::class ,'index'])->name('mana.index');
+     
+    
+    
+     });
+     Route::post('/product/review', [ShopController::class, 'store_review'])->name('product.review')->middleware('auth');
+     Route::get('/product/quickview/{id}', [ShopController::class, 'quickView'])->name('shop.product.quickview');
+     
+     
 
     
     

@@ -192,7 +192,7 @@
 
                                     <div class="wg-box">
                                         <div class="flex items-center justify-between">
-                                            <h5>Tổng Sản Phẩm</h5>
+                                            <h5>Tổng Đơn Hàng</h5>
                                             <div class="dropdown default">
                                                 <a class="btn btn-secondary dropdown-toggle" href="{{ route('admin.orders') }}">
                                                     <span class="view-all">Xem Tất Cả</span>
@@ -205,7 +205,7 @@
                                                 <thead>
                                                     <tr>
                                                         <th style="width:70px">STT</th>
-                                                        <th class="text-center">Tên</th>
+                                                        <th class="text-center">Tên Người Nhận</th>
                                                         <th class="text-center">Số Điện Thoại</th>
                                                         <th class="text-center">Tạm Tính</th>
                                                         <th class="text-center">Thuế</th>
@@ -213,7 +213,7 @@
 
                                                         <th class="text-center">Trạng Thái</th>
                                                         <th class="text-center">Ngày Đặt</th>
-                                                        <th class="text-center">Số Lượng</th>
+                                                        {{-- <th class="text-center">Số Lượng</th> --}}
                                                         <th class="text-center">Ngày Giao</th>
                                                         <th class="text-center">Hoạt Động</th>
                                                     </tr>
@@ -221,12 +221,12 @@
                                                 <tbody>
                                                     @foreach($orders as $order)
                                                     <tr>
-                                                        <td class="text-center">{{$order->id}}</td>
+                                                        <td class="text-center">{{ $loop->iteration }}</td>
                                                         <td class="text-center">{{$order->name}}</td>
                                                         <td class="text-center">{{$order->phone}}</td>
-                                                        <td class="text-center">{{$order->subtotal}} đ</td>
-                                                        <td class="text-center">{{$order->tax}} đ</td>
-                                                        <td class="text-center">{{$order->total}} đ</td>
+                                                        <td class="text-center">{{ number_format($order->subtotal, 0, ',', '.') }} đ</td>
+                                                        <td class="text-center">{{ number_format($order->tax, 0, ',', '.') }} đ</td>
+                                                        <td class="text-center">{{ number_format($order->total, 0, ',', '.') }} đ</td>
                                                         <td class="text-center">
                                                             @if($order->status == 'delivered')
                                                          <span class="badge bg-success">Đã Giao</span>
@@ -237,7 +237,7 @@
                                                      @endif
                                                         </td>
                                                         <td class="text-center">{{$order->created_at}}</td>
-                                                        <td class="text-center">{{$order->orderItems->count()}}</td>
+                                                        {{-- <td class="text-center">{{$order->orderItems->count()}}</td> --}}
                                                         <td class="text-center">{{$order->delivered_date}}</td>
                                                         <td class="text-center">
                                                             <a href="{{ route('admin.order.details', ['order_id' => $order->id])}}">

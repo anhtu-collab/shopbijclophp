@@ -1,10 +1,40 @@
 @extends('layouts.app')
 
 @section('content')
+<style>
+    .cart-header{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 40px;
+}
+
+.btn-back{
+    padding: 10px 40px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    text-decoration: none;
+    color: #333;
+    transition: 0.2s;
+    font-weight: 500;
+}
+
+.btn-back:hover{
+    background: #f3f3f3;
+    transform: translateX(-2px);
+}
+    </style>
 <main class="pt-90">
     <div class="mb-4 pb-4"></div>
     <section class="my-account container">
-        <h2 class="page-title">Sửa địa chỉ</h2>
+        
+                <div class="cart-header">
+      <h2 class="page-title">Sửa địa chỉ</h2>
+
+    <a href="{{ route('user.address') }}" class="btn-back">
+        Quay lại
+    </a>
+</div>
 
         @if(Session::has('success'))
             <p class="alert alert-success">{{ Session::get('success') }}</p>
@@ -66,7 +96,7 @@
 
             <div class="mb-3">
                 <label>
-                    <input type="checkbox" name="isdefault" {{ $address->is_default ? 'checked' : '' }}>
+                    <input type="checkbox" name="is_default" {{ $address->is_default ? 'checked' : '' }}>
                     Đặt làm mặc định
                 </label>
             </div>

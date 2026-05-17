@@ -249,15 +249,17 @@
     </symbol>
   </svg>
   <style>
-    #header {
-      padding-top: 8px;
-      padding-bottom: 8px;
-    }
+   #header {
+    padding-top: 8px;
+    padding-bottom: 8px;
+}
 
-    .logo__image {
-      max-width: 220px;
-    }
-    .product-item {
+.logo__image {
+    max-width: 220px;
+}
+
+/* SEARCH PRODUCT */
+.product-item {
     display: flex;
     align-items: center;
     justify-content: flex-start;
@@ -272,7 +274,6 @@
     justify-content: center;
     width: 50px;
     height: 50px;
-    gap: 10px;
     flex-shrink: 0;
     padding: 5px;
     border-radius: 10px;
@@ -286,6 +287,139 @@
 #box-content-search .product-item {
     margin-bottom: 10px;
 }
+
+/* ===== DROPDOWN FIX ===== */
+
+.navigation {
+    position: relative;
+}
+
+.navigation__item {
+    position: relative;
+}
+
+/* =========================
+   DROPDOWN MENU
+========================= */
+.dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+
+    min-width: 240px;
+
+    padding: 10px 6px;
+    margin: 0;
+
+    list-style: none;
+
+    /* 💎 Glass gradient đẹp */
+    background: white
+
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 14px;
+
+    box-shadow: 0 18px 45px rgba(0,0,0,0.15);
+
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(14px) scale(0.98);
+
+    transition: all 0.25s ease;
+
+    z-index: 99999;
+
+    display: block !important;
+}
+
+/* =========================
+   SHOW HOVER
+========================= */
+.navigation__item:hover .dropdown-menu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0) scale(1);
+}
+
+/* =========================
+   ITEM STYLE
+========================= */
+.dropdown-menu li a {
+    display: block;
+
+    padding: 11px 14px;
+    margin: 3px 4px;
+
+    font-size: 14px;
+    font-weight: 500;
+
+    color: #1e2a3a;
+
+    text-decoration: none;
+
+    border-radius: 10px;
+
+    transition: all 0.2s ease;
+
+    position: relative;
+}
+
+/* hover item */
+.dropdown-menu li a:hover {
+    background: rgba(59, 91, 219, 0.15);
+    color: #0b3d91;
+
+    transform: translateX(6px);
+}
+
+/* small left indicator */
+.dropdown-menu li a::before {
+    content: "";
+    position: absolute;
+    left: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+
+    width: 4px;
+    height: 0;
+
+    background: #151616;
+    border-radius: 10px;
+
+    transition: all 0.2s ease;
+}
+
+/* show indicator on hover */
+.dropdown-menu li a:hover::before {
+    height: 60%;
+}
+
+/* =========================
+   FIX OVERFLOW BUG
+========================= */
+.header,
+.header-desk,
+.navigation,
+.container {
+    overflow: visible !important;
+}
+
+.header {
+    position: relative;
+    z-index: 9999;
+}
+
+/* =========================
+   OPTIONAL: ICON STYLE (nếu có icon)
+========================= */
+.dropdown-menu li a i {
+    margin-right: 8px;
+    opacity: 0.8;
+}
+
   </style>
   <div class="header-mobile header_sticky">
     <div class="container d-flex align-items-center h-100">
@@ -316,7 +450,7 @@
         <form action="#" method="GET" class="search-field position-relative mt-4 mb-3">
           <div class="position-relative">
             <input class="search-field__input w-100 border rounded-1" type="text" name="search-keyword"
-              placeholder="Search products" />
+              placeholder="Tìm kiếm sản phẩm" />
             <button class="btn-icon search-popup__submit pb-0 me-2" type="submit">
               <svg class="d-block" width="20" height="20" viewBox="0 0 20 20" fill="none"
                 xmlns="http://www.w3.org/2000/svg">
@@ -338,9 +472,21 @@
             <li class="navigation__item">
               <a href="{{route('home.index')}}" class="navigation__link">TRANG CHỦ</a>
             </li>
-            <li class="navigation__item">
-              <a href="{{route('shop.index')}}" class="navigation__link">MUA SẮM</a>
-            </li>
+            <li class="navigation__item dropdown">
+              <a href="{{ route('shop.index') }}" class="navigation__link">
+                  MUA SẮM
+              </a>
+
+              <ul class="dropdown-menu">
+                  @foreach($categories as $category)
+                      <li>
+                          <a href="{{ route('shop.index', ['category' => $category->id]) }}">
+                              {{ $category->name }}
+                          </a>
+                      </li>
+                  @endforeach
+              </ul>
+          </li>
             <li class="navigation__item">
               <a href="{{route('cart.index')}}" class="navigation__link">GIỎ HÀNG</a>
             </li>
@@ -425,14 +571,26 @@
             <li class="navigation__item">
               <a href="{{route('home.index')}}" class="navigation__link">TRANG CHỦ</a>
             </li>
-            <li class="navigation__item">
-              <a href="{{route('shop.index')}}" class="navigation__link">MUA SẮM</a>
+            <li class="navigation__item dropdown">
+                <a href="{{ route('shop.index') }}" class="navigation__link">
+                    MUA SẮM
+                </a>
+
+                <ul class="dropdown-menu">
+                    @foreach($categories as $category)
+                        <li>
+                            <a href="{{ route('shop.index', ['categories' => $category->id]) }}">
+                              {{ $category->name }}
+                              </a>
+                        </li>
+                    @endforeach
+                </ul>
             </li>
             <li class="navigation__item">
               <a href="{{route('cart.index')}}" class="navigation__link">GIỎ HÀNG</a>
             </li>
             <li class="navigation__item">
-              <a href="about.html" class="navigation__link">GIỚI THIỆU</a>
+              <a href="{{route('views.blogs')}}" class="navigation__link">BÀI VIẾT</a>
             </li>
             <li class="navigation__item">
               <a href="{{route('home.contact')}}" class="navigation__link">LIÊN HỆ</a>
@@ -456,7 +614,7 @@
               <form action="#" method="GET" class="search-field container">
                 <p class="text-uppercase text-secondary fw-medium mb-4">Bạn Đang Tìm Kiếm GÌ?</p>
                 <div class="position-relative">
-                  <input class="search-field__input search-popup__input w-100 fw-medium" type="text" name="search-keyword" id="search-input" placeholder="Search products" />
+                  <input class="search-field__input search-popup__input w-100 fw-medium" type="text" name="search-keyword" id="search-input" placeholder="Tìm kiếm sản phẩm" />
                   <button class="btn-icon search-popup__submit" type="submit">
                     <svg class="d-block" width="20" height="20" viewBox="0 0 20 20" fill="none"
                       xmlns="http://www.w3.org/2000/svg">
@@ -482,6 +640,7 @@
                 <use href="#icon_user" />
               </svg>
             </a>
+            
           </div>  
           @else  
           <div class="header-tools__item hover-container">
@@ -492,6 +651,7 @@
                 <use href="#icon_user" />
               </svg>
             </a>  
+          </div>
           @endguest
 
           <a href="{{route('wishlist.index')}}" class="header-tools__item header-tools__cart">
@@ -504,14 +664,14 @@
 @endif    
           </a>
 
-          <a href="{{ route('cart.index') }}" class="header-tools__item-link">
+          <a href="{{ route('cart.index') }}" class="header-tools__item header-tools__cart">
     <svg class="d-block" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
         <use href="#icon_cart" />
     </svg>
     
     {{-- Kiểm tra: Nếu giỏ hàng có sản phẩm thì mới hiển thị Badge --}}
     @if(Cart::instance('cart')->content()->count() > 0)
-        <span class="cart-count">
+        <span class="cart-amount d-block position-absolute js-cart-items-count">
             {{ Cart::instance('cart')->content()->count() }}
         </span>
     @endif
@@ -527,16 +687,16 @@
   <hr class="mt-5 text-secondary" />
   <footer class="footer footer_type_2">
     <div class="footer-middle container">
-      <div class="row row-cols-lg-5 row-cols-2">
+      <div class="row row-cols-lg-3 row-cols-2">
         <div class="footer-column footer-store-info col-12 mb-4 mb-lg-0">
           <div class="logo">
             <a href="{{route('home.index')}}">
               <img src="{{ asset('assets/images/logo.jpg') }}" alt="BRijclo" class="logo__image d-block" />
             </a>
           </div>
-         <p class="footer-address">123 Đường Biển, TP. BRijclo, California</p>
-        <p class="m-0"><strong class="fw-medium">Email: contact@bRijclo.vn</strong></p>
-        <p><strong class="fw-medium">Hotline: +84 000 000 000</strong></p>
+         <p class="footer-address">Sao biển 23-455,kdt Vinhomes Ocean Pank</p>
+        <p class="m-0"><strong class="fw-medium">Email: brijclo.adm@gmail.com</strong></p>
+        <p><strong class="fw-medium">Hotline: +84 925 7724 99</strong></p>
           <ul class="social-links list-unstyled d-flex flex-wrap mb-0">
             <li>
               <a href="#" class="footer__social-link d-block">
@@ -582,18 +742,7 @@
           </ul>
         </div>
 
-  <div class="footer-column footer-menu mb-4 mb-lg-0">
-  <h6 class="sub-menu__title text-uppercase">Công ty</h6>
-  <ul class="sub-menu__list list-unstyled">
-    <li class="sub-menu__item"><a href="about-2.html" class="menu-link menu-link_us-s">Về chúng tôi</a></li>
-    <li class="sub-menu__item"><a href="#" class="menu-link menu-link_us-s">Tuyển dụng</a></li>
-    <li class="sub-menu__item"><a href="#" class="menu-link menu-link_us-s">Đối tác liên kết</a></li>
-    <li class="sub-menu__item"><a href="blog_list1.html" class="menu-link menu-link_us-s">Bài viết</a></li>
-    <li class="sub-menu__item"><a href="contact-2.html" class="menu-link menu-link_us-s">Liên hệ</a></li>
-  </ul>
-</div>
-
-<div class="footer-column footer-menu mb-4 mb-lg-0">
+{{-- <div class="footer-column footer-menu mb-4 mb-lg-0">
   <h6 class="sub-menu__title text-uppercase">MUA SẮM</h6>
   <ul class="sub-menu__list list-unstyled">
     <li class="sub-menu__item"><a href="shop2.html" class="menu-link menu-link_us-s">Hàng mới về</a></li>
@@ -602,40 +751,63 @@
     <li class="sub-menu__item"><a href="shop5.html" class="menu-link menu-link_us-s">Nữ</a></li>
     <li class="sub-menu__item"><a href="shop1.html" class="menu-link menu-link_us-s">Tất cả sản phẩm</a></li>
   </ul>
-</div>
+</div> --}}
 
 <div class="footer-column footer-menu mb-4 mb-lg-0">
   <h6 class="sub-menu__title text-uppercase">Hỗ trợ</h6>
   <ul class="sub-menu__list list-unstyled">
-    <li class="sub-menu__item"><a href="#" class="menu-link menu-link_us-s">Chăm sóc khách hàng</a></li>
+    {{-- <li class="sub-menu__item"><a href="#" class="menu-link menu-link_us-s">Chăm sóc khách hàng</a></li>
     <li class="sub-menu__item"><a href="account_dashboard.html" class="menu-link menu-link_us-s">Tài khoản của tôi</a></li>
-    <li class="sub-menu__item"><a href="store_location.html" class="menu-link menu-link_us-s">Tìm MUA SẮM</a></li>
+    <li class="sub-menu__item"><a href="store_location.html" class="menu-link menu-link_us-s">MUA SẮM</a></li>
     <li class="sub-menu__item"><a href="#" class="menu-link menu-link_us-s">Pháp lý & quyền riêng tư</a></li>
-    <li class="sub-menu__item"><a href="#" class="menu-link menu-link_us-s">Thẻ quà tặng</a></li>
+    <li class="sub-menu__item"><a href="#" class="menu-link menu-link_us-s">Thẻ quà tặng</a></li> --}}
+     <li class="sub-menu__item"><a href="{{ route('home.contact') }}" class="menu-link menu-link_us-s">Chăm sóc khách hàng</a></li>
+    <li class="sub-menu__item"><a href="{{ route('user.index') }}" class="menu-link menu-link_us-s">Tài khoản của tôi</a></li>
+    <li class="sub-menu__item" ><a href="{{ route('shop.index') }}" class="menu-link menu-link_us-s">Mua sắm</a></li>
+    <li class="sub-menu__item"><a href="{{ route('home.index') }}" class="menu-link menu-link_us-s">Trang chủ</a></li>
+    
   </ul>
 </div>
 
 <div class="footer-column footer-menu mb-4 mb-lg-0">
   <h6 class="sub-menu__title text-uppercase">Danh mục</h6>
+
   <ul class="sub-menu__list list-unstyled">
-    <li class="sub-menu__item"><a href="#" class="menu-link menu-link_us-s">Áo sơ mi</a></li>
-    <li class="sub-menu__item"><a href="#" class="menu-link menu-link_us-s">Quần jean</a></li>
-    <li class="sub-menu__item"><a href="#" class="menu-link menu-link_us-s">Giày dép</a></li>
-    <li class="sub-menu__item"><a href="#" class="menu-link menu-link_us-s">Túi xách</a></li>
-    <li class="sub-menu__item"><a href="#" class="menu-link menu-link_us-s">Tất cả sản phẩm</a></li>
+    @foreach($categories as $category)
+      <li class="sub-menu__item">
+        <a href="{{ route('shop.index', ['category' => $category->id]) }}"
+           class="menu-link menu-link_us-s">
+          {{ $category->name }}
+        </a>
+      </li>
+    @endforeach
+
+    </li>
   </ul>
 </div>
 
-    <div class="footer-bottom">
+ <div class="footer-column footer-menu mb-4 mb-lg-0">
+  <h6 class="sub-menu__title text-uppercase">Công ty</h6>
+  <ul class="sub-menu__list list-unstyled">
+    {{-- <li class="sub-menu__item"><a href="about-2.html" class="menu-link menu-link_us-s">Về chúng tôi</a></li>
+    <li class="sub-menu__item"><a href="#" class="menu-link menu-link_us-s">Tuyển dụng</a></li>
+    <li class="sub-menu__item"><a href="#" class="menu-link menu-link_us-s">Đối tác liên kết</a></li>
+    <li class="sub-menu__item"><a href="blog_list1.html" class="menu-link menu-link_us-s">Bài viết</a></li>
+    <li class="sub-menu__item"><a href="contact-2.html" class="menu-link menu-link_us-s">Liên hệ</a></li> --}}
+    <li class="sub-menu__item"><a href="{{ url('/blogs') }}" class="menu-link menu-link_us-s">Bài viết</a></li>
+    <li class="sub-menu__item"><a href="{{ route('home.contact') }}" class="menu-link menu-link_us-s">Liên hệ</a></li>
+  </ul>
+</div>
+    {{-- <div class="footer-bottom">
       <div class="container d-md-flex align-items-center">
-        <span class="footer-copyright me-auto">©2026 Surfside Media</span>
+        <span class="footer-copyright me-auto text-center">©2026 Brijclo</span>
         <div class="footer-settings d-md-flex align-items-center gap-2">
         <a href="privacy-policy.html">Chính sách bảo mật</a>
         <span>|</span>
         <a href="terms-conditions.html">Điều khoản &amp; Điều kiện</a>
       </div>
             </div>
-    </div>
+    </div> --}}
   </footer>
 
 

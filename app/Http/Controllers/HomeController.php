@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Blog;
 use App\Models\Category;
 use App\Models\Contact;
 use App\Models\Product;
 use App\Models\Slide;
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 class HomeController extends Controller
@@ -52,6 +54,27 @@ public function search(Request $request)
     $query = $request->input('query');
     $results = Product::where('name', 'LIKE', "%{$query}%")->take(8)->get();
     return response()->json($results);
+}
+public function blog_detail($slug)
+{
+    $blog = Blog::where('slug', $slug)->where('status', 1)->firstOrFail();
+    $related = Blog::where('status', 1)
+                   ->where('id', '!=', $blog->id)
+                   ->where('category', $blog->category)
+                   ->take(3)->get();
+    return view('blog_detail', compact('blog', 'related'));
+}
+
+public function blogs(Request $request)
+{
+    $query = Blog::where('status', 1)->orderBy('created_at', 'desc');
+
+    if ($request->category) {
+        $query->where('category', $request->category);
+    }
+
+    $blogs = $query->paginate(9)->withQueryString();
+    return view('blogs', compact('blogs'));
 }
     
 }

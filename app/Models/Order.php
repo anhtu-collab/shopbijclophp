@@ -17,4 +17,8 @@ public function orderItems() {
 public function transaction() {
     return $this->hasOne(Transaction::class);
 }
+public function items()
+{
+    return $this->hasMany(OrderItem::class, 'order_id');
+}
 }

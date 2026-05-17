@@ -62,7 +62,7 @@
                                             <tbody>
                                                 @foreach($slides as $slide)
                                                 <tr>
-                                                    <td>{{$slide->id}}</td>
+                                                    <td>{{ ($slides->currentPage() - 1) * $slides->perPage() + $loop->iteration }}</td>
                                                     <td class="pname">
                                                         <div class="image">
                                                             <img src="{{ asset('uploads/slides')}}/{{$slide->image}}" alt="" class="{{$slide->title}}">

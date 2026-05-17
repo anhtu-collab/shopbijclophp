@@ -4,11 +4,43 @@
     .text-success {
       color: #278c04 !important;
     }
+.text-danger {
+    color: #ff0000 !important;
+    font-weight: 600;
+}
+.cart-header{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 40px;
+}
+
+.btn-back{
+    padding: 10px 40px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    text-decoration: none;
+    color: #333;
+    transition: 0.2s;
+    font-weight: 500;
+}
+
+.btn-back:hover{
+    background: #f3f3f3;
+    transform: translateX(-2px);
+}
+
   </style>
   <main class="pt-90">
     <div class="mb-4 pb-4"></div>
     <section class="shop-checkout container">
-      <h2 class="page-title">Thanh Toán & Giao Hàng</h2>
+      <div class="cart-header">
+    <h2 class="page-title">Thanh Toán & Giao Hàng</h2>
+
+    <a href="{{ route('cart.index') }}" class="btn-back">
+        Quay lại
+    </a>
+</div>
       <div class="checkout-steps">
         <a href="{{route('cart.index')}}" class="checkout-steps__item active">
           <span class="checkout-steps__item-number">01</span>
@@ -33,6 +65,7 @@
         </a>
       </div>
       <form name="checkout-form" action="{{ route('cart.place.an.order') }}" method="POST">
+        <input type="hidden" name="address_id" id="address_id_input" value="{{ $address->id ?? '' }}">
         @csrf
         <div class="checkout-form">
           <div class="billing-info__wrapper">
@@ -49,18 +82,82 @@
                   <div class="my-account__address-list">
                     <div class="my-account__address-list-item">
                       <div class="my-account__address-item__detail">
-                        <p>{{ $address->name }}</p>
-                        <p>{{ $address->address }}</p>
-                        <p>{{ $address->landmark }}</p>
-                        <p>{{ $address->city }}, {{ $address->state }}, {{ $address->country }}</p>
-                        <p>{{ $address->zip }}</p>
-                        <br />
-                        <p>{{ $address->phone }}</p>
+                         <p><strong>Họ tên:</strong> {{ $address->name ?? '---' }}</p>
+
+                            <p><strong>Địa chỉ:</strong> 
+                                {{ $address->address ?? '---' }}
+                            </p>
+
+                            <p><strong>Khu vực:</strong> 
+                                {{ $address->locality ?? '---' }}
+                            </p>
+
+                            <p><strong>Thành phố:</strong> 
+                                {{ $address->city ?? '---' }}
+                            </p>
+
+                            @if($address->landmark)
+                                <p><strong>Ghi chú:</strong> {{ $address->landmark }}</p>
+                            @else
+                                <p><strong>Ghi chú:</strong> ---</p>
+                            @endif
+
+                            <p><strong>Mã bưu điện (ZIP):</strong> {{ $address->zip ?? '---' }}</p>
+                            
+                            <p><strong>Số điện thoại:</strong> 
+                                <span class="text-dark">{{ $address->phone ?? '---' }}</span>
+                            </p>                    
                       </div>
                     </div>
                   </div>
+                  <div class="mt-3">
+                      <button type="button"
+                          class="btn btn-outline-primary btn-sm"
+                          data-bs-toggle="modal"
+                          data-bs-target="#addressModal">
+                          Thay đổi địa chỉ
+                      </button>
+                  </div>
                 </div>
               </div>
+                          <div class="modal fade" id="addressModal" tabindex="-1">
+              <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+
+                  <div class="modal-header">
+                    <h5 class="modal-title">Chọn địa chỉ giao hàng</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                  </div>
+
+                  <div class="modal-body">
+
+                  @foreach($addresses as $item)
+                    <div class="border p-3 mb-2 rounded">
+                      <div class="form-check">
+                        <input class="form-check-input select-address"
+                              type="radio"
+                              name="selected_address"
+                              value="{{ $item->id }}"
+                              data-name="{{ $item->name }}"
+                              data-phone="{{ $item->phone }}"
+                              data-address="{{ $item->address }}"
+                              data-city="{{ $item->city }}"
+                              data-locality="{{ $item->locality }}"
+                              data-zip="{{ $item->zip }}"
+                              data-landmark="{{ $item->landmark }}">
+
+                        <label class="form-check-label w-100">
+                          <strong>{{ $item->name }}</strong> - {{ $item->phone }} <br>
+                          {{ $item->address }}, {{ $item->locality }}, {{ $item->city }}
+                        </label>
+                      </div>
+                    </div>
+                  @endforeach
+                  </div>
+
+                </div>
+              </div>
+            </div>
 
             @else
               <div class="row mt-5">
@@ -269,6 +366,11 @@
                    Thanh Toán Khi Nhận Hàng
                   </label>
                 </div>
+                @error('mode')
+                  <div class="text-danger mt-2">
+                      {{ $message }}
+                  </div>
+              @enderror
 
 
 
@@ -288,5 +390,31 @@
       </form>
     </section>
   </main>
+  <script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    const addressInput = document.getElementById('address_id_input');
+    const detailBox = document.querySelector('.my-account__address-item__detail');
+
+    document.querySelectorAll('.select-address').forEach(el => {
+        el.addEventListener('change', function () {
+
+            addressInput.value = this.value;
+
+            // preview nhưng KHÔNG đóng modal
+            detailBox.innerHTML = `
+                <p><strong>Họ tên:</strong> ${this.dataset.name}</p>
+                <p><strong>Địa chỉ:</strong> ${this.dataset.address}</p>
+                <p><strong>Khu vực:</strong> ${this.dataset.locality}</p>
+                <p><strong>Thành phố:</strong> ${this.dataset.city}</p>
+                <p><strong>Ghi chú:</strong> ${this.dataset.landmark}</p>
+                <p><strong>Mã Bưu điện (ZIP):</strong> ${this.dataset.zip}</p>
+                <p><strong>Số điện thoại:</strong> ${this.dataset.phone}</p>
+            `;
+        });
+    });
+
+});
+</script>
 
 @endsection

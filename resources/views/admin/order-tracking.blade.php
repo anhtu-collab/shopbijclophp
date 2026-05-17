@@ -79,15 +79,15 @@
                             <tr>
                                <tr>
                                 <th>STT</th>
-                                <th>Tên </th>
+                                <th>Tên Người Nhận</th>
                                 <th>Số Điện Thoại</th>
                                 <th>Tạm Tính</th>
                                 <th>Thuế</th>
                                 <th>Tổng Tiền</th>
                                 <th>Trạng Thái</th>
                                 <th>Ngày Đặt</th>
-                                <th>Số lượng</th>
-                                <th>Ngày Giao / Hủy</th>
+                                {{-- <th>Số lượng</th> --}}
+                                {{-- <th>Ngày Giao / Hủy</th> --}}
                                 <th>Hành Động</th>
                             </tr>
                         </thead>
@@ -110,8 +110,8 @@
                                     @endif
                                 </td>
                                 <td class="text-center">{{ $order->created_at->format('d/m/Y H:i') }}</td>
-                                <td class="text-center">{{ $order->orderItems->count() }}</td>
-                                <td class="text-center">
+                                {{-- <td class="text-center">{{ $order->orderItems->count() }}</td> --}}
+                                {{-- <td class="text-center">
                                     @if($order->status == 'delivered')
                                         {{ $order->delivered_date ? $order->delivered_date->format('d/m/Y H:i') : '-' }}
                                     @elseif($order->status == 'canceled')
@@ -119,7 +119,7 @@
                                     @else
                                         -
                                     @endif
-                                </td>
+                                </td> --}}
                                 <td class="text-center">
                                     @if($order->status == 'ordered')
                                     <form action="{{ route('admin.order.status.update') }}" method="POST" class="d-flex gap-1">

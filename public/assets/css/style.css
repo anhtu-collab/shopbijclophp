@@ -13817,10 +13817,14 @@ textarea.form-control-lg {
   .product-single__addtocart .qty-control {
     min-width: 7.25rem; }
     .product-single__addtocart .qty-control__number {
-      border: 2px solid #E4E4E4;
-      height: 3.75rem;
-      padding: 0 2rem;
-      min-width: 6.5rem; }
+    border: none;
+    height: 100%;
+    padding: 0;
+    min-width: unset;
+    width: 100%;
+    text-align: center;
+    flex: 1;
+}
     .product-single__addtocart .qty-control__reduce, .product-single__addtocart .qty-control__increase {
       font-size: 1rem;
       text-align: center;

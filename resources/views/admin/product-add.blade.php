@@ -24,6 +24,50 @@
     font-style: normal;
     cursor: pointer;
     font-weight: bold;
+    
+}
+.size-item-box{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    position: relative;
+}
+
+.size-label{
+    font-weight: 600;
+    background: #343a40;
+    color: #fff;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+}
+
+.size-item-box input{
+    width: 70px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 3px 6px;
+    text-align: center;
+}
+
+.btn-remove-item{
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    width: 18px;
+    height: 18px;
+    background: red;
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 12px;
+    cursor: pointer;
 }
 </style>
 <div class="main-content-inner">
@@ -176,14 +220,32 @@
                         </div>
                     </fieldset>
                 </div>
-                <div class="mb-3">
-                     <div class="body-title mb-10">Size <span class="tf-color-1">*</span></div>
-                    <input type="text" id="sizeInput" class="form-control" placeholder="Nhập size cho sản phẩm">
-                
-                    <div id="sizeList" class="mt-2 d-flex flex-wrap gap-2"></div>
-                
-                    <input type="hidden" name="sizes" id="sizes">
+                <div class="mb-4">
+                <div class="body-title mb-2 fw-bold">
+                    Kích thước & Số lượng <span class="text-danger">*</span>
                 </div>
+
+                <div class="d-flex gap-2 mb-3">
+                    <!-- size -->
+                    <input type="text" id="sizeInput" class="form-control"
+                        placeholder="Nhập size (S, M, L...)">
+
+                    <!-- stock -->
+                    <input type="number" id="stockInput" class="form-control"
+                        placeholder="Số lượng" min="1" style="max-width:120px">
+
+                    <!-- add button -->
+                    <button type="button" class="btn btn-primary text-nowrap" onclick="addSize()">
+                        Thêm
+                    </button>
+                </div>
+
+                <!-- list hiển thị các size đã thêm -->
+                <div id="sizeList" class="d-flex flex-wrap gap-2 mb-2"></div>
+
+                <!-- hidden input chứa JSON để gửi lên backend -->
+                <input type="hidden" name="sizes" id="sizes" value="[]">
+            </div>
                     <div class="mb-3">
                          <div class="body-title mb-10">Màu sắc <span class="tf-color-1">*</span></div>
                         <input type="text" id="colorInput" class="form-control" placeholder="Nhập màu cho sản phẩm">
@@ -242,31 +304,72 @@
     let sizes = [];
 let colors = [];
 
-$("#sizeInput").on("keypress", function(e){
+// $("#sizeInput").on("keypress", function(e){
+//     if(e.which === 13){
+//         e.preventDefault();
+
+//         let val = $(this).val().trim();
+//         if(val && !sizes.includes(val)){
+//             sizes.push(val);
+//             renderSizes();
+//         }
+//         $(this).val('');
+//     }
+// });
+$("#stockInput").on("keypress", function(e){
     if(e.which === 13){
         e.preventDefault();
-
-        let val = $(this).val().trim();
-        if(val && !sizes.includes(val)){
-            sizes.push(val);
-            renderSizes();
-        }
-        $(this).val('');
+        addSize();
     }
 });
 
-function renderSizes(){
+function addSize() {
+    let size = $("#sizeInput").val().trim().toUpperCase();
+    let quantity = $("#stockInput").val().trim();
+
+    if (size && quantity) {
+        // Kiểm tra nếu size đã tồn tại thì tăng số lượng thay vì thêm mới (tùy chọn)
+        let existing = sizes.find(s => s.size === size);
+        if (existing) {
+            existing.quantity = parseInt(existing.quantity) + parseInt(quantity);
+        } else {
+            sizes.push({
+                size: size,
+                quantity: quantity
+            });
+        }
+
+        renderSizes();
+        $("#sizeInput").val('').focus();
+        $("#stockInput").val('');
+    }
+}
+
+function renderSizes() {
     $("#sizeList").html('');
 
     sizes.forEach((s, index) => {
         $("#sizeList").append(`
-            <span class="tag-chip tag-size">
-                ${s}
-                <i onclick="removeSize(${index})">×</i>
-            </span>
+            <div class="size-item-box">
+                <span class="btn-remove-item" onclick="removeSize(${index})">×</span>
+                <span class="size-label">${s.size}</span>
+                <input type="number" 
+                       value="${s.quantity}" 
+                       min="1" 
+                       onchange="updateQuantity(${index}, this.value)"
+                       placeholder="SL">
+            </div>
         `);
     });
 
+    // Cập nhật input hidden để gửi backend
+    $("#sizes").val(JSON.stringify(sizes));
+}
+function updateQuantity(index, newQty) {
+    if (newQty < 1) newQty = 1;
+    sizes[index].quantity = newQty;
+    
+    // Cập nhật lại input hidden mà không cần render lại giao diện (để tránh mất focus)
     $("#sizes").val(JSON.stringify(sizes));
 }
 

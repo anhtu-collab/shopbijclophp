@@ -1,5 +1,54 @@
 @extends('layouts.admin')
 @section('content')
+<style>
+.tag-chip{
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+}
+
+.tag-size{
+    background: #343a40;
+}
+
+.tag-color{
+    background: #0d6efd;
+}
+
+.tag-chip i{
+    font-style: normal;
+    cursor: pointer;
+    font-weight: bold;
+}
+#galpreview {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 10px;
+    width: 100%;
+}
+
+#galpreview .item {
+    width: 120px !important;
+    height: 120px;
+    overflow: hidden;
+}
+
+#galpreview .item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* 👇 QUAN TRỌNG NHẤT */
+.upload-image {
+    overflow: visible !important;
+}
+</style>
 <div class="main-content-inner">
     <div class="main-content-wrap">
         <div class="flex items-center mb-24 justify-between gap20 flex-wrap">
@@ -128,16 +177,28 @@
                         <input type="text" name="quantity" value="{{$product->quantity}}">
                     </fieldset>
                                  </div>
-                                  <fieldset class="name">
-                         <div class="body-title mb-10">Size<span class="tf-color-1">*</span></div>
-                         <input type="text" name="sizes" class="form-control" value="{{ implode(', ', json_decode($product->sizes, true) ?? []) }}">
-                     </fieldset>
-                 
-                     <fieldset class="name">
-                         <div class="body-title mb-10">Màu Sắc<span class="tf-color-1">*</span></div>
-                         <input type="text" name="colors" class="form-control" value="{{ implode(', ', json_decode($product->colors, true) ?? []) }}">
-                     </fieldset>
-                        
+                                <div class="mb-3">
+                                    <div class="body-title mb-10">Size & Số lượng</div>
+
+                                    <div class="d-flex gap-2 mb-2">
+                                        <input type="text" id="sizeInput" class="form-control" placeholder="Size (S, M, L)">
+                                        <input type="number" id="qtyInput" class="form-control" placeholder="SL" style="max-width:120px">
+                                        <button type="button" class="btn btn-primary" onclick="addSize()">Thêm</button>
+                                    </div>
+
+                                    <div id="sizeList" class="d-flex flex-wrap gap-2"></div>
+
+                                    <input type="hidden" name="sizes" id="sizes">
+                                </div>
+
+                        <div class="mb-3">
+                            <div class="body-title mb-10">Màu sắc</div>
+                            <input type="text" id="colorInput" class="form-control" placeholder="Nhập màu rồi Enter">
+
+                            <div id="colorList" class="mt-2 d-flex flex-wrap gap-2"></div>
+
+                            <input type="hidden" name="colors" id="colors">
+                        </div>
 
                 <div class="cols gap22">
                     <fieldset class="name">
@@ -171,7 +232,7 @@
 @push('scripts')
 <script>
     $(function(){
-
+        // Xem trước ảnh đại diện chính khi thay đổi file
         $("#myFile").on("change", function(e){
             const [file] = this.files;
             if(file){
@@ -180,42 +241,187 @@
             }
         });
 
-
+        // Xem trước danh sách bộ sưu tập ảnh (Gallery)
         $("#gFile").on("change", function(e){
             const gphotos = this.files;
-            $("#galpreview").html(""); 
+            // $("#galpreview").html(""); 
             $.each(gphotos, function(key, val){
                 $("#galpreview").append(`<div class="item gitems"><img src="${URL.createObjectURL(val)}"></div>`);
             });
         });
 
+        // Tự động cập nhật Slug theo Tên sản phẩm
         $("input[name='name']").on("change", function(){
             $("input[name='slug']").val(StringToSlug($(this).val()));
         });
+        
     });
 
-   function StringToSlug(str) {
-    str = str.toLowerCase();
+    // Hàm chuyển đổi tiếng Việt có dấu thành chuỗi Slug không dấu
+    function StringToSlug(str) {
+        str = str.toLowerCase();
 
-    // bỏ dấu tiếng Việt
-    str = str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    str = str.replace(/đ/g, "d");
+        // bỏ dấu tiếng Việt
+        str = str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        str = str.replace(/đ/g, "d");
 
-    // xoá ký tự đặc biệt
-    str = str.replace(/[^a-z0-9\s-]/g, "");
+        // xoá ký tự đặc biệt
+        str = str.replace(/[^a-z0-9\s-]/g, "");
 
-    // thay khoảng trắng thành dấu -
-    str = str.replace(/\s+/g, "-");
+        // thay khoảng trắng thành dấu -
+        str = str.replace(/\s+/g, "-");
 
-    // xoá nhiều dấu - liên tiếp
-    str = str.replace(/-+/g, "-");
+        // xoá nhiều dấu - liên tiếp
+        str = str.replace(/-+/g, "-");
 
-    return str.trim("-");
-}
-$('.price-input').on('input', function () {
-    let value = $(this).val().replace(/\D/g, '');
-    value = new Intl.NumberFormat('vi-VN').format(value);
-    $(this).val(value);
-});
+        return str.trim("-");
+    }
+
+    // Tự động định dạng dấu chấm phân tách phần nghìn cho giá tiền
+    $('.price-input').on('input', function () {
+        let value = $(this).val().replace(/\D/g, ''); // chỉ lấy số
+        value = new Intl.NumberFormat('vi-VN').format(value);
+        $(this).val(value);
+    });
+
+    // =======================================================
+    // 1. XỬ LÝ BIẾN THỂ SIZE & SỐ LƯỢNG (ĐỒNG BỘ TỪ BẢNG VARIANTS)
+    // =======================================================
+    
+    // Nạp dữ liệu Size & Số lượng cũ của sản phẩm từ mối quan hệ bảng ProductVariant
+  let sizes = @json($oldSizes ?? []);
+
+    // Sự kiện nhấn Enter tại ô nhập số lượng kho để kích hoạt thêm nhanh
+    $("#qtyInput").on("keypress", function(e){
+        if(e.which === 13){
+            e.preventDefault();
+            addSize();
+        }
+    });
+    
+
+    // Hàm thêm mới hoặc cộng dồn số lượng Size
+    function addSize() {
+        let size = $("#sizeInput").val().trim().toUpperCase();
+        let quantity = $("#qtyInput").val().trim();
+
+        if (size && quantity) {
+            let qtyInt = parseInt(quantity);
+            if (isNaN(qtyInt) || qtyInt <= 0) {
+                alert("Số lượng phải là số nguyên lớn hơn 0");
+                return;
+            }
+
+            // Nếu size đã tồn tại trong danh sách, tiến hành cộng dồn số lượng
+            let existing = sizes.find(s => s.size === size);
+            if (existing) {
+                existing.quantity = parseInt(existing.quantity) + qtyInt;
+            } else {
+                // Nếu chưa có, đẩy Object mới vào mảng
+                sizes.push({
+                    size: size,
+                    quantity: qtyInt
+                });
+            }
+
+            renderSizes();
+            $("#sizeInput").val('').focus();
+            $("#stockInput").val('');
+        }
+    }
+
+    // Hàm hiển thị danh sách Size kèm ô chỉnh sửa số lượng trực quan
+    function renderSizes() {
+        $("#sizeList").html('');
+
+        sizes.forEach((s, index) => {
+            $("#sizeList").append(`
+                <div class="size-item-box">
+                    <span class="btn-remove-item" onclick="removeSize(${index})">×</span>
+                    <span class="size-label">${s.size}</span>
+                    <input type="number" 
+                           value="${s.quantity}" 
+                           min="1" 
+                           onchange="updateQuantity(${index}, this.value)"
+                           placeholder="SL">
+                </div>
+            `);
+        });
+
+        // Đồng bộ mảng Object thành chuỗi JSON nạp vào input ẩn gửi lên Backend
+        $("#sizes").val(JSON.stringify(sizes));
+    }
+
+    // Hàm cập nhật số lượng trực tiếp khi người dùng thay đổi giá trị trong ô input của box
+    function updateQuantity(index, newQty) {
+        let qtyInt = parseInt(newQty);
+        if (isNaN(qtyInt) || qtyInt < 1) qtyInt = 1;
+        
+        sizes[index].quantity = qtyInt;
+        
+        // Cập nhật giá trị chuỗi JSON mà không cần render lại giao diện (để giữ con trỏ focus của người dùng)
+        $("#sizes").val(JSON.stringify(sizes));
+    }
+
+    // Hàm xóa Size khỏi danh sách
+    function removeSize(index){
+        sizes.splice(index, 1);
+        renderSizes();
+    }
+
+    // =======================================================
+    // 2. XỬ LÝ BIẾN THỂ MÀU SẮC (COLOR)
+    // =======================================================
+    
+    // Nạp danh sách tên màu cũ của sản phẩm từ bảng ProductVariant
+   let colors = @json($oldColors ?? []);
+
+
+    $(document).ready(function(){
+        renderSizes();
+        renderColors();
+    });
+
+    // Sự kiện nhấn Enter tại ô Màu sắc để thêm nhanh
+    $("#colorInput").on("keypress", function(e){
+        if(e.which === 13){
+            e.preventDefault();
+
+            let val = $(this).val().trim();
+            // Chuẩn hóa chữ cái đầu viết hoa cho màu sắc đẹp hơn (ví dụ: trắng -> Trắng)
+            if (val) {
+                val = val.charAt(0).toUpperCase() + val.slice(1);
+            }
+
+            if(val && !colors.includes(val)){
+                colors.push(val);
+                renderColors();
+            }
+            $(this).val('');
+        }
+    });
+
+    // Hàm hiển thị danh sách Màu sắc dạng Tag-chip
+    function renderColors(){
+        $("#colorList").html('');
+
+        colors.forEach((c, index) => {
+            $("#colorList").append(`
+                <span class="tag-chip tag-color">
+                    ${c}
+                    <i onclick="removeColor(${index})">×</i>
+                </span>
+            `);
+        });
+
+        // Nạp chuỗi JSON mảng màu vào input ẩn gửi lên Backend
+        $("#colors").val(JSON.stringify(colors));
+    }
+
+    // Hàm xóa Màu sắc khỏi danh sách
+    function removeColor(index){
+        colors.splice(index, 1);
+        renderColors();
+    }
 </script>
 @endpush

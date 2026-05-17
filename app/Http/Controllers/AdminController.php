@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Blog;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Contact;
@@ -10,14 +11,19 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\ProductVariant;
+use App\Models\Review;
 use App\Models\Slide;
 use App\Models\Transaction;
+use App\Models\Address;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\File;
 use Intervention\Image\Laravel\Facades\Image;
+ 
+use App\Models\User;
+use Illuminate\Support\Facades\Hash;
 
 class AdminController extends Controller
 {
@@ -279,11 +285,8 @@ return view('admin.index', compact(
         $product->SKU = $request->SKU;
         $product->stock_status = $request->stock_status;
         $product->featured = $request->featured;
-        $product->quantity = $request->quantity;
         $product->category_id = $request->category_id;
         $product->brand_id = $request->brand_id;
-        $product->sizes = json_encode(array_values(array_unique(json_decode($request->sizes, true) ?? [])));
-        $product->colors = json_encode(array_values(array_unique(json_decode($request->colors, true) ?? [])));
         $current_timestamp = Carbon::now()->timestamp;
 
         // Xử lý ảnh chính (Main Image)
@@ -316,39 +319,135 @@ return view('admin.index', compact(
         }
         $product->images = $gallery_images;
         $product->save();
+  // 1. Giải mã chuỗi JSON từ Frontend gửi lên thành mảng PHP
+$inputSizes  = json_decode($request->input('sizes'), true) ?? [];   
+$inputColors = json_decode($request->input('colors'), true) ?? [];  
+
+// 2. Chuyển đổi tên Size -> Lấy Size ID
+$sizeIds = [];
+foreach ($inputSizes as $sItem) {
+    $sizeName = trim(strtoupper($sItem['size'])); 
+    if (!empty($sizeName)) {
+        // Tìm size theo tên, nếu không có sẽ tự động tạo mới
+        $sizeModel = \App\Models\Size::firstOrCreate(['name' => $sizeName]); 
+        $sizeIds[] = [
+            'id'       => $sizeModel->id,
+            'quantity' => intval($sItem['quantity']) ?? 0
+        ];
+    }
+}
+
+// 3. Chuyển đổi tên Màu -> Lấy Color ID
+$colorIds = [];
+foreach ($inputColors as $colorName) {
+    $colorName = trim(mb_convert_case($colorName, MB_CASE_TITLE, "UTF-8")); 
+    if (!empty($colorName)) {
+        // Tìm hoặc tạo mới màu trong bảng colors
+        $colorModel = \App\Models\Color::firstOrCreate(['name' => $colorName]);
+        $colorIds[] = $colorModel->id;
+    }
+}
+
+// 4. Tiến hành lặp và lưu vào bảng product_variants
+if (count($sizeIds) > 0 && count($colorIds) > 0) {
+    foreach ($sizeIds as $sIdData) {
+        foreach ($colorIds as $cId) {
+            \App\Models\ProductVariant::create([
+                'product_id' => $product->id,
+                'size_id'    => $sIdData['id'],       
+                'color_id'   => $cId,                 
+                'quantity'   => $sIdData['quantity'],
+            ]);
+        }
+    }
+} elseif (count($sizeIds) > 0) {
+    foreach ($sizeIds as $sIdData) {
+        \App\Models\ProductVariant::create([
+            'product_id' => $product->id,
+            'size_id'    => $sIdData['id'],
+            'color_id'   => null,
+            'quantity'   => $sIdData['quantity'],
+        ]);
+    }
+} elseif (count($colorIds) > 0) {
+    foreach ($colorIds as $cId) {
+        \App\Models\ProductVariant::create([
+            'product_id' => $product->id,
+            'size_id'    => null,
+            'color_id'   => $cId,
+            'quantity'   => intval($request->input('quantity')) ?? 0,
+        ]);
+    }
+}
 
         return redirect()->route('admin.products')->with('status', 'Đã Thêm Thành Công!');
     }
 
-    public function GenerateProductThumbnailsImage($image, $imageName)
-    {
-        $destinationPathThumbnail = public_path('uploads/products/thumbnails');
-        $destinationPath = public_path('uploads/products');
+    // public function GenerateProductThumbnailsImage($image, $imageName)
+    // {
+    //     $destinationPathThumbnail = public_path('uploads/products/thumbnails');
+    //     $destinationPath = public_path('uploads/products');
         
-        // Tạo thư mục nếu chưa có
-        if (!File::exists($destinationPathThumbnail)) {
-            File::makeDirectory($destinationPathThumbnail, 0755, true);
-        }
+    //     // Tạo thư mục nếu chưa có
+    //     if (!File::exists($destinationPathThumbnail)) {
+    //         File::makeDirectory($destinationPathThumbnail, 0755, true);
+    //     }
 
-        $img = Image::read($image->path());
+    //     $img = Image::read($image->path());
 
-        // Ảnh gốc được resize theo kích thước chuẩn e-commerce (540x689)
-        $img->cover(540, 689, "top");
-        $img->save($destinationPath . '/' . $imageName);
+    //     // Ảnh gốc được resize theo kích thước chuẩn e-commerce (540x689)
+    //     $img->cover(540, 689, "top");
+    //     $img->save($destinationPath . '/' . $imageName);
 
-        // Ảnh Thumbnail nhỏ (104x104)
-        $img->resize(104, 104, function($constraint){
-            $constraint->aspectRatio();
-        })->save($destinationPathThumbnail . '/' . $imageName);
-    }
+    //     // Ảnh Thumbnail nhỏ (104x104)
+    //     $img->resize(104, 104, function($constraint){
+    //         $constraint->aspectRatio();
+    //     })->save($destinationPathThumbnail . '/' . $imageName);
+    // }
     // Thêm vào AdminController.php
+        public function GenerateProductThumbnailsImage($image, $imageName)
+{
+    $destinationPathThumbnail = public_path('uploads/products/thumbnails');
+    $destinationPath = public_path('uploads/products');
+
+    if (!File::exists($destinationPathThumbnail)) {
+        File::makeDirectory($destinationPathThumbnail, 0755, true);
+    }
+
+    $img = Image::read($image->path());
+
+    // 🔥 Ảnh gốc
+    $imgOriginal = clone $img;
+    $imgOriginal->cover(540, 689, "top")
+                ->save($destinationPath . '/' . $imageName);
+
+    // 🔥 Thumbnail
+    $imgThumb = clone $img;
+    $imgThumb->cover(104, 104, "top")
+             ->save($destinationPathThumbnail . '/' . $imageName);
+}
 
 public function product_edit($id)
 {
-    $product = Product::find($id);
+    // Sử dụng with() để nạp sẵn liên kết variants, tránh lỗi chậm trang
+    $product = Product::with(['variants.size', 'variants.color'])->findOrFail($id);
     $categories = Category::select('id', 'name')->orderBy('name')->get();
     $brands = Brand::select('id', 'name')->orderBy('name')->get();
-    return view('admin.product-edit', compact('product', 'categories', 'brands'));
+
+    // Gom dữ liệu Size cũ thành mảng chuẩn
+    $oldSizes = $product->variants->whereNotNull('size_id')->map(function($v) {
+        return [
+            'size' => $v->size ? $v->size->name : 'N/A',
+            'quantity' => intval($v->quantity)
+        ];
+    })->unique('size')->values()->toArray();
+
+    // Gom dữ liệu Màu sắc cũ thành mảng chuẩn (nếu có dùng)
+    $oldColors = $product->variants->whereNotNull('color_id')->map(function($v) {
+        return $v->color ? $v->color->name : 'N/A';
+    })->unique()->values()->toArray();
+
+    return view('admin.product-edit', compact('product', 'categories', 'brands', 'oldSizes', 'oldColors'));
 }
 
 public function product_update(Request $request)
@@ -382,11 +481,8 @@ public function product_update(Request $request)
     $product->SKU = $request->SKU;
     $product->stock_status = $request->stock_status;
     $product->featured = $request->featured;
-    $product->quantity = $request->quantity;
     $product->category_id = $request->category_id;
     $product->brand_id = $request->brand_id;
-    $product->sizes = json_encode(array_values(array_unique(json_decode($request->sizes, true) ?? [])));
-    $product->colors = json_encode( array_values(array_unique(json_decode($request->colors, true) ?? [])));
 
     $current_timestamp = Carbon::now()->timestamp;
 
@@ -432,6 +528,24 @@ public function product_update(Request $request)
     }
 
     $product->save();
+    // decode JSON
+$inputSizes = json_decode($request->sizes, true) ?? [];
+
+// xoá hết variant cũ
+$product->variants()->delete();
+
+// thêm lại
+foreach ($inputSizes as $sItem) {
+    $size = \App\Models\Size::firstOrCreate([
+        'name' => strtoupper($sItem['size'])
+    ]);
+
+    \App\Models\ProductVariant::create([
+        'product_id' => $product->id,
+        'size_id'    => $size->id,
+        'quantity'   => $sItem['quantity']
+    ]);
+}
     return redirect()->route('admin.products')->with('status', 'Đã Cập Nhật Thành Công!');
 }
 // Thêm vào AdminController.php
@@ -470,31 +584,19 @@ public function variant_store(Request $request)
 {
     $request->validate([
         'product_id' => 'required',
-        'color' => 'required',
-        'size' => 'required',
-        'stock' => 'required|numeric',
-        'price' => 'required|numeric',
+        'size_id' => 'required',
+        'color_id' => 'required',
+        'quantity' => 'required|numeric',
     ]);
-
-    // check trùng
-    $exists = ProductVariant::where('product_id', $request->product_id)
-        ->where('color', $request->color)
-        ->where('size', $request->size)
-        ->first();
-
-    if ($exists) {
-        return back()->with('error', 'Biến thể đã tồn tại!');
-    }
 
     ProductVariant::create([
         'product_id' => $request->product_id,
-        'color' => $request->color,
-        'size' => $request->size,
-        'stock' => $request->stock,
-        'price' => $request->price,
+        'size_id'    => $request->size_id,
+        'color_id'   => $request->color_id,
+        'quantity'   => $request->quantity,
     ]);
 
-    return back()->with('status', 'Thêm màu + size thành công!');
+    return back()->with('status', 'OK');
 }
 public function coupons()
 {
@@ -529,6 +631,7 @@ $coupon->value = $value;
     $coupon->cart_value = $request->cart_value;
     $coupon->expiry_date = $request->expiry_date;
     $coupon->save();
+    
     return redirect()->route('admin.coupons')->with('status', 'Đã Thêm Thành Công!');
 }
 
@@ -610,45 +713,103 @@ public function order_details($order_id) {
                     ->orderBy('id')
                     ->paginate(12);
     $transaction = Transaction::where('order_id', $order_id)->first();
+    $addresses = Address::where('user_id', $order->user_id)->get();
     
-    return view('admin.order-details', compact('order', 'orderItems', 'transaction'));
+    return view('admin.order-details', compact('order', 'orderItems', 'transaction','addresses'));
 }
 // app/Http/Controllers/AdminController.php
 
 public function update_order_status(Request $request)
 {
     $order = Order::find($request->order_id);
-    $order->status = $request->order_status;
 
-    if ($request->order_status == 'delivered') 
-    {
+    if (!$order) {
+        return back()->with('error', 'Không tìm thấy đơn hàng!');
+    }
+
+    $oldStatus = $order->status;
+    $newStatus = $request->order_status;
+
+    $order->status = $newStatus;
+
+    // =========================
+    // HANDLE DATE
+    // =========================
+    if ($newStatus == 'delivered') {
         $order->delivered_date = Carbon::now();
-    } 
-    elseif ($request->order_status == 'canceled') 
-    {
+    } elseif ($newStatus == 'canceled') {
         $order->canceled_date = Carbon::now();
     }
+
+    // =========================
+    // STOCK HANDLING
+    // =========================
+    $orderItems = OrderItem::where('order_id', $order->id)->get();
+
+    // 🔥 HOÀN KHO nếu bị hủy
+                if ($newStatus == 'canceled' && $oldStatus != 'canceled') {
+
+                    foreach ($orderItems as $item) {
+                        $product = Product::find($item->product_id);
+            $variant = ProductVariant::where('product_id', $item->product_id)
+               ->where('size_id', $item->size_id)
+               ->where('color_id', $item->color_id)
+                ->first();
+
+            if ($variant) {
+                $variant->quantity += $item->quantity;
+                $variant->save();
+            }
+        }
+    }
+
     $order->save();
 
-    $transaction = Transaction::where('order_id', $request->order_id)->first();
+    // =========================
+    // TRANSACTION
+    // =========================
+    $transaction = Transaction::where('order_id', $order->id)->first();
 
     if ($transaction) {
-        if ($request->order_status == 'delivered') {
-            $transaction->status = 'approved';
-        } 
-        elseif ($request->order_status == 'canceled') {
-            $transaction->status = 'declined'; // 👈 QUAN TRỌNG
-        }
-        $transaction->save();
-        session(['last_updated_order_id' => $order->id]);
 
-    }
-    return back()->with('status', 'Cập Nhật Thành Công!'); 
+        // if ($newStatus == 'delivered') {
+        //     $transaction->status = 'approved';
+        // } 
+        // elseif ($newStatus == 'canceled') {
+        //     $transaction->status = 'declined';
+        // }
+        if ($newStatus == 'delivered') {
+    $transaction->status = 'success';
+} 
+elseif ($newStatus == 'canceled') {
+    $transaction->status = 'failed';
 }
+
+        $transaction->save();
+    }
+
+    session(['last_updated_order_id' => $order->id]);
+
+    return back()->with('status', 'Cập Nhật Thành Công!');
+}
+
 public function order_invoice($order_id)
 {
     $order = Order::with('orderItems.product')->findOrFail($order_id);
-    return view('admin.invoice', compact('order'));
+    $transaction = Transaction::where('order_id', $order->id)->first();
+
+    $isPaid = false;
+
+    if ($transaction) {
+        if ($transaction->mode == 'vnpay' && $transaction->status == 'approved') {
+            $isPaid = true;
+        }
+
+        if ($transaction->mode == 'cod' && $transaction->status == 'approved') {
+            $isPaid = true;
+        }
+    }
+    return view('admin.invoice', compact('order', 'transaction', 'isPaid'));
 }
 public function slides() {
     $slides = Slide::orderBy('id', 'DESC')->paginate(10);
@@ -764,4 +925,322 @@ public function search(Request $request)
 
     return response()->json($results);
 }
+ public function users() {
+        $users = User::orderBy('id', 'DESC')->paginate(10);
+        return view('admin.users', compact('users'));
+    }
+
+    // FORM ADD
+public function users_add()
+{
+    return view('admin.users-add');
 }
+
+public function users_store(Request $request)
+{
+    $request->validate([
+        'name'     => 'required|string|max:255',
+        'email'    => 'required|email|unique:users,email',
+        'mobile'   => 'nullable|string|max:20',
+        'password' => 'required|min:6',
+        'utype'    => 'required|in:ADM,USR',
+    ]);
+
+    User::create([
+        'name'     => $request->name,
+        'email'    => $request->email,
+        'mobile'   => $request->mobile,
+        'password' => Hash::make($request->password),
+        'utype'    => $request->utype,
+    ]);
+
+    return redirect()->route('admin.users')
+                     ->with('status', 'Thêm người dùng thành công!');
+}
+
+
+// STORE
+public function user_store(Request $request) {
+    $request->validate([
+        'name' => 'required',
+        'email' => 'required|email|unique:users,email',
+        'password' => 'required|min:6',
+        'utype' => 'required',
+        
+    ]);
+
+    $user = new User();
+    $user->name = $request->name;
+    $user->email = $request->email;
+    $user->password = Hash::make($request->password);
+    $user->utype = $request->utype;
+
+    
+
+    $user->save();
+
+    return redirect()->route('admin.users')->with("status", "User added successfully!");
+}
+
+// EDIT
+public function users_edit($id)
+{
+    $user = User::findOrFail($id);
+    return view('admin.users-edit', compact('user'));
+}
+
+// UPDATE
+public function users_update(Request $request)
+{
+    $request->validate([
+        'name'     => 'required|string|max:255',
+        'email'    => 'required|email|unique:users,email,'.$request->id,
+        'mobile' => 'nullable|string|max:20|unique:users,mobile,'.$request->id,
+        'password' => 'nullable|min:6',
+        'utype'    => 'required|in:ADM,USR',
+    ]);
+
+    $user = User::findOrFail($request->id);
+    $user->name   = $request->name;
+    $user->email  = $request->email;
+    $user->mobile = $request->mobile;
+    $user->utype  = $request->utype;
+
+    if ($request->filled('password')) {
+        $user->password = Hash::make($request->password);
+    }
+
+    $user->save();
+
+    return redirect()->route('admin.users')
+                     ->with('status', 'Cập nhật người dùng thành công!');
+}
+
+// public function users_store(Request $request)
+// {
+//     $request->validate([
+//         'name'     => 'required|string|max:255',
+//         'email'    => 'required|email|unique:users,email',
+//         'mobile'   => 'nullable|string|max:20|unique:users,mobile', // thêm unique
+//         'password' => 'required|min:6',
+//         'utype'    => 'required|in:ADM,USR',
+//     ]);
+
+//     User::create([
+//         'name'     => $request->name,
+//         'email'    => $request->email,
+//         'mobile'   => $request->mobile,
+//         'password' => Hash::make($request->password),
+//         'utype'    => $request->utype,
+//     ]);
+
+//     return redirect()->route('admin.users')
+//                      ->with('status', 'Thêm người dùng thành công!');
+// }
+
+// DELETE
+public function users_delete($id) {
+    $user = User::findOrFail($id);
+
+    if($user->image && File::exists(public_path('uploads/users/'.$user->image))) {
+        File::delete(public_path('uploads/users/'.$user->image));
+    }
+
+    $user->delete();
+
+    return redirect()->route('admin.users')->with("status", "Xóa thành công!");
+}
+public function user_detail($id)
+{
+    $user = User::with([
+        'addresses',
+        'orders.items.product.category',
+        'orders.items.product.brand'
+    ])->findOrFail($id);
+
+    $orders = Order::where('user_id', $id)->latest()->paginate(10);
+
+    $totalSpent = Order::where('user_id', $id)
+        ->where('status', 'delivered')
+        ->sum('total');
+
+    $totalOrders = Order::where('user_id', $id)->count();
+
+    $totalProducts = OrderItem::whereHas('order', function ($q) use ($id) {
+        $q->where('user_id', $id);
+    })->sum('quantity');
+
+    $lastOrder = Order::where('user_id', $id)->latest()->first();
+
+    $defaultAddress = $user->addresses->where('is_default', 1)->first();
+    $otherAddresses = $user->addresses->where('is_default', 0);
+
+    $avgOrderValue = $totalOrders > 0 ? $totalSpent / $totalOrders : 0;
+
+   $lastOrderDays = null;
+
+if ($lastOrder) {
+    $created = $lastOrder->created_at;
+
+    $lastOrderDays = $created->isFuture()
+        ? 0
+        : $created->diffInDays(now());
+}
+
+    $customerType = match (true) {
+        $totalSpent > 50000000 => 'VIP ',
+        $totalOrders > 100 => 'VÀNG',
+        $totalOrders > 30 => 'BẠC',
+        default => 'NEW',
+    };
+
+    return view('admin.user-detail', compact(
+        'user',
+        'orders',
+        'totalSpent',
+        'totalOrders',
+        'totalProducts',
+        'avgOrderValue',
+        'lastOrder',
+        'lastOrderDays',
+        'customerType',
+        'defaultAddress',
+        'otherAddresses'
+    ));
+}
+
+
+// Danh sách blog
+public function blogs()
+{
+    $blogs = Blog::orderBy('created_at', 'desc')->paginate(10);
+    return view('admin.blogs', compact('blogs'));
+}
+
+// Form thêm blog
+public function blog_add()
+{
+    return view('admin.blog-add');
+}
+// Lưu blog mới
+public function blog_store(Request $request)
+{
+    $request->validate([
+        'title'     => 'required|string|max:255',
+        'excerpt'   => 'nullable|string|max:500',
+        'content'   => 'required',
+        'category'  => 'nullable|string|max:100',
+        'thumbnail' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+        'status'    => 'required|in:0,1',
+    ]);
+
+    $blog = new Blog();
+    $blog->title    = $request->title;
+    $blog->slug     = Blog::generateSlug($request->title);
+    $blog->excerpt  = $request->excerpt;
+    $blog->content  = $request->content;
+    $blog->category = $request->category;
+    // $blog->author   = auth()->user()->name;
+    $blog->status   = $request->status;
+
+    if ($request->hasFile('thumbnail')) {
+        $file = time() . '.' . $request->file('thumbnail')->getClientOriginalExtension();
+        $request->file('thumbnail')->move(public_path('uploads/blogs'), $file);
+        $blog->thumbnail = $file;
+    }
+
+    $blog->save();
+
+    return redirect()->route('admin.blogs')
+                     ->with('status', 'Thêm bài viết thành công!');
+}
+
+// Form edit blog
+public function blog_edit($id)
+{
+    $blog = Blog::findOrFail($id);
+    return view('admin.blog-edit', compact('blog'));
+}
+
+// Cập nhật blog
+public function blog_update(Request $request)
+{
+    $request->validate([
+        'title'     => 'required|string|max:255',
+        'excerpt'   => 'nullable|string|max:500',
+        'content'   => 'required',
+        'category'  => 'nullable|string|max:100',
+        'thumbnail' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+        'status'    => 'required|in:0,1',
+    ]);
+
+    $blog = Blog::findOrFail($request->id);
+    $blog->title    = $request->title;
+    $blog->excerpt  = $request->excerpt;
+    // $blog->content  = $request->content;
+    $blog->category = $request->category;
+    $blog->status   = $request->status;
+
+    if ($request->hasFile('thumbnail')) {
+        if ($blog->thumbnail) {
+            @unlink(public_path('uploads/blogs/' . $blog->thumbnail));
+        }
+        $file = time() . '.' . $request->file('thumbnail')->getClientOriginalExtension();
+        $request->file('thumbnail')->move(public_path('uploads/blogs'), $file);
+        $blog->thumbnail = $file;
+    }
+
+    $blog->save();
+
+    return redirect()->route('admin.blogs')
+                     ->with('status', 'Cập nhật bài viết thành công!');
+}
+
+// Xóa blog
+public function blog_delete($id)
+{
+    $blog = Blog::findOrFail($id);
+    if ($blog->thumbnail) {
+        @unlink(public_path('uploads/blogs/' . $blog->thumbnail));
+    }
+    $blog->delete();
+
+    return redirect()->route('admin.blogs')
+                     ->with('status', 'Xóa bài viết thành công!');
+}
+
+
+        public function trades() {
+        
+            return view('admin.trades', compact('trades'));
+        }
+        public function reviews()
+    {
+        $reviews = Review::with('product')
+                    ->latest()
+                    ->paginate(10);
+
+        return view('admin.reviews', compact('reviews'));
+    }
+    public function review_update_status(Request $request, $id)
+    {
+        $review = Review::findOrFail($id);
+
+        $request->validate([
+            'status' => 'required|in:approved,rejected'
+        ]);
+
+        $review->status = $request->status;
+        $review->save();
+
+        return back()->with('status', 'Đã cập nhật review!');
+    }
+    public function review_delete($id)
+    {
+        Review::findOrFail($id)->delete();
+        return back();
+    }
+        
+
+}
+

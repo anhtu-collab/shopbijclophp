@@ -156,40 +156,72 @@
     text-align: center; 
 }
 
+.action-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+/* Nút IN */
 .btn-print {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 15px;               
-    padding: 18px 45px;       
-    background-color: #ffffff; 
-    color: #4f46e5;           
-    border: 2px solid #4f46e5;  
+    gap: 15px;
+    padding: 18px 45px;
+    background-color: #ffffff;
+    color: #4f46e5;
+    border: 2px solid #4f46e5;
     text-transform: uppercase;
     letter-spacing: 1px;
     cursor: pointer;
     transition: all 0.3s ease;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.1); 
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
 }
 
 .btn-print span.icon {
-    font-size: 28px; 
+    font-size: 28px;
 }
-
 
 .btn-print:hover {
     background-color: #4f46e5;
     color: white;
-    transform: scale(1.05); /* Nút to nhẹ lên khi rà chuột vào */
+    transform: translateY(-3px) scale(1.05);
     box-shadow: 0 15px 30px rgba(79, 70, 229, 0.4);
 }
 
+/* Nút QUAY LẠI */
+.btn-back {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px; /* thêm khoảng cách icon */
+    padding: 18px 45px;
+    background-color: #f3f4f6;
+    color: #4f46e5;
+    border: 2px solid #4f46e5;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+}
+
+.btn-back span.icon {
+    font-size: 28px;
+}
+
+.btn-back:hover {
+    background-color: #4f46e5;
+    color: white;
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.25);
+}
 </style>
 
 <main class="invoice-master">
     <div class="invoice-card">
         <div class="invoice-top-accent"></div>
-        
         <div class="invoice-body">
             {{-- Header --}}
             <div class="invoice-header">
@@ -198,11 +230,18 @@
                     <p style="font-size: 14px; color: #6b7280; margin-top: 5px;">Mã đơn hàng: #{{ $order->id }}</p>
                 </div>
                 <div class="text-right">
-                    <span class="invoice-status">Đã thanh toán</span>
-                    <p style="margin-top: 10px; font-size: 14px; color: #6b7280;">
-                        Ngày lập: {{ \Carbon\Carbon::parse($order->created_at)->format('d/m/Y') }}
-                    </p>
-                </div>
+
+    @if($isPaid)
+        <span class="invoice-status text-success"> Đã thanh toán</span>
+    @else
+        <span class="invoice-status text-danger"> Chưa thanh toán</span>
+    @endif
+
+    <p style="margin-top: 10px; font-size: 14px; color: #6b7280;">
+        Ngày lập: {{ \Carbon\Carbon::parse($order->created_at)->format('d/m/Y') }}
+    </p>
+
+</div>
             </div>
 
             {{-- Info Grid --}}
@@ -307,11 +346,15 @@
             <p class="footer-note">Nếu có bất kỳ thắc mắc nào về hoá đơn, vui lòng liên hệ hotro@brijclo.vn</p>
         </div>
     </div>
-    <div class="no-print">
+  <div class="no-print action-buttons">
     <button onclick="window.print()" class="btn-print">
-        <span class="icon">🖨️</span>
+        <span class="icon"></span>
         <span class="text">IN HOÁ ĐƠN</span>
     </button>
+
+    <a href="{{ route('admin.order.details', $order->id) }}" class="btn-back">
+        <span class="text"> QUAY LẠI</span>
+    </a>
 </div>
 </main>
 @endsection

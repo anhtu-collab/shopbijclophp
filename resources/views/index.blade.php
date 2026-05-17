@@ -17,12 +17,100 @@
   top: 0;
   left: 0;
   opacity: 0;
-  transition: opacity 0.4s ease;
+  transition: opacity 5s ease;
 }
 
 /* Hover đổi ảnh */
 .pc__img-wrapper:hover .img-hover {
   opacity: 1;
+}
+.discount-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+
+    background: linear-gradient(135deg, #ff416c, #ff4b2b);
+    color: #fff;
+
+    padding: 6px 12px;
+    font-size: 15px;
+    font-weight: 600;
+
+    border-radius: 20px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+
+    z-index: 20;
+
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+    100% { transform: scale(1); }
+}
+.pc__img-wrapper {
+    position: relative;
+    overflow: hidden;
+}
+
+.pc__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    position: absolute;
+    top: 0;
+    left: 0;
+    transition: transform 0.7s ease;
+}
+
+.main-img {
+    transform: translateX(0);
+}
+
+.hover-img {
+    transform: translateX(100%);
+}
+
+.pc__img-wrapper:hover .main-img {
+    transform: translateX(-100%);
+}
+
+.pc__img-wrapper:hover .hover-img {
+    transform: translateX(0);
+}
+.sold-out-glass {
+    position: absolute;
+    inset: 0;
+
+    backdrop-filter: blur(6px);
+    background: rgba(255, 255, 255, 0.2);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 20;
+    overflow: hidden; /* QUAN TRỌNG */
+}
+
+/* VỆT ĐEN CHÉO */
+.sold-out-glass span {
+    position: absolute;
+    top: 50%;
+    left: -30%;
+
+    width: 160%;
+    text-align: center;
+
+    background: rgba(235, 8, 8, 0.75);
+    color: #fff;
+
+    padding: 12px 0;
+    font-size: 16px;
+    font-weight: bold;
+    letter-spacing: 3px;
+
+    transform: rotate(-25deg);
 }
   </style>
  <main>
@@ -149,7 +237,7 @@
           <div
             class="col-md-6 col-lg-4 col-xl-20per d-flex align-items-center flex-column justify-content-center py-4 align-items-md-start">
             <h2>Khuyến mãi mùa hè</h2>
-            <h2 class="fw-bold">Giảm Tới 60%</h2>
+            <h2 class="fw-bold">Giảm Tới 50%</h2>
 
             <div class="position-relative d-flex align-items-center text-center pt-xxl-4 js-countdown mb-3"
               data-date="18-3-2024" data-time="06:50">
@@ -215,6 +303,12 @@
                   @foreach($sproducts as $sproduct)
                   <div class="swiper-slide product-card product-card_style3">
                     <div class="pc__img-wrapper">
+                      @if($sproduct->sale_price && $sproduct->regular_price > 0)
+                          @php
+                              $discount = round(100 - ($sproduct->sale_price / $sproduct->regular_price * 100));
+                          @endphp
+                          <span class="discount-badge">-{{$discount}}%</span>
+                      @endif
                       <a href="{{ route('shop.product.details', ['product_slug' => $sproduct->slug]) }}">
                         <img loading="lazy" src="{{ asset('uploads/products') }}/{{ $sproduct->image }}"  width="258" height="313"
                           alt="{{$sproduct->name}}" class="pc__img">
@@ -226,6 +320,14 @@
                                 class="pc__img img-hover">
                           @endif
                       </a>
+                       @if($sproduct->quantity <= 0)
+                            <div class="sold-out-glass">
+                                <span>HẾT HÀNG</span>
+                            </div>
+                        @endif
+
+
+                      
                     </div>
 
                     <div class="pc__info position-relative">
@@ -256,27 +358,27 @@
         <div class="row">
           <div class="col-md-6">
             <div class="category-banner__item border-radius-10 mb-5">
-              <img loading="lazy" class="h-auto" src="{{ asset ('assets/images/home/demo3/category_9.jpg') }}" width="690" height="665"
+              <img loading="lazy" class="h-auto" src="{{ asset ('assets/images/home/demo3/15.webp') }}" width="690" height="665"
                 alt="" />
               <div class="category-banner__item-mark">
-                Chỉ Tử 199.999 đ
+                Chỉ Tử 499.999 
               </div>
               <div class="category-banner__item-content">
                 <h3 class="mb-0">Áo Blazer</h3>
-                <a href="#" class="btn-link default-underline text-uppercase fw-medium">Mua Sắm Ngay</a>
+                <a href="{{ route('shop.index')}}" class="btn-link default-underline text-uppercase fw-medium">Mua Sắm Ngay</a>
               </div>
             </div>
           </div>
           <div class="col-md-6">
             <div class="category-banner__item border-radius-10 mb-5">
-              <img loading="lazy" class="h-auto" src="{{ asset ('assets/images/home/demo3/category_10.jpg') }}" width="690" height="665"
+              <img loading="lazy" class="h-auto" src="{{ asset ('assets/images/home/demo3/16.png') }}" width="690" height="665"
                 alt="" />
               <div class="category-banner__item-mark">
-                Chỉ Tử 199.999 đ
+                Chỉ Tử 299.999
               </div>
               <div class="category-banner__item-content">
-                <h3 class="mb-0">Đồ Thể Thao</h3>
-                <a href="#" class="btn-link default-underline text-uppercase fw-medium">Mua Sắm Ngay</a>
+                <h3 class="mb-0">Kính Thời Trang</h3>
+                <a href="{{ route('shop.index')}}" class="btn-link default-underline text-uppercase fw-medium">Mua Sắm Ngay</a>
               </div>
             </div>
           </div>
@@ -292,12 +394,50 @@
           @foreach ($fproducts as $fproduct)
     <div class="col-6 col-md-4 col-lg-3">
         <div class="product-card product-card_style3 mb-3 mb-md-4 mb-xxl-5">
-            <div class="pc__img-wrapper">
-                <a href="{{ route('shop.product.details', ['product_slug' => $fproduct->slug]) }}">
-                    <img loading="lazy" src="{{ asset('uploads/products') }}/{{ $fproduct->image }}" 
-                         width="330" height="400" alt="{{ $fproduct->name }}" class="pc__img">
-                </a>
-            </div>
+           <div class="pc__img-wrapper">
+
+    {{-- Badge giảm giá --}}
+    @if($fproduct->sale_price && $fproduct->regular_price > 0)
+        @php
+            $discount = round(100 - ($fproduct->sale_price / $fproduct->regular_price * 100));
+        @endphp
+        <span class="discount-badge">-{{$discount}}%</span>
+    @endif
+
+    @php
+        $images = [];
+
+        if(!empty($fproduct->images)){
+            $images = json_decode($fproduct->images, true);
+
+            if(!$images){
+                $images = explode(',', $fproduct->images);
+            }
+        }
+    @endphp
+
+    <a href="{{ route('shop.product.details', ['product_slug' => $fproduct->slug]) }}">
+        
+        {{-- ảnh chính --}}
+        <img 
+            src="{{ asset('uploads/products/' . $fproduct->image) }}" 
+            class="pc__img main-img">
+
+        {{-- ảnh phụ --}}
+        @if(!empty($images) && !empty($images[0]))
+            <img 
+                src="{{ asset('uploads/products/' . trim($images[0])) }}"
+                class="pc__img hover-img">
+        @endif
+
+    </a>
+    @if($fproduct->quantity <= 0)
+    <div class="sold-out-glass">
+        <span>HẾT HÀNG</span>
+    </div>
+@endif
+
+</div>
 
             <div class="pc__info position-relative">
                 <h6 class="pc__title">
@@ -321,13 +461,19 @@
 @endforeach
 
         <div class="text-center mt-2">
-          <a class="btn-link btn-link_lg default-underline text-uppercase fw-medium" href="#">TẢI THÊM</a>
+            <a class="btn-link btn-link_lg default-underline text-uppercase fw-medium"
+              href="{{ route('shop.index') }}">
+                TẢI THÊM
+            </a>
         </div>
+        
       </section>
     </div>
 
     <div class="mb-3 mb-xl-5 pt-1 pb-4"></div>
 
   </main>
+  <script> 
+  </script>
     
 @endsection

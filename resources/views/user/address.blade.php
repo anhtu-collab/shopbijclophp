@@ -1,9 +1,38 @@
 @extends('layouts.app')
 @section('content')
+<style>
+    .cart-header{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 40px;
+}
+
+.btn-back{
+    padding: 10px 40px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    text-decoration: none;
+    color: #333;
+    transition: 0.2s;
+    font-weight: 500;
+}
+
+.btn-back:hover{
+    background: #f3f3f3;
+    transform: translateX(-2px);
+}
+    </style>
  <main class="pt-90">
     <div class="mb-4 pb-4"></div>
     <section class="my-account container">
-      <h2 class="page-title">Địa Chỉ</h2>
+               <div class="cart-header">
+     <h2 class="page-title">Địa Chỉ</h2>
+
+    <a href="{{route('user.index')}}" class="btn-back">
+        Quay lại
+    </a>
+</div>
       <div class="row">
         <div class="col-lg-3">
           <ul class="account-nav">
@@ -37,11 +66,18 @@
                 
             </div>
         <div class="my-account__address-list row">
-            <h5>Địa chỉ giao hàng</h5>
             </div>
              @foreach($addresses as $address)
              
                 <div class="my-account__address-item__detail">
+                   <div class="d-flex justify-content-between align-items-center">
+                          <h5 class="mb-0">Địa chỉ giao hàng</h5>
+
+                          <a href="{{ route('user.address.edit', $address->id) }}" 
+                            class="btn btn-warning btn-sm">
+                            Sửa địa chỉ
+                          </a>
+                      </div>
                      <div>
                         <p><strong>Họ tên:</strong> {{ $address->name ?? '---' }}</p>
     
@@ -70,12 +106,6 @@
                             <p><strong>Số điện thoại:</strong> 
                                 <span class="text-dark">{{ $address->phone ?? '---' }}</span>
                             </p>
-                             <div>
-              <a href="{{ route('user.address.edit', $address->id) }}" 
-                   class="btn btn-warning btn-sm mt-2">
-                   Sửa thông tin
-                </a>
-            </div>
                     </div>
                 </div>
               </div>

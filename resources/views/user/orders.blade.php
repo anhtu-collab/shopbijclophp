@@ -31,11 +31,38 @@
       background-color: #f5d700 !important;
       color: #000;
     }
+    .cart-header{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 40px;
+}
+
+.btn-back{
+    padding: 10px 40px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    text-decoration: none;
+    color: #333;
+    transition: 0.2s;
+    font-weight: 500;
+}
+
+.btn-back:hover{
+    background: #f3f3f3;
+    transform: translateX(-2px);
+}
     </style>
     <main class="pt-90" style="padding-top: 0px;">
     <div class="mb-4 pb-4"></div>
     <section class="my-account container">
-        <h2 class="page-title">Đơn hàng</h2>
+          <div class="cart-header">
+     <h2 class="page-title">Đơn hàng</h2>
+
+    <a href="{{route('user.index')}}" class="btn-back">
+        Quay lại
+    </a>
+</div>
         <div class="row">
             <div class="col-lg-2">
                  @include('user.account-nav')
@@ -54,7 +81,7 @@
                                     <th class="text-center">Tổng tiền</th>
                                     <th class="text-center">Trạng thái</th>
                                     <th class="text-center">Ngày đặt hàng</th>
-                                    <th class="text-center">Số lượng</th>
+                                    {{-- <th class="text-center">Số lượng</th> --}}
                                     <th class="text-center">Ngày giao hàng</th>
                                     <th></th>
                                 </tr>
@@ -62,7 +89,7 @@
                             <tbody>
                                 @foreach ($orders as $order)
                                 <tr>
-                                 <td class="text-center">{{ $order->id }}</td>
+                                 <td class="text-center">{{ ($orders->currentPage() - 1) * $orders->perPage() + $loop->iteration }}</td>
                                  <td class="text-center">{{ $order->name }}</td>
                                  <td class="text-center">{{ $order->phone }}</td>
                                  <td class="text-center">{{ number_format($order->subtotal ?? 0, 0, ',', '.') }} đ</td>
@@ -78,7 +105,7 @@
                                     @endif
                                  </td>
                                  <td class="text-center">{{ $order->created_at }}</td>
-                                 <td class="text-center">{{ $order->orderItems->count() }}</td>
+                                 {{-- <td class="text-center">{{ $order->orderItems->count() }}</td> --}}
                                  <td class="text-center">{{ $order->delivered_date }}</td>
                                     <td class="text-center">
                                         <a href="{{ route('user.order.details', ['order_id' => $order->id]) }}">

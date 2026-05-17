@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('addresses', function (Blueprint $table) {
             $table->id();
-            $table->bigInteger('user_id')->unsigned();
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->string('name');
             $table->string('phone');
             $table->string('locality');
@@ -24,7 +24,7 @@ return new class extends Migration
             $table->string('landmark')->nullable();
             $table->string('zip');
             $table->string('type')->default('home');
-            $table->boolean('isdefault')->default(false);
+            $table->boolean('is_default')->default(false);
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->timestamps();
     });

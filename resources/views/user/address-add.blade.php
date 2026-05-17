@@ -1,9 +1,38 @@
 @extends('layouts.app')
 @section('content')
+<style>
+    .cart-header{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 40px;
+}
+
+.btn-back{
+    padding: 10px 40px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    text-decoration: none;
+    color: #333;
+    transition: 0.2s;
+    font-weight: 500;
+}
+
+.btn-back:hover{
+    background: #f3f3f3;
+    transform: translateX(-2px);
+}
+    </style>
  <main class="pt-90">
     <div class="mb-4 pb-4"></div>
     <section class="my-account container">
+            <div class="cart-header">
       <h2 class="page-title">Thêm địa chỉ</h2>
+
+    <a href="{{ route('user.address') }}" class="btn-back">
+        Quay lại
+    </a>
+</div>
       <div class="row">
         <div class="col-lg-3">
           <ul class="account-nav">
@@ -31,9 +60,9 @@
                   <div class="col-6">
                       <p class="notice">Các địa chỉ sau đây sẽ được sử dụng mặc định trên trang thanh toán.</p>
                   </div>
-                  <div class="col-6 text-right">
+                  <!-- <div class="col-6 text-right">
                       <a href="{{ route('user.index') }}" class="btn btn-sm btn-danger">Quay lại</a>
-                  </div>
+                  </div> -->
               </div>
 
               <div class="row">

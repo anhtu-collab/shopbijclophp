@@ -15,7 +15,6 @@
       font-weight: 700;
       text-transform: uppercase;
       margin-bottom: 40px;
-      border-bottom: 1px solid;
       padding-bottom: 13px;
     }
 
@@ -97,11 +96,38 @@
       border-width: 1px 1px;
       border-color: #6a6e51;
     }
+      .cart-header{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 40px;
+}
+
+.btn-back{
+    padding: 10px 40px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    text-decoration: none;
+    color: #333;
+    transition: 0.2s;
+    font-weight: 500;
+}
+
+.btn-back:hover{
+    background: #f3f3f3;
+    transform: translateX(-2px);
+}
   </style>
     <main class="pt-90" style="padding-top: 0px;">
     <div class="mb-4 pb-4"></div>
     <section class="my-account container">
-        <h2 class="page-title">CHI TIẾT ĐƠN HÀNG</h2>
+                <div class="cart-header">
+      <h2 class="page-title">CHI TIẾT ĐƠN HÀNG</h2>
+
+    <a href="{{ route('user.orders')}}" class="btn-back">
+        Quay lại
+    </a>
+</div>
         <div class="row">
             <div class="col-lg-2">
                  @include('user.account-nav')
@@ -113,9 +139,9 @@
                                             <div class="col-6">
                                                  <h5>Đơn Hàng</h5>
                                             </div>
-                                            <div class="col-6 text-right">
-                                                <a class="btn btn-sm btn-danger" href="{{ route('user.orders')}}">Trở Lại</a>
-                                            </div>
+                                            <!-- <div class="col-6 text-right">
+                                                <a class="btn btn-sm btn-danger" href="{{ route('user.orders')}}">Quay lại</a>
+                                            </div> -->
                                         </div>
                                     </div>
                                     <div class="table-responsive">

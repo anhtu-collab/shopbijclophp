@@ -175,7 +175,7 @@
                                     </div>
                                 </div>
 
-                                <div class="wg-box mt-5">
+                                <!-- <div class="wg-box mt-5">
                                     <h5>Địa Chỉ Giao Hàng</h5>
                                     <div class="my-account__address-item col-md-6">
                                         <div class="my-account__address-item__detail">
@@ -190,7 +190,69 @@
                                             
                                         </div>
                                     </div>
-                                </div>
+                                </div> -->
+                                <div class="wg-box mt-5">
+                                        <h5>Thông tin đặt hàng</h5>
+
+                                        <div class="row">
+                                            <!-- ĐỊA CHỈ MẶC ĐỊNH -->
+                                            <div class="col-md-6">
+                                                    <h6>Địa Chỉ Mặc Định</h6>
+
+                                                    @php
+                                                        $defaultAddress = $addresses->where('is_default', 1)->first();
+                                                    @endphp
+
+                                                    @if($defaultAddress)
+                                                        <div class="my-account__address-item__detail">
+                                                             <p><strong> Họ tên:</strong> {{ $defaultAddress->name }}</p>
+
+                                                                    <p><strong> Địa chỉ:</strong> {{ $defaultAddress->address }}</p>
+
+                                                                    <p><strong>Khu vực:</strong> {{ $defaultAddress->locality }}</p>
+
+                                                                    <p><strong> Thành phố:</strong> {{ $defaultAddress->city }}, </p>
+                                                                    <p><strong> Quốc gia:</strong> {{ $defaultAddress->country }}</p>
+
+                                                                    <p><strong> Địa chỉ :</strong> {{ $defaultAddress->landmark }}</p>
+
+                                                                    <p><strong> Mã bưu điện:</strong> {{ $defaultAddress->zip }}</p>
+
+                                                                    <hr>
+
+                                                                    <p><strong> SĐT:</strong> {{ $defaultAddress->phone }}</p>
+                                                        </div>
+                                                    @else
+                                                        <p>Không có địa chỉ mặc định</p>
+                                                    @endif
+                                                </div>
+                                            <!-- ĐỊA CHỈ NHẬN HÀNG -->
+                                            <div class="col-md-6">
+                                                <h6>Địa Chỉ Nhận Hàng</h6>
+                                                <div class="my-account__address-item__detail">
+                                                    <div class="order-shipping-info">
+
+                                                        <p><strong> Họ tên:</strong> {{ $order->shipping_name ?? $order->name }}</p>
+
+                                                        <p><strong> Địa chỉ:</strong> {{ $order->shipping_address ?? $order->address }}</p>
+
+                                                        <p><strong> Khu vực:</strong> {{ $order->shipping_locality ?? $order->locality }}</p>
+
+                                                        <p><strong> Thành phố:</strong> {{ $order->shipping_city ?? $order->city }},</p>
+                                                        <p><strong> Quốc gia:</strong> {{ $order->shipping_country ?? $order->country }}</p>
+
+                                                        <p><strong> Địa chỉ :</strong> {{ $order->shipping_landmark ?? $order->landmark }}</p>
+
+                                                        <p><strong>Mã bưu điện:</strong> {{ $order->shipping_zip ?? $order->zip }}</p>
+
+                                                        <hr>
+
+                                                        <p><strong> SĐT:</strong> {{ $order->shipping_phone ?? $order->phone }}</p>
+
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div> 
 
                                 <div class="wg-box mt-5">
                                     <h5>Thanh Toán</h5>

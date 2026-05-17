@@ -12,11 +12,45 @@
     border-color: #2563eb;
     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }
+.qty-input {
+    width: 50px;
+    text-align: center;
+    border: 1px solid #ddd;
+    height: 28px;
+}
+.cart-header{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 40px;
+}
+
+.btn-back{
+    padding: 10px 40px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    text-decoration: none;
+    color: #333;
+    transition: 0.2s;
+    font-weight: 500;
+}
+
+.btn-back:hover{
+    background: #f3f3f3;
+    transform: translateX(-2px);
+}
+
 </style>
 <main class="pt-90">
     <div class="mb-4 pb-4"></div>
     <section class="shop-checkout container">
-      <h2 class="page-title">Giỏ Hàng</h2>
+      <div class="cart-header">
+    <h2 class="page-title">Giỏ Hàng</h2>
+
+    <a href="{{ route('shop.index') }}" class="btn-back">
+        Quay lại
+    </a>
+</div>
       <div class="checkout-steps">
         <a href="javascript:void(0)" class="checkout-steps__item active">
           <span class="checkout-steps__item-number">01</span>
@@ -134,7 +168,7 @@
             <form action="{{route('cart.coupon.remove')}}" method="POST" class="position-relative bg-body">
               @csrf
               @method('DELETE')
-              <input class="form-control" type="text" name="coupon_code" placeholder="Coupon Code" value="@if(Session::has('coupon')) {{Session::get('coupon')['code']}} Applied! @endif">
+              <input class="form-control" type="text" name="coupon_code" placeholder="Coupon Code" value="@if(Session::has('coupon')) {{Session::get('coupon')['code']}} Đã áp dụng @endif">
               <input class="btn-link fw-medium position-absolute top-0 end-0 h-100 px-4" type="submit" value="XÓA MÃ GIẢM GIÁ">
           </form>   
           @endif

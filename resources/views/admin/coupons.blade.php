@@ -55,7 +55,7 @@
                                                 
                                                 <tbody>
                                                     <tr>
-                                                        <td>{{ $coupon->id }}</td>
+                                                        <td>{{ ($coupons->currentPage() - 1) * $coupons->perPage() + $loop->iteration }}</td>
                                                         <td>{{ $coupon->code }}</td>
                                                         <td>
                                                             @if($coupon->type == 'fixed')

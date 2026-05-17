@@ -137,11 +137,19 @@
                                     <strong>{{ number_format($order->total, 0, ',', '.') }} đ</strong>
                                 </td>
                             </tr>
-                        </tbody>
+
+
+        
+                                </tbody>
                     </table>
 
                 </div>
             </div>
+                        <div class="d-flex justify-content-end ">
+            <a href="{{ route('shop.index') }}" class="btn btn-outline-primary px-4 py-2">
+                Tiếp tục mua sắm
+            </a>
+        </div>
 
         </div>
     </section>

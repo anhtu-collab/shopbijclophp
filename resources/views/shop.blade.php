@@ -2,28 +2,318 @@
 @section('content')
 <style>
 .pc__btn-wl {
+    position: static !important;
+    top: auto !important;
+    right: auto !important;
+
+    opacity: 1;
+    visibility: visible;
+    transition: 0.3s;
+
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+/* hover card vẫn được nhưng không ảnh hưởng layout */
+.product-card:hover .pc__btn-wl {
+    opacity: 1;
+}
+
+/* tim màu cam */
+.filled-heart {
+    color: orange !important;
+}
+.wishlist-box {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+}
+.discount-badge {
     position: absolute;
     top: 10px;
     right: 10px;
-    z-index: 10;
 
-    opacity: 0;
-    visibility: hidden;
-    transition: 0.3s;
+    background: linear-gradient(135deg, #ff416c, #ff4b2b);
+    color: #fff;
+
+    padding: 6px 12px;
+    font-size: 15px;
+    font-weight: 600;
+
+    border-radius: 20px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+
+    z-index: 20;
+
+    animation: pulse 1.5s infinite;
 }
 
-/* hover vào card thì hiện nút */
-.product-card:hover .pc__btn-wl {
-    opacity: 1;
-    visibility: visible;
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+    100% { transform: scale(1); }
 }
-.filled-heart {
-        color: orange !important;
-    }
-    
+.pc__img-wrapper {
+    position: relative;
+    overflow: hidden;
+}
+
+
+.pc__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    position: absolute;
+    top: 0;
+    left: 0;
+    image-rendering: auto;
+    transition: transform 0.7s ease;
+}
+
+.main-img {
+    transform: translateX(0);
+}
+
+.hover-img {
+    transform: translateX(100%);
+}
+
+.pc__img-wrapper:hover .main-img {
+    transform: translateX(-100%);
+}
+
+.pc__img-wrapper:hover .hover-img {
+    transform: translateX(0);
+}
+.sold-out-glass {
+    position: absolute;
+    inset: 0;
+
+    backdrop-filter: blur(6px);
+    background: rgba(255, 255, 255, 0.2);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 20;
+    overflow: hidden; /* QUAN TRỌNG */
+}
+
+/* VỆT ĐEN CHÉO */
+.sold-out-glass span {
+    position: absolute;
+    top: 50%;
+    left: -30%;
+
+    width: 160%;
+    text-align: center;
+
+    background: rgba(235, 8, 8, 0.75);
+    color: #fff;
+
+    padding: 12px 0;
+    font-size: 16px;
+    font-weight: bold;
+    letter-spacing: 3px;
+
+    transform: rotate(-25deg);
+}
+.modal-overlay{
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    backdrop-filter: blur(4px);
+}
+
+.modal-content{
+      width: 1100px;      /* tăng từ 900 → 1100 */
+    max-width: 98%;     /* chiếm gần full màn */
+    height: 85vh;
+    background: #fff;
+    border-radius: 18px;
+    overflow: hidden;
+    display: flex;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+    animation: pop 0.25s ease;
+}
+
+@keyframes pop{
+    from{transform: scale(0.9); opacity:0;}
+    to{transform: scale(1); opacity:1;}
+}
+
+.close-btn{
+    position: absolute;
+    right: 18px;
+    top: 12px;
+    font-size: 26px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+}
+
+.modal-body{
+    display: flex;
+    width: 100%;
+}
+
+/* LEFT IMAGE */
+.product-preview{
+     width: 50%;
+    padding: 25px;
+    background: #f7f7f7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.product-preview img{
+    width: 100%;
+    max-height: 5000px;
+    object-fit: cover;
+    border-radius: 12px;
+}
+
+/* RIGHT INFO */
+.product-info{
+    width: 50%;
+    padding: 50px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.product-title{
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.current-price{
+    font-size: 18px;
+    color: #eb1313;
+    font-weight: 700;
+}
+
+/* VARIANTS */
+.variant-section label{
+    font-weight: 600;
+    margin-bottom: 6px;
+    display: block;
+}
+
+.swatch-group{
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.swatch-group button{
+    padding: 6px 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background: #fff;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.swatch-group button:hover{
+    border-color: #000;
+}
+
+/* QUANTITY */
+.quantity-picker{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.qty-btn{
+    width: 34px;
+    height: 34px;
+    border: 1px solid #ddd;
+    background: #fff;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+#quantityInput{
+    width: 60px;
+    text-align: center;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+}
+
+/* BUTTON */
+.btn-buy-now{
+    margin-top: auto;
+    padding: 12px;
+    border: none;
+    border-radius: 10px;
+    background: linear-gradient(135deg,#ff4b2b,#ff416c);
+    color: #fff;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.btn-buy-now:hover{
+    transform: translateY(-2px);
+}
+.variant-btn{
+    padding: 6px 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background: #fff;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.variant-btn.active{
+    background: #ff416c;
+    color: #fff;
+    border-color: #ff416c;
+}
+.qty-buy-row{
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 10px;
+}
+
+/* giữ cụm số lượng gọn lại */
+.qty-buy-row .quantity-picker{
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* nút mua ngay nằm ngang hàng */
+.qty-buy-row .btn-buy-now{
+    height: 38px;
+    padding: 0 18px;
+    border: none;
+    border-radius: 10px;
+    background: linear-gradient(135deg,#ff4b2b,#ff416c);
+    color: #fff;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+/* input số lượng gọn hơn */
+.qty-buy-row #quantityInput{
+    width: 50px;
+    text-align: center;
+}
 </style>
 <main class="pt-90">
-    <section class="shop-main container d-flex pt-4 pt-xl-5">
+    <section class="shop-main container-fluid d-flex pt-4 pt-xl-5 px-4 px-lg-5">
       <div class="shop-sidebar side-sticky bg-body" id="shopFilter">
         <div class="aside-header d-flex d-lg-none align-items-center">
           <h3 class="text-uppercase fs-6 mb-0">Bộ Lọc</h3>
@@ -48,7 +338,7 @@
             </h5>
             <div id="accordion-filter-1" class="accordion-collapse collapse show border-0"
               aria-labelledby="accordion-heading-1" data-bs-parent="#categories-list">
-              <div class="accordion-body px-0 pb-0 pt-3 category-list">
+              {{-- <div class="accordion-body px-0 pb-0 pt-3 category-list">
                 <ul class="list list-inline mb-0">
                  @foreach ($categories as $category)
                   <li class="list-item">
@@ -60,13 +350,55 @@
                         <span class="text-right float-end">{{ $category->products->count() }}</span> </li>
                               @endforeach
                 </ul>
-              </div>
+              </div> --}}
+              <form method="GET" action="{{ route('shop.index') }}">
+              <div class="accordion-body px-0 pb-0 pt-3 category-list">
+
+    @php
+        $selectedCategories = request('categories');
+
+        if (!is_array($selectedCategories)) {
+            $selectedCategories = $selectedCategories
+                ? explode(',', $selectedCategories)
+                : [];
+        }
+    @endphp
+
+    <ul class="list list-inline mb-0">
+        @foreach ($categories as $category)
+            <li class="list-item">
+
+                <label class="menu-link py-1">
+
+                    <input type="checkbox"
+                           class="chk-category"
+                           name="categories[]"
+                           value="{{ $category->id }}"
+
+                           {{ 
+                               in_array($category->id, $selectedCategories) 
+                               || request('category') == $category->id 
+                               ? 'checked' : '' 
+                           }}>
+
+                    {{ $category->name }}
+                </label>
+
+                <span class="text-right float-end">
+                    {{ $category->products->count() }}
+                </span>
+
+            </li>
+        @endforeach
+    </ul>
+</div>
+              </form>
             </div>
           </div>
         </div>
 
 
-        <div class="accordion" id="color-filters">
+        <!-- {{-- <div class="accordion" id="color-filters">
           <div class="accordion-item mb-4 pb-3">
             <h5 class="accordion-header" id="accordion-heading-1">
               <button class="accordion-button p-0 border-0 fs-5 text-uppercase" type="button" data-bs-toggle="collapse"
@@ -98,10 +430,10 @@
               </div>
             </div>
           </div>
-        </div>
+        </div> --}} -->
 
 
-        <div class="accordion" id="size-filters">
+        {{-- <div class="accordion" id="size-filters">
           <div class="accordion-item mb-4 pb-3">
             <h5 class="accordion-header" id="accordion-heading-size">
               <button class="accordion-button p-0 border-0 fs-5 text-uppercase" type="button" data-bs-toggle="collapse"
@@ -129,7 +461,7 @@
               </div>
             </div>
           </div>
-        </div>
+        </div> --}}
 
 
         <div class="accordion" id="brand-filters">
@@ -185,14 +517,14 @@
             </h5>
             <div id="accordion-filter-price" class="accordion-collapse collapse show border-0"
               aria-labelledby="accordion-heading-price" data-bs-parent="#price-filters">
-              <input class="price-range-slider" type="text" name="price_range" value="" data-slider-min="1"
-                data-slider-max="9999999" data-slider-step="5" data-slider-value="[{{ (int)$min_price }},{{ (int)$max_price }}]" data-currency="đ" />
+              <input class="price-range-slider" type="text" name="price_range" value="" data-slider-min="100"
+                data-slider-max="10000000" data-slider-step="5" data-slider-value="[{{ (int)$min_price }},{{ (int)$max_price }}]" data-currency="" />
               <div class="price-range__info d-flex align-items-center mt-2">
                 <div class="me-auto">
-                  <span class="price-range__min">199.999.Vnđ</span>
+                  <span class="price-range__min">199.999 đ</span>
                 </div>
                 <div>
-                  <span class="price-range__max">999.999.Vnđ</span>
+                  <span class="price-range__max">999.999 đ</span>
                 </div>
               </div>
             </div>
@@ -203,7 +535,7 @@
       <div class="shop-list flex-grow-1">
         <div class="swiper-container js-swiper-slider slideshow slideshow_small slideshow_split" data-settings='{
             "autoplay": {
-              "delay": 5000
+              "delay": 4000
             },
             "slidesPerView": 1,
             "effect": "fade",
@@ -219,22 +551,23 @@
               <div class="slide-split h-100 d-block d-md-flex overflow-hidden">
                 <div class="slide-split_text position-relative d-flex align-items-center"
                   style="background-color: #f5e6e0;">
-                  <div class="slideshow-text container p-3 p-xl-5">
-                    <h2
-                    class="text-uppercase section-title fw-normal mb-3 animate animate_fade animate_btt animate_delay-2">
-                    PHỤ KIỆN <br /><strong>NỮ</strong>
-                  </h2>
+                      <div class="slideshow-text container p-3 p-xl-5">
+                        <h2 class="text-uppercase section-title fw-normal mb-3 animate animate_fade animate_btt animate_delay-2">
+                           <strong>BRIJCLO</strong>
+                        </h2>
 
-                  <p class="mb-0 animate animate_fade animate_btt animate_delay-5">
-                    Phụ kiện là cách tốt nhất để làm mới phong cách của bạn. Hãy tạo điểm nhấn với những thiết kế và màu sắc mới,
-                    hoặc lựa chọn những món đồ mang tính kinh điển.
-                  </p>
-                  </div>
+                        <p class="mb-0 animate animate_fade animate_btt animate_delay-5">
+                            Với BRIJCLO, phụ kiện không chỉ đơn thuần là một món đồ đi kèm trang phục mà còn là chi tiết 
+                            giúp hoàn thiện phong cách cá nhân một cách tinh tế.  
+                            Mỗi thiết kế được tạo ra với sự cân bằng giữa tính thẩm mỹ và tính ứng dụng, 
+                            giúp bạn dễ dàng sử dụng trong nhiều hoàn cảnh khác nhau mỗi ngày.
+                        </p>
+                    </div>
                 </div>
                 <div class="slide-split_media position-relative">
                   <div class="slideshow-bg" style="background-color: #f5e6e0;">
                     <img loading="lazy" src="{{asset('/assets/images/shop/shop_banner1.webp')}}" width="630" height="450"
-                      alt="Women's accessories" class="slideshow-bg__img object-fit-cover" />
+                      alt="BRIJCLO Accessories" class="slideshow-bg__img object-fit-cover" />
                   </div>
                 </div>
               </div>
@@ -244,21 +577,25 @@
               <div class="slide-split h-100 d-block d-md-flex overflow-hidden">
                 <div class="slide-split_text position-relative d-flex align-items-center"
                   style="background-color: #f5e6e0;">
-                  <div class="slideshow-text container p-3 p-xl-5">
-                  <h2
-                    class="text-uppercase section-title fw-normal mb-3 animate animate_fade animate_btt animate_delay-2">
-                    PHỤ KIỆN <br /><strong>NỮ</strong>
-                  </h2>
-                  <p class="mb-0 animate animate_fade animate_btt animate_delay-5">
-                    Phụ kiện là cách tốt nhất để làm mới phong cách của bạn. Hãy tạo điểm nhấn với những thiết kế và màu sắc mới,
-                    hoặc lựa chọn những món đồ mang tính kinh điển.
-                  </p>
-                </div>
+                    <div class="slideshow-text container p-3 p-xl-5">
+                          <h2 class="text-uppercase section-title fw-normal mb-3 animate animate_fade animate_btt animate_delay-2">
+                             <strong>BRIJCLO</strong>
+                          </h2>
+
+                          <p class="mb-0 animate animate_fade animate_btt animate_delay-5">
+                                  Các sản phẩm tại BRIJCLO được cập nhật o xu hướng thời trang hiện đại,  
+                                  mang đến sự đa dạng trong lựa chọn từ đơn giản, nhẹ nhàng đến cá tính nổi bật.  
+                                  Dù bạn theo đuổi phong cách nào, sản phẩm vẫn dễ dàng kết hợp với trang phục,  
+                                  giúp tạo nên tổng thể hài hòa và thu hút ánh nhìn.
+
+                          </p>.
+                          </p>
+                      </div>
                     </div>
                 <div class="slide-split_media position-relative">
                   <div class="slideshow-bg" style="background-color: #f5e6e0;">
-                   <img loading="lazy" src="{{ asset('assets/images/shop/shop_banner2.webp') }}" width="630" height="450">
-                      alt="Women's accessories" class="slideshow-bg__img object-fit-cover" />
+                   <img loading="lazy" src="{{ asset('assets/images/shop/shop_banner2.webp') }}" width="630" height="450"
+                      alt="BRIJCLO Accessories" class="slideshow-bg__img object-fit-cover" />
                   </div>
                 </div>
               </div>
@@ -268,21 +605,22 @@
               <div class="slide-split h-100 d-block d-md-flex overflow-hidden">
                 <div class="slide-split_text position-relative d-flex align-items-center"
                   style="background-color: #f5e6e0;">
-                 <div class="slideshow-text container p-3 p-xl-5">
-                  <h2
-                    class="text-uppercase section-title fw-normal mb-3 animate animate_fade animate_btt animate_delay-2">
-                    PHỤ KIỆN <br /><strong>NỮ</strong>
-                  </h2>
-                  <p class="mb-0 animate animate_fade animate_btt animate_delay-5">
-                    Phụ kiện là chìa khóa để nâng tầm phong cách của bạn. Tạo điểm nhấn với những thiết kế và gam màu mới,
-                    hoặc lựa chọn các sản phẩm mang tính biểu tượng vượt thời gian.
-                  </p>
-                </div>
+                    <div class="slideshow-text container p-3 p-xl-5">
+                        <h2 class="text-uppercase section-title fw-normal mb-3 animate animate_fade animate_btt animate_delay-2">
+                           <strong>BRIJCLO</strong>
+                        </h2>
+
+                        <p class="mb-0 animate animate_fade animate_btt animate_delay-5">
+                          BRIJCLO hướng đến việc mang lại trải nghiệm thời trang tiện lợi và linh hoạt hơn mỗi ngày.  
+                        Không cần quá cầu kỳ, chỉ cần một vài chi tiết phụ kiện phù hợp là đủ để tạo điểm nhấn.  
+                        Chúng tôi tin rằng phong cách đến từ sự tự tin và những lựa chọn đơn giản nhưng đúng chất.  
+                        Và BRIJCLO là nơi giúp bạn bắt đầu điều đó.
+                    </div>
                 </div>
                 <div class="slide-split_media position-relative">
                   <div class="slideshow-bg" style="background-color: #f5e6e0;">
                     <img loading="lazy" src="{{asset('assets/images/shop/shop_banner3.webp')}}" width="630" height="450"
-                      alt="Women's accessories" class="slideshow-bg__img object-fit-cover" />
+                      alt="BRIJCLO Accessories" class="slideshow-bg__img object-fit-cover" />
                   </div>
                 </div>
               </div>
@@ -346,44 +684,93 @@
 @foreach($products as $product)
 <div class="product-card-wrapper col">
   <div class="product-card mb-3 mb-md-4 mb-xxl-5 position-relative h-100">
-
-    <!-- IMAGE -->
+     @if($product->sale_price && $product->regular_price > 0)
+    @php
+      $discount = round(100 - ($product->sale_price / $product->regular_price * 100));
+    @endphp
+    <span class="discount-badge">-{{ $discount }}%</span>
+  @endif
     <div class="pc__img-wrapper position-relative">
       <div class="swiper-container background-img js-swiper-slider" data-settings='{"resizeObserver": true}'>
-        <div class="swiper-wrapper">
+  <div class="swiper-wrapper">
 
-          <div class="swiper-slide">
-            <a href="{{route('shop.product.details',['product_slug'=>$product->slug])}}">
-              <img loading="lazy"
-                   src="{{ asset('uploads/products/'.$product->image) }}"
-                   width="330" height="400"
-                   alt="{{$product->name}}"
-                   class="pc__img">
-            </a>
-          </div>
+    {{-- ẢNH CHÍNH + HOVER --}}
+    @php
+      $images = !empty($product->images)
+          ? explode(',', $product->images)
+          : [];
+    @endphp
 
+    <div class="swiper-slide">
+      <a href="{{route('shop.product.details',['product_slug'=>$product->slug])}}">
+        
+        <div class="pc__img-wrapper">
+
+          {{-- ảnh chính --}}
+          <img 
+            src="{{ asset('uploads/products/'.$product->image) }}" 
+            width="330" height="400"
+            class="pc__img main-img">
+
+          {{-- ảnh hover --}}
+          @if(!empty($images[0]))
+            <img 
+              src="{{ asset('uploads/products/'.trim($images[0])) }}" 
+              width="330" height="400"
+              class="pc__img hover-img">
+          @endif
 
         </div>
+
+      </a>
+    </div>
+
+    {{-- CÁC ẢNH PHỤ --}}
+    @foreach($images as $img)
+      <div class="swiper-slide">
+        <a href="{{route('shop.product.details',['product_slug'=>$product->slug])}}">
+          <img loading="lazy"
+               src="{{ asset('uploads/products/'.trim($img)) }}"
+               width="330" height="400"
+               class="pc__img">
+        </a>
       </div>
-    @if(Cart::instance('cart')->content()->where('id', $product->id)->count() > 0)
+    @endforeach
+
+  </div>
+</div>
+  @if($product->quantity <= 0)
+    <div class="sold-out-glass">
+        <span>HẾT HÀNG</span>
+    </div>
+
+@elseif(Cart::instance('cart')->content()->where('id', $product->id)->count() > 0)
     <a href="{{ route('cart.index') }}"
        class="pc__atc btn anim_appear-bottom position-absolute border-0 text-uppercase fw-medium"
        style="background-color:#ffc;">
-       Thêm Vào Giỏ hàng
+       Đến Giỏ Hàng
     </a>
 @else
-    <form action="{{ route('cart.add') }}" method="POST">
-        @csrf
-        <input type="hidden" name="id" value="{{ $product->id }}">
-        <input type="hidden" name="quantity" value="1">
-        <input type="hidden" name="name" value="{{ $product->name }}">
-        <input type="hidden" name="price" value="{{ $product->sale_price ? $product->sale_price : $product->regular_price }}">
-        <button type="submit"
-    class="pc__atc btn anim_appear-bottom position-absolute border-0 text-uppercase fw-medium">Thêm Vào Giỏ Hàng</button>
-    </form>
+<button 
+    type="button"
+    class="pc__atc btn anim_appear-bottom position-absolute border-0 text-uppercase fw-medium buy-now-btn"
+    data-id="{{ $product->id }}"
+    data-name="{{ $product->name }}"
+    data-regular="{{ $product->regular_price }}"
+    data-sale="{{ $product->sale_price }}"
+    data-image="{{ asset('uploads/products/'.$product->image) }}"
+    {{-- data-images='@json(explode(",", $product->images))' --}}
+    data-rating="{{ $product->rating }}"
+    data-reviews="{{ $product->reviews_count }}"
+    data-description="{{ $product->short_description }}"
+    data-sizes="{{ $product->sizes }}"
+    data-colors="{{ $product->colors }}"
+>
+    Mua Ngay
+</button>
 @endif
     </div>
-    @if(Cart::instance('wishlist')->content()->where('id', $product->id)->count() > 0)
+    {{-- @if(Cart::instance('wishlist')->content()->where('id', $product->id)->count() > 0)
     <form method="POST" action="{{ route('wishlist.item.remove',['rowId'=>Cart::instance('wishlist')->content()->where('id', $product->id)->first()->rowId]) }}">
       @csrf
       @method('DELETE')
@@ -407,43 +794,109 @@
         </svg>
     </button>
 </form>
-@endif
+@endif --}}
 
     <!-- INFO -->
-    <div class="pc__info">
-      <p class="pc__category">
-        {{$product->category->name ?? 'No category'}}
-      </p>
+ <div class="pc__info">
 
-      <h6 class="pc__title">
-        <a href="{{route('shop.product.details',['product_slug'=>$product->slug])}}">
-          {{$product->name}}
-        </a>
-      </h6>
+  <!-- CATEGORY + WISHLIST -->
+  <div class="d-flex justify-content-between align-items-center">
+    
+    <p class="pc__category mb-0">
+      {{$product->category->name ?? 'No category'}}
+    </p>
 
-      <div class="product-card__price d-flex">
-        <span class="money price">
-          @if($product->sale_price)
-            <s>{{ number_format($product->regular_price, 0, ',', '.') }}.vnđ</s> 
-            {{ number_format($product->sale_price, 0, ',', '.') }}.vnđ
-        @else
-            {{ number_format($product->regular_price, 0, ',', '.') }}.vnđ
-        @endif
-        </span>
-      </div>
+    <div class="wishlist-box">
+      @if(Cart::instance('wishlist')->content()->where('id', $product->id)->count() > 0)
 
-      <!-- RATING (GIỐNG VIDEO) -->
-      <div class="d-flex align-items-center mt-1">
-        <div class="rating">★★★★★</div>
-        <span class="ms-2 text-muted">8k Đánh Giá</span>
-      </div>
+        <form method="POST"
+              action="{{ route('wishlist.item.remove',['rowId'=>Cart::instance('wishlist')->content()->where('id', $product->id)->first()->rowId]) }}">
+          @csrf
+          @method('DELETE')
 
+          <button type="submit"
+                  class="pc__btn-wl filled-heart border-0 bg-transparent"
+                  title="Bỏ khỏi wishlist">
+            <svg width="16" height="16">
+              <use href="#icon_heart" />
+            </svg>
+          </button>
+        </form>
+
+      @else
+
+        <form method="POST" action="{{ route('wishlist.add') }}">
+          @csrf
+          <input type="hidden" name="id" value="{{ $product->id }}" />
+          <input type="hidden" name="name" value="{{ $product->name }}" />
+          <input type="hidden" name="price"
+                 value="{{ $product->sale_price == '' ? $product->regular_price : $product->sale_price }}" />
+          <input type="hidden" name="quantity" value="1" />
+
+          <button type="submit"
+                  class="pc__btn-wl border-0 bg-transparent"
+                  title="Thêm wishlist">
+            <svg width="16" height="16">
+              <use href="#icon_heart" />
+            </svg>
+          </button>
+        </form>
+
+      @endif
     </div>
 
   </div>
-</div>
-@endforeach
-</div>
+
+  <!-- TITLE -->
+  <h6 class="pc__title mt-1">
+    <a href="{{route('shop.product.details',['product_slug'=>$product->slug])}}">
+      {{$product->name}}
+    </a>
+  </h6>
+
+  <!-- PRICE -->
+  <div class="product-card__price d-flex">
+    <span class="money price">
+      @if($product->sale_price)
+        <s>{{ number_format($product->regular_price, 0, ',', '.') }} đ</s> 
+        {{ number_format($product->sale_price, 0, ',', '.') }} đ
+      @else
+        {{ number_format($product->regular_price, 0, ',', '.') }} đ
+      @endif
+    </span>
+  </div>
+
+  <!-- RATING -->
+          @php
+              $rating = $product->rating ?? 0;
+          @endphp
+
+          <div class="d-flex align-items-center gap-1 mt-1">
+
+            <div class="d-flex text-warning">
+              @for ($i = 1; $i <= 5; $i++)
+                  @if ($i <= floor($rating))
+                      ⭐
+                  {{-- @elseif ($i - $rating < 1)
+                      ✨ --}}
+                  @else
+                      ☆
+                  @endif
+              @endfor
+            </div>
+
+            <span class="text-muted small">
+              {{ number_format($rating, 1) }} · {{ $product->reviews_count }} đánh giá
+            </span>
+
+          </div>
+
+          </div>
+
+            </div>
+          </div>
+          @endforeach
+          </div>
 
       <div class="divider"></div>
 <div class="flex items-center justify-between flex-wrap gap10 wgp-pagination">
@@ -460,13 +913,341 @@
      <input type="hidden" name="brands" id="hdnBrands" />
      <input type="hidden" name="categories" id="hdnCategories" />
      <input type="hidden" name="min_price" id="hdnMinPrice" value="{{ $min_price }}"/>
-<input type="hidden" name="max_price" id="hdnMaxPrice" value="{{ $max_price }}"/>
+      <input type="hidden" name="max_price" id="hdnMaxPrice" value="{{ $max_price }}"/>
 </form>
 
+<div id="buyNowModal" class="modal-overlay">
+
+    <div class="modal-content">
+
+        <button id="closeModal" class="close-btn">&times;</button>
+
+        <div class="modal-body">
+
+            <!-- LEFT -->
+            <div class="product-preview">
+                <img id="modalImage" src="" alt="Product">
+
+                <!-- thumbnails -->
+                {{-- <div class="thumbnail-list" id="thumbnailList"></div> --}}
+            </div>
+
+            <!-- RIGHT -->
+            <div class="product-info">
+
+                <h4 id="modalName" class="product-title"></h4>
+
+                <!-- ⭐ rating -->
+                <div class="rating">
+                    <span id="modalStars"></span>
+                    <span id="modalReviewCount"></span>
+                </div>
+
+                <!-- 💰 price -->
+                <div class="product-single__price">
+                    <span id="modalRegularPrice" class="old-price"></span>
+                    <span id="modalSalePrice" class="current-price"></span>
+                </div>
+
+                <!-- 📝 description -->
+                <p id="modalDescription" class="product-desc"></p>
+
+                <form action="{{ route('buy.now') }}" method="POST" id="buyNowForm">
+                    @csrf
+
+                    <input type="hidden" name="id" id="modalId">
+                    <input type="hidden" name="size" id="selectedSize">
+                    <input type="hidden" name="color" id="selectedColor">
+
+                    <!-- SIZE -->
+                    <div class="variant-section">
+                        <label>Kích thước</label>
+                        <div class="swatch-group" id="sizeOptions"></div>
+                    </div>
+
+                    <!-- COLOR -->
+                    <div class="variant-section">
+                        <label>Màu sắc</label>
+                        <div class="swatch-group" id="colorOptions"></div>
+                    </div>
+
+                    <!-- QTY -->
+                    <div class="qty-buy-row">
+
+    <div class="quantity-picker">
+        <button type="button" class="qty-btn minus">-</button>
+
+        <input type="number"
+               name="quantity"
+               id="quantityInput"
+               value="1"
+               min="1"
+               readonly>
+
+        <button type="button" class="qty-btn plus">+</button>
+    </div>
+
+    <button type="submit" class="btn-buy-now">
+        Mua ngay
+    </button>
+
+</div>
+
+                </form>
+            </div>
+
+        </div>
+    </div>
+</div>
 @endsection
  
 @push('scripts')
 <script>
+document.addEventListener('DOMContentLoaded', function () {
+
+  /* ======================
+     BUY NOW MODAL
+  ====================== */
+  const modal = document.getElementById('buyNowModal');
+const closeBtn = document.getElementById('closeModal');
+ console.log(closeBtn); // test
+
+    if (closeBtn) {
+        closeBtn.addEventListener('click', function () {
+            modal.style.display = 'none';
+        });
+    }
+const qtyInput = document.getElementById('quantityInput');
+const plusBtn = document.querySelector('.qty-btn.plus');
+const minusBtn = document.querySelector('.qty-btn.minus');
+
+plusBtn.addEventListener('click', function () {
+    let value = parseInt(qtyInput.value) || 1;
+    qtyInput.value = value + 1;
+});
+
+minusBtn.addEventListener('click', function () {
+    let value = parseInt(qtyInput.value) || 1;
+    if (value > 1) {
+        qtyInput.value = value - 1;
+    }
+});
+  document.querySelectorAll('.buy-now-btn').forEach(btn => {
+      btn.addEventListener('click', function () {
+
+          document.getElementById('modalId').value = this.dataset.id;
+          document.getElementById('modalName').innerText = this.dataset.name;
+          const regularEl = document.getElementById('modalRegularPrice');
+const saleEl = document.getElementById('modalSalePrice');
+
+let regular = parseInt(this.dataset.regular) || 0;
+let sale = this.dataset.sale ? parseInt(this.dataset.sale) : null;
+
+if (sale && sale < regular) {
+    regularEl.innerHTML = `<s>${regular.toLocaleString('vi-VN')} đ</s>`;
+    saleEl.innerHTML = `${sale.toLocaleString('vi-VN')} đ`;
+} else {
+    regularEl.innerHTML = "";
+    saleEl.innerHTML = `${regular.toLocaleString('vi-VN')} đ`;
+}
+          document.getElementById('modalImage').src = this.dataset.image;
+
+          document.getElementById('quantityInput').value = 1;
+          const sizeBox = document.getElementById('sizeOptions');
+          const colorBox = document.getElementById('colorOptions');
+
+          sizeBox.innerHTML = '';
+          colorBox.innerHTML = '';
+
+          document.getElementById('selectedSize').value = '';
+          document.getElementById('selectedColor').value = '';
+
+          
+          // SIZE
+ // SIZE
+if (this.dataset.sizes) {
+    let sizes = [];
+
+    try {
+        sizes = JSON.parse(this.dataset.sizes);
+    } catch (e) {
+        sizes = this.dataset.sizes.split(',');
+    }
+
+    sizes.forEach(s => {
+        let btnSize = document.createElement('button');
+        btnSize.type = 'button';
+        btnSize.className = 'variant-btn';
+
+        let label = s.trim().toUpperCase();
+        btnSize.innerText = label;
+
+        btnSize.onclick = () => {
+
+            // clear active
+            sizeBox.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+
+            // active current
+            btnSize.classList.add('active');
+
+            // save value
+            document.getElementById('selectedSize').value = label;
+        };
+
+        sizeBox.appendChild(btnSize);
+    });
+}
+
+          // COLOR
+        // COLOR
+if (this.dataset.colors) {
+    let colors = [];
+
+    try {
+        colors = JSON.parse(this.dataset.colors);
+    } catch (e) {
+        colors = this.dataset.colors.split(',');
+    }
+
+    colors.forEach(c => {
+        let btnColor = document.createElement('button');
+        btnColor.type = 'button';
+        btnColor.className = 'variant-btn';
+
+        let label = c.trim();
+
+        const map = {
+            do: "Đỏ",
+            den: "Đen",
+            xanh: "Xanh"
+        };
+
+        label = map[label.toLowerCase()] || label;
+
+        btnColor.innerText = label;
+
+        btnColor.onclick = () => {
+
+            // clear active
+            colorBox.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+
+            // active current
+            btnColor.classList.add('active');
+
+            // save value
+            document.getElementById('selectedColor').value = label;
+        };
+
+        colorBox.appendChild(btnColor);
+    });
+}
+// const thumbBox = document.getElementById('thumbnailList');
+//         if (thumbBox) {
+//             thumbBox.innerHTML = '';
+
+//             let images = [];
+
+//             if (this.dataset.images) {
+//                 try {
+//                     images = JSON.parse(this.dataset.images);
+//                 } catch (e) {
+//                     images = this.dataset.images.split(',');
+//                 }
+//             } else if (this.dataset.image) {
+//                 images = [this.dataset.image];
+//             }
+
+//             images.forEach(img => {
+//                 let thumb = document.createElement('img');
+//                 thumb.src = img.trim();
+//                 thumb.className = 'thumb-img';
+
+//                 thumb.onclick = () => {
+//                     document.getElementById('modalImage').src = thumb.src;
+//                 };
+
+//                 thumbBox.appendChild(thumb);
+//             });
+//         }
+
+        // ======================
+        // ⭐ RATING
+        // ======================
+        const starsEl = document.getElementById('modalStars');
+        const reviewEl = document.getElementById('modalReviewCount');
+
+        if (starsEl && reviewEl) {
+            let rating = parseFloat(this.dataset.rating) || 0;
+            let reviews = parseInt(this.dataset.reviews) || 0;
+
+            let stars = '';
+            for (let i = 1; i <= 5; i++) {
+                if (i <= Math.floor(rating)) {
+                    stars += '⭐';
+                } else {
+                    stars += '☆';
+                }
+            }
+
+            // ⭐ hiển thị sao
+            starsEl.innerText = stars;
+
+            // 🔥 hiển thị giống Blade
+            reviewEl.innerText = `${rating.toFixed(1)} · ${reviews} đánh giá`;
+        }
+
+        // ======================
+        // 📝 DESCRIPTION
+        // ======================
+        const descEl = document.getElementById('modalDescription');
+        if (descEl) {
+           descEl.innerHTML = this.dataset.description || "Chưa có mô tả sản phẩm";
+        }
+
+          modal.style.display = 'flex';
+      });
+  });
+
+  closeBtn.addEventListener('click', function () {
+      modal.style.display = 'none';
+  });
+
+  modal.addEventListener('click', function (e) {
+      if (e.target === modal) {
+          modal.style.display = 'none';
+      }
+  });
+
+  /* ======================
+     SWIPER
+  ====================== */
+  document.querySelectorAll('.js-swiper-slider').forEach(function (el) {
+
+    let settings = {};
+
+    try {
+      const raw = el.getAttribute('data-settings');
+      if (raw) settings = JSON.parse(raw);
+    } catch (e) {
+      console.warn('Swiper JSON lỗi:', e);
+    }
+
+    new Swiper(el, {
+      loop: true,
+      slidesPerView: 1,
+      spaceBetween: 10,
+      observer: true,
+      observeParents: true,
+      autoplay: {
+        delay: 4000,
+        disableOnInteraction: false,
+      },
+      ...settings
+    });
+
+  });
+
+});
   $(function() {
       $("#pagesize").on("change", function() {
           $("#size").val($(this).val());
@@ -493,16 +1274,26 @@
           }, 50);
       });
 
-      $("input[name='categories']").on("change", function() {
-          var categories = "";
-          $("input[name='categories']:checked").each(function() {
-              categories += (categories === "" ? "" : ",") + $(this).val();
-          });
-          $("#hdnCategories").val(categories);
-          setTimeout(() => {
-              $("#frmfilter").submit();
-          }, 50);
-      });
+      // $("input[name='categories']").on("change", function() {
+      //     var categories = "";
+      //     $("input[name='categories']:checked").each(function() {
+      //         categories += (categories === "" ? "" : ",") + $(this).val();
+      //     });
+      //     $("#hdnCategories").val(categories);
+      //     setTimeout(() => {
+      //         $("#frmfilter").submit();
+      //     }, 50);
+      // });
+      $("input[name='categories[]']").on("change", function() {
+    var categories = "";
+    $("input[name='categories[]']:checked").each(function() {
+        categories += (categories === "" ? "" : ",") + $(this).val();
+    });
+    $("#hdnCategories").val(categories);
+    setTimeout(() => {
+        $("#frmfilter").submit();
+    }, 50);
+});
 
       $(".price-range-slider").on("slideStop", function(e) {
           var value = e.value;
@@ -520,5 +1311,6 @@
           $("#frmfilter").submit();
       });
   });
+        
 </script>
 @endpush

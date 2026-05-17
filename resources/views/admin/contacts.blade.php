@@ -52,7 +52,7 @@
                                                 </thead>
                                                @foreach ($contacts as $contact)
                                                <tr>
-                                                   <td>{{ $contact->id }}</td>
+                                                  <td>{{ ($contacts->currentPage() - 1) * $contacts->perPage() + $loop->iteration }}</td>
                                                    <td>{{ $contact->name }}</td>
                                                    <td>{{ $contact->phone }}</td>
                                                    <td>{{ $contact->email }}</td>

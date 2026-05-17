@@ -23,6 +23,12 @@
   
     @stack("styles")
 </head>
+<style>
+    .image i {
+    font-size: 25px;
+    color: #333;
+}
+    </style>
 <body class="body">
     <div id="wrapper">
         <div id="page" class="">
@@ -149,21 +155,59 @@
                                         <div class="text">Bình Luận</div>
                                     </a>
                                 </li>
+                              <li class="menu-item">
+                                    <a href="{{ route('admin.reviews') }}">
+                                        <div class="icon"><i class="icon-mail"></i></div>
+                                        <div class="text">Đánh Giá</div>
+                                    </a>
+                                </li>
 
                                 <li class="menu-item">
-                                    <a href="users.html" class="">
+                                    <a href="{{ route('admin.blogs') }}" class="">
+                                        <div class="icon"><i class="icon-file-plus"></i></div>
+                                        <div class="text">Bài Viết</div>
+                                    </a>
+                                </li>
+
+                                <li class="menu-item has-children">
+                                    <a href="javascript:void(0);" class="menu-item-button">
+                                        <div class="icon"><i class="icon-layers"></i></div>
+                                        <div class="text">Giao dịch</div>
+                                    </a>
+                                    <ul class="sub-menu">
+                                        <li class="sub-menu-item">
+                                            <a href="{{route('admin.category.add')}}" class="">
+                                                <div class="text">Bán hang</div>
+                                            </a>
+                                        </li>
+                                        <li class="sub-menu-item">
+                                            <a href="{{route('admin.categories')}}" class="">
+                                                <div class="text">Hóa đơn</div>
+                                            </a>
+                                        </li>
+                                        <li class="sub-menu-item">
+                                            <a href="{{route('admin.categories')}}" class="">
+                                                <div class="text">E-invoice</div>
+                                            </a>
+                                        </li>
+                                        <li class="sub-menu-item">
+                                            <a href="{{route('admin.categories')}}" class="">
+                                                <div class="text">Phiếu chốt quỹ hằng ngày</div>
+                                            </a>
+                                        </li>
+                                        <li class="sub-menu-item">
+                                            <a href="{{route('admin.categories')}}" class="">
+                                                <div class="text">Tra hàng tồn</div>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </li>
+                                <li class="menu-item">
+                                    <a href="{{route('admin.users')}}" class="">
                                         <div class="icon"><i class="icon-user"></i></div>
                                         <div class="text">Người Dùng</div>
                                     </a>
                                 </li>
-
-                                <li class="menu-item">
-                                    <a href="settings.html" class="">
-                                        <div class="icon"><i class="icon-settings"></i></div>
-                                        <div class="text">Cài Đặt</div>
-                                    </a>
-                                </li>
-
                                  <li class="menu-item">
                                     <form method="POST" action="{{route('logout')}}" id="logout-form">
                                         @csrf
@@ -208,7 +252,7 @@
                             </div>
                             <div class="header-grid">
 
-                                <div class="popup-wrap message type-header">
+                                {{-- <div class="popup-wrap message type-header">
                                     <div class="dropdown">
                                         <button class="btn btn-secondary dropdown-toggle" type="button"
                                             id="dropdownMenuButton2" data-bs-toggle="dropdown" aria-expanded="false">
@@ -217,7 +261,7 @@
                                                 <i class="icon-bell"></i>
                                             </span>
                                         </button>
-                                        <ul class="dropdown-menu dropdown-menu-end has-content"
+                                        {{-- <ul class="dropdown-menu dropdown-menu-end has-content"
                                             aria-labelledby="dropdownMenuButton2">
                                             <li>
                                                 <h6>Notifications</h6>
@@ -271,43 +315,46 @@
                                                 </div>
                                             </li>
                                             <li><a href="#" class="tf-button w-full">View all</a></li>
-                                        </ul>
-                                    </div>
-                                </div>
+                                        </ul> --}}
+                                    {{-- </div>
+                                </div> --}}
 
                                 <div class="popup-wrap user type-header">
                                     <div class="dropdown">
                                         <button class="btn btn-secondary dropdown-toggle" type="button"
                                             id="dropdownMenuButton3" data-bs-toggle="dropdown" aria-expanded="false">
                                             <span class="header-user wg-user">
-                                                <span class="image">
-                                                    <img src="{{ asset('images/avatar/admin.png') }}" alt="">
-                                                </span>
+                                               <span class="image d-flex align-items-center justify-content-center">
+                                                        <i class="icon-user"></i>
+                                                    </span>
                                                 <span class="flex flex-column">
                                                     <span class="body-title mb-2">Admin</span>
                                                     <span class="text-tiny">Admin</span>
                                                 </span>
                                             </span>
                                         </button>
-                                        <ul class="dropdown-menu dropdown-menu-end has-content"
+                                        {{-- <ul class="dropdown-menu dropdown-menu-end has-content"
                                             aria-labelledby="dropdownMenuButton3">
-                                            <li>
-                                                <a href="#" class="user-item">
+                                           <li>
+                                                <a href="{{route('admin.users')}}" class="user-item">
                                                     <div class="icon">
                                                         <i class="icon-user"></i>
                                                     </div>
                                                     <div class="body-title-2">Account</div>
                                                 </a>
                                             </li>
-                                            <li>
-                                                <a href="#" class="user-item">
-                                                    <div class="icon">
-                                                        <i class="icon-mail"></i>
-                                                    </div>
-                                                    <div class="body-title-2">Inbox</div>
-                                                    <div class="number">27</div>
-                                                </a>
-                                            </li>
+                                         <a href="{{ route('admin.contacts') }}" class="user-item">
+                                                        <div class="icon">
+                                                            <i class="icon-mail"></i>
+                                                        </div>
+
+                                                        <div class="body-title-2">Inbox</div>
+
+                                                        <div class="number">
+                                                            {{ $inboxCount ?? 0 }}
+                                                        </div>
+                                                    </a>
+                                                </li>
                                             <li>
                                                 <a href="#" class="user-item">
                                                     <div class="icon">
@@ -337,7 +384,7 @@
                                                     @csrf
                                                 </form>
                                             </li>
-                                        </ul>
+                                        </ul> --}}
                                     </div>
                                 </div>
 
@@ -347,7 +394,7 @@
                     <div class="main-content">
                         @yield('content')
                         <div class="bottom-page">
-                            <div class="body-text"> © 2026 BRijclo</div>
+                            <div class="body-text"> © 2026 Brijclo</div>
                         </div>
                     </div>
 

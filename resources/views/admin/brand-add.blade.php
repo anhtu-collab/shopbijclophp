@@ -35,12 +35,12 @@
                                             <div class="body-title">Tên Thương Hiệu <span class="tf-color-1">*</span></div>
                                             <input class="flex-grow" type="text" placeholder="Nhập tên thương hiệu" name="name" tabindex="0" value="{{old('name')}}" aria-required="true" required="">
                                         </fieldset>
-                                          @error('name') <span class="alert-danger text-center">{{$message}}</span> @enderror 
+                                          @error('name') <span class="alert-danger text-center">{{message}}</span> @enderror 
                                         <fieldset class="name">
                                             <div class="body-title">Mã Thương Hiệu<span class="tf-color-1">*</span></div>
                                             <input class="flex-grow" type="text" placeholder="Nhập mã thương hiệu" name="slug" tabindex="0" value="{{old('slug')}}" aria-required="true" required="">
                                         </fieldset>
-                                          @error('slug') <span class="alert-danger text-center">{{$message}}</span>  @enderror 
+                                          @error('slug') <span class="alert-danger text-center">{{message}}</span>  @enderror 
                                         <fieldset>
                                             <div class="body-title">Ảnh Thương Hiệu<span class="tf-color-1">*</span>
                                             </div>
@@ -60,7 +60,7 @@
                                                 </div>
                                             </div>
                                         </fieldset>
-                                          @error('image') <span class="alert-danger text-center">{{$message}}</span>  @enderror s
+                                          @error('image') <span class="alert-danger text-center">{{message}}</span>  @enderror 
                                         <div class="bot">
                                             <div></div>
                                             <button class="tf-button w208" type="submit">Lưu</button>

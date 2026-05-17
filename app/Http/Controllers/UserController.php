@@ -22,9 +22,7 @@ class UserController extends Controller
 
      public function orders()
     {
-        $orders = Order::where('user_id', Auth::id())
-                        ->orderBy('created_at', 'DESC')
-                       ->paginate(10);
+        $orders = Order::where('user_id', Auth::id())->orderBy('created_at', 'DESC') ->paginate(10);
         return view('user.orders', compact('orders'));
     }
 
@@ -45,21 +43,116 @@ class UserController extends Controller
             return redirect()->route('login');
         }
     }
-    public function order_cancel(Request $request)
+    public function place_order(Request $request)
 {
-    $order = Order::find($request->order_id);
+    $user = Auth::user();
+
+    // 1. lấy địa chỉ
+    if ($request->address_id) {
+        $address = Address::where('id', $request->address_id)
+                    ->where('user_id', $user->id)
+                    ->first();
+    } else {
+        $address = Address::where('user_id', $user->id)
+                    ->where('is_default', 1)
+                    ->first();
+    }
+
+    if (!$address) {
+        return back()->with('error', 'Chưa có địa chỉ giao hàng!');
+    }
+
+    // 2. tạo order
+    $order = new Order();
+
+    $order->user_id = $user->id;
+
+    $order->name = $address->name;
+    $order->phone = $address->phone;
+    $order->address = $address->address;
+    $order->city = $address->city;
+    $order->state = $address->state;
+    $order->country = $address->country;
+    $order->zip = $address->zip;
+    $order->locality = $address->locality;
+    $order->landmark = $address->landmark;
+
+    $order->address_id = $address->id;
+    $order->address_type = $address->is_default ? 'default' : 'custom';
+
+    // 3. tính cart (GIẢ SỬ BẠN DÙNG SESSION CART)
+    $cart = session()->get('cart', []);
+
+    $subtotal = 0;
+
+    foreach ($cart as $item) {
+        $subtotal += $item['price'] * $item['quantity'];
+    }
+
+    $order->subtotal = $subtotal;
+    $order->discount = 0;
+    $order->tax = 0;
+    $order->total = $subtotal;
+
+    $order->status = 'ordered';
+    $order->save();
+
+    // 4. tạo order items
+    foreach ($cart as $item) {
+        OrderItem::create([
+            'order_id' => $order->id,
+            'product_id' => $item['id'],
+            'quantity' => $item['quantity'],
+            'price' => $item['price'],
+        ]);
+    }
+
+    // 5. clear cart
+    session()->forget('cart');
+
+    return redirect()->route('user.orders')
+        ->with('success', 'Đặt hàng thành công!');
+}
+//     public function order_cancel(Request $request)
+// {
+//     $order = Order::find($request->order_id);
+
+//     if (!$order) {
+//         return back()->with('error', 'Không tìm thấy đơn hàng!');
+//     }
+
+//     if ($order->user_id != Auth::id()) {
+//         return back()->with('error', 'Không có quyền hủy đơn này!');
+//     }
+//     if ($order->status != 'pending') {
+//     return back()->with('error', 'Không thể hủy đơn này!');
+// }
+
+//     $order->status = "canceled";
+//     $order->canceled_date = Carbon::now();
+//     $order->save();
+
+//     return back()->with('status', 'Đã hủy thành công!');
+// }
+public function order_cancel(Request $request)
+{
+    $order = Order::where('id', $request->order_id)
+                  ->where('user_id', Auth::id())
+                  ->first();
 
     if (!$order) {
         return back()->with('error', 'Không tìm thấy đơn hàng!');
     }
 
-    if ($order->user_id != Auth::id()) {
-        return back()->with('error', 'Không có quyền hủy đơn này!');
+    if ($order->status !== 'pending') {
+        return back()->with('error', 'Không thể hủy đơn này!');
     }
 
-    $order->status = "canceled";
-    $order->canceled_date = Carbon::now();
-    $order->save();
+    $order->update([
+        'status' => 'canceled',
+        'canceled_date' => Carbon::now()
+        
+    ]);
 
     return back()->with('status', 'Đã hủy thành công!');
 }
@@ -78,14 +171,22 @@ public function add_address()
 }
 public function edit_address($id)
 {
+    
+    
     $address = Address::where('id', $id)
                       ->where('user_id', auth()->id())
                       ->first();
+    if (!$address) {
+    return redirect()->route('user.address')->with('error', 'Không tìm thấy địa chỉ!');
+}
 
     return view('user.address-edit', compact('address'));
 }
 public function update_address(Request $request, $id)
 {
+    if ($request->has('is_default')) {
+    Address::where('user_id', Auth::id())->update(['is_default' => 0]);
+}
     $request->validate([
         'name' => 'required',
         'phone' => 'required',
@@ -114,7 +215,7 @@ public function update_address(Request $request, $id)
         'address' => $request->address,
         'locality' => $request->locality,
         'landmark' => $request->landmark,
-        'is_default' => $request->has('isdefault') ? 1 : 0,
+        'is_default' => $request->has('is_default') ? 1 : 0,
     ]);
 
     return redirect()->route('user.address')
@@ -122,6 +223,9 @@ public function update_address(Request $request, $id)
 }
 public function store_address(Request $request)
 {
+    if ($request->has('is_default')) {
+    Address::where('user_id', Auth::id())->update(['is_default' => 0]);
+}
     $request->validate([
         'name' => 'required',
         'phone' => 'required',
@@ -144,7 +248,7 @@ public function store_address(Request $request)
         'address' => $request->address,
         'locality' => $request->locality,
         'landmark' => $request->landmark,
-        'is_default' => $request->has('isdefault') ? 1 : 0,
+        'is_default' => $request->has('is_default') ? 1 : 0,
     ]);
 
     return redirect()->route('user.address')

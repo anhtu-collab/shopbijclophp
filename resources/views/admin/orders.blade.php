@@ -38,16 +38,17 @@
                                             <table class="table table-striped table-bordered">
                                                 <thead>
                                                     <tr>
-                                                        <th style="width:70px">STT</th>
-                                                        <th class="text-center">Tên</th>
-                                                        <th class="text-center">Số Điện Thoại</th>
+                                                        <th class="text-center" style="width:70px">STT</th>
+                                                        <!-- <th class="text-center">Tên Người Đặt</th> -->
+                                                        <th class="text-center">Tên Người Nhận</th>
+                                                        <th class="text-center">Số Điện Thoại Nhận Hàng</th>
                                                         <th class="text-center">Tạm Tính</th>
                                                         <th class="text-center">Thuế</th>
                                                         <th class="text-center">Tổng Tiền</th>
 
                                                         <th class="text-center">Trạng Thái</th>
                                                         <th class="text-center">Ngày Đặt</th>
-                                                        <th class="text-center">Số Lượng</th>
+                                                        <!-- {{-- <th class="text-center">Số Lượng</th> --}} -->
                                                         <th class="text-center">Ngày Giao/ Hủy</th>
                                                         <th class="text-center">Hoạt Động</th>
                                                     </tr>
@@ -56,6 +57,7 @@
                                                     @foreach($orders as $order)
                                                     <tr>
                                                         <td class="text-center">{{ ($orders->currentPage() - 1) * $orders->perPage() + $loop->iteration }}</td>
+                                                        <!-- <td class="text-center">{{$order->name}}</td> -->
                                                         <td class="text-center">{{$order->name}}</td>
                                                         <td class="text-center">{{$order->phone}}</td>
                                                         <td class="text-center">{{ number_format($order->subtotal ?? 0, 0, ',', '.') }} đ</td>
@@ -71,7 +73,7 @@
                                                      @endif
                                                         </td>
                                                         <td class="text-center"> {{ \Carbon\Carbon::parse($order->created_at)->format('d/m/Y H:i') }}</td>
-                                                       <td class="text-center">{{ $order->orderItems->count() }}</td>
+                                                       {{-- <td class="text-center">{{ $order->orderItems->count() }}</td> --}}
                                                        <td class="text-center">
                                                            @if($order->status == 'delivered')
                                                                {{ $order->delivered_date ? \Carbon\Carbon::parse($order->delivered_date)->format('d/m/Y H:i') : '-' }}

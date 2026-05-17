@@ -54,7 +54,7 @@
                                                 <tbody>
                                                      @foreach ($brands as $brand)                                                                 
                                                     <tr>
-                                                        <td>{{$brand->id}}</td>
+                                                        <td>{{ ($brands->currentPage() - 1) * $brands->perPage() + $loop->iteration }}</td>
                                                         <td class="pname">
                                                             <div class="image">
                                                                 <img src="{{asset('uploads/brands')}}/{{$brand->image}}" alt="{{$brand->name}}" class="image">
@@ -64,7 +64,7 @@
                                                             </div>
                                                         </td>
                                                         <td>{{$brand->slug}}</td>
-                                                        <td><a href="#" target="_blank">0</a></td>
+                                                        <td><a href="#" target="_blank">{{ $brand->products()->where('quantity', '>', 0)->count()}}</a></td>
                                                         <td>
                                                             <div class="list-icon-function">
                                                                 <a href="{{route('admin.brand.edit',['id'=>$brand])}}">

@@ -32,7 +32,7 @@
                                     <form class="form-new-product form-style-1" action="{{route('admin.brand.update')}}" method="POST" enctype="multipart/form-data">
                                         @csrf  
                                         @method('PUT')
-                                        <input type="hidden" name="id" value={{$brand->id}} />
+                                        <input type="hidden" name="id" value="{{ $brand->id }}" />
                                         <fieldset class="name">
                                             <div class="body-title">Tên Thương Hiệu<span class="tf-color-1">*</span></div>
                                             <input class="flex-grow" type="text" placeholder="Nhập tên thương hiệu" name="name" tabindex="0" value="{{$brand->name}}" aria-required="true" required="">

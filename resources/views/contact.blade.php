@@ -1,10 +1,40 @@
 @extends('layouts.app')
 @section('content')
+<style>
+    .cart-header{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 40px;
+}
+
+.btn-back{
+    padding: 10px 40px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    text-decoration: none;
+    color: #333;
+    transition: 0.2s;
+    font-weight: 500;
+}
+
+.btn-back:hover{
+    background: #f3f3f3;
+    transform: translateX(-2px);
+}
+    </style>
  <main class="pt-90">
     <div class="mb-4 pb-4"></div>
     <section class="contact-us container">
       <div class="mw-930">
-        <h2 class="page-title">LIÊN HỆ</h2>
+        
+                        <div class="cart-header">
+     <h2 class="page-title">LIÊN HỆ</h2>
+
+    <a href="{{ route('shop.index') }}" class="btn-back">
+        Quay lại
+    </a>
+</div>
       </div>
     </section>
 
