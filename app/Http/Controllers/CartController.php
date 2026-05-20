@@ -11,6 +11,7 @@ use App\Models\Coupon;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
+use App\Models\ProductVariant;
 use App\Models\Transaction;
 use Illuminate\Support\Facades\Auth;
 
@@ -22,52 +23,122 @@ class CartController extends Controller
     }
     public function buyNow(Request $request)
 {
+    $product = Product::find($request->id);
+
+    if (!$product) {
+        return back()->with('error', 'Sản phẩm không tồn tại!');
+    }
+
+    if ($product->is_out_of_stock) {
+        return back()->with('error', 'Sản phẩm này hiện đã hết hàng!');
+    }
+
+    $variantQuery = ProductVariant::where('product_id', $request->id);
+
+    if (is_numeric($request->size)) {
+        $variantQuery->where('size_id', $request->size);
+    } elseif ($request->size) {
+        $variantQuery->whereHas('size', function ($q) use ($request) {
+            $q->where('name', $request->size);
+        });
+    }
+
+    if (is_numeric($request->color)) {
+        $variantQuery->where('color_id', $request->color);
+    } elseif ($request->color) {
+        $variantQuery->whereHas('color', function ($q) use ($request) {
+            $q->where('name', $request->color);
+        });
+    }
+
+    $variant = $variantQuery->first();
+
+    if (!$variant) {
+        return back()->with('error', 'Không tìm thấy biến thể sản phẩm!');
+    }
+
+    if ($request->quantity > $variant->quantity) {
+        return back()->with('error', 'Không đủ hàng!');
+    }
+
     Cart::instance('cart')->destroy();
 
     Cart::instance('cart')->add(
         $request->id,
         $request->name,
         $request->quantity,
-        $request->price
-    );
+        $request->price,
+        [
+            'size_id' => $variant->size_id,
+            'color_id' => $variant->color_id,
+            'size' => $variant->size->name,
+            'color' => $variant->color->name,
+        ]
+    )->associate(Product::class);
 
     return redirect()->route('checkout.index');
 }
 
 
-    public function add_to_cart(Request $request) {
-            $product = Product::find($request->id);
+  public function add_to_cart(Request $request)
+{
+    $product = Product::find($request->id);
 
     if (!$product) {
         return back()->with('error', 'Sản phẩm không tồn tại!');
     }
 
-    // 🚨 CHECK HẾT HÀNG
-    if ($product->quantity <= 0) {
-        return back()->with('error', 'Sản phẩm đã hết hàng rồi!');
+    if ($product->is_out_of_stock) {
+        return back()->with('error', 'Sản phẩm này hiện đã hết hàng!');
     }
 
-    // 🚨 CHECK SỐ LƯỢNG MUA > TỒN KHO
-    if ($request->quantity > $product->quantity) {
-        return back()->with('error', 'Số lượng vượt quá tồn kho');
-    }
-        Cart::instance('cart')->add(
-            $request->id, 
-            $request->name, 
-            $request->quantity, 
-            $request->price,
-            [
-            'size' => $request->size,
-            'color' => $request->color,
-            ]
+    $query = ProductVariant::where('product_id', $request->id);
 
-        )->associate('App\Models\Product'); // Liên kết với Model Product để lấy ảnh
-        
-        return redirect()->back();
+    if (is_numeric($request->size)) {
+        $query->where('size_id', $request->size);
+    } elseif ($request->size) {
+        $query->whereHas('size', function ($q) use ($request) {
+            $q->where('name', $request->size);
+        });
     }
-    // Hàm tăng số lượng
+
+    if (is_numeric($request->color)) {
+        $query->where('color_id', $request->color);
+    } elseif ($request->color) {
+        $query->whereHas('color', function ($q) use ($request) {
+            $q->where('name', $request->color);
+        });
+    }
+
+    $variant = $query->first();
+
+    if (!$variant) {
+        return back()->with('error', 'Không tìm thấy biến thể sản phẩm!');
+    }
+
+    if ($request->quantity > $variant->quantity) {
+        return back()->with('error', 'Không đủ hàng!');
+    }
+
+    Cart::instance('cart')->add(
+        $request->id,
+        $product->name,
+        $request->quantity,
+        $product->sale_price ?? $product->regular_price,
+        [
+            'size_id' => $variant->size_id,
+            'color_id' => $variant->color_id,
+            'size' => $variant->size->name,
+            'color' => $variant->color->name,
+        ]
+    )->associate(Product::class);
+
+    return back()->with('success', 'Đã thêm vào giỏ hàng!');
+}
+
 public function increase_cart_quantity($rowId)
 {
+    // 1. Lấy thông tin item trong giỏ hàng
     $productCart = Cart::instance('cart')->get($rowId);
 
     // ❗ Check item tồn tại trong cart
@@ -75,6 +146,7 @@ public function increase_cart_quantity($rowId)
         return back()->with('error', 'Sản phẩm không tồn tại trong giỏ!');
     }
 
+    // 2. Tìm sản phẩm gốc
     $product = Product::find($productCart->id);
 
     // ❗ Check sản phẩm tồn tại
@@ -82,15 +154,47 @@ public function increase_cart_quantity($rowId)
         return back()->with('error', 'Sản phẩm đã bị xoá!');
     }
 
-    // 🚨 CHẶN VƯỢT KHO
-    if ($productCart->qty >= $product->quantity) {
+    // 3. Lấy size và color từ options của giỏ hàng
+    $sizeId = $productCart->options->size_id ?? null;
+    $colorId = $productCart->options->color_id ?? null;
+    $sizeName = $productCart->options->size ?? null;
+    $colorName = $productCart->options->color ?? null;
+
+    // 4. Truy vấn số lượng tồn kho từ bảng biến thể (ProductVariant)
+    $variantQuery = ProductVariant::where('product_id', $productCart->id);
+
+    if ($sizeId) {
+        $variantQuery->where('size_id', $sizeId);
+    } elseif ($sizeName) {
+        $variantQuery->whereHas('size', function ($q) use ($sizeName) {
+            $q->where('name', $sizeName);
+        });
+    }
+
+    if ($colorId) {
+        $variantQuery->where('color_id', $colorId);
+    } elseif ($colorName) {
+        $variantQuery->whereHas('color', function ($q) use ($colorName) {
+            $q->where('name', $colorName);
+        });
+    }
+
+    $variant = $variantQuery->first();
+
+    // ❗ Trường hợp không tìm thấy biến thể tương ứng trong database
+    if (!$variant) {
+        return back()->with('error', 'Phiên bản sản phẩm này không còn tồn tại hoặc đã ngừng bán!');
+    }
+
+    // 🚨 CHẶN VƯỢT KHO BIẾN THỂ
+    if ($productCart->qty >= $variant->quantity) {
         return back()->with(
             'error',
-            'Chỉ còn ' . $product->quantity . ' sản phẩm trong kho!'
+            'Chỉ còn ' . $variant->quantity . ' sản phẩm thuộc phiên bản (Size/Màu) này trong kho!'
         );
     }
 
-    // ✅ Tăng số lượng
+    // ✅ Tăng số lượng trong giỏ hàng thêm 1
     Cart::instance('cart')->update($rowId, $productCart->qty + 1);
 
     return back()->with('success', 'Đã tăng số lượng!');
@@ -98,13 +202,28 @@ public function increase_cart_quantity($rowId)
 
 // Hàm giảm số lượng
 public function decrease_cart_quantity($rowId) {
-    $product = Cart::instance('cart')->get($rowId);
-    $qty = $product->qty - 1; // Giảm đi 1
+    // 1. Lấy thông tin item trong giỏ hàng
+    $productCart = Cart::instance('cart')->get($rowId);
     
+    // ❗ Check xem item có tồn tại trong giỏ hàng không
+    if (!$productCart) {
+        return back()->with('error', 'Sản phẩm không tồn tại trong giỏ!');
+    }
+
+    // 2. Tính toán số lượng mới sau khi giảm
+    $qty = $productCart->qty - 1; // Giảm đi 1
+    
+    // 3. Nếu số lượng giảm xuống bằng 0, thực hiện xóa sản phẩm khỏi giỏ hàng
+    if ($qty <= 0) {
+        Cart::instance('cart')->remove($rowId);
+        return redirect()->back()->with('success', 'Đã xóa sản phẩm khỏi giỏ hàng!');
+    }
+    
+    // 4. Nếu số lượng vẫn > 0, cập nhật lại giỏ hàng bình thường
     Cart::instance('cart')->update($rowId, $qty);
-    return redirect()->back();
+    
+    return redirect()->back()->with('success', 'Đã giảm số lượng!');
 }
-// Hàm xóa 1 sản phẩm cụ thể
 public function remove_item($rowId) {
     // Sử dụng phương thức remove() với rowId [00:01:11]
     Cart::instance('cart')->remove($rowId);
@@ -329,31 +448,68 @@ foreach (Cart::instance('cart')->content() as $item)
         return back()->with('error', 'Sản phẩm không tồn tại!');
     }
 
-    if ($product->quantity <= 0) {
-        return back()->with('error', $product->name . ' đã hết hàng!');
+    $sizeId = $item->options['size_id'] ?? null;
+    $colorId = $item->options['color_id'] ?? null;
+    $sizeName = $item->options['size'] ?? null;
+    $colorName = $item->options['color'] ?? null;
+    $variantQuery = ProductVariant::where('product_id', $product->id);
+
+    if ($sizeId) {
+        $variantQuery->where('size_id', $sizeId);
+    } elseif ($sizeName) {
+        $variantQuery->whereHas('size', function ($q) use ($sizeName) {
+            $q->where('name', $sizeName);
+        });
     }
 
-    if ($product->quantity < $item->qty) {
-        return back()->with('error', $product->name . ' không đủ hàng!');
+    if ($colorId) {
+        $variantQuery->where('color_id', $colorId);
+    } elseif ($colorName) {
+        $variantQuery->whereHas('color', function ($q) use ($colorName) {
+            $q->where('name', $colorName);
+        });
     }
 
-    // trừ kho
-    $product->quantity -= $item->qty;
+    $variant = $variantQuery->first();
 
-    // chống âm kho
-    if ($product->quantity < 0) {
-        $product->quantity = 0;
+    if ($variant) {
+        if ($variant->quantity <= 0) {
+            return back()->with('error', $product->name . ' đã hết hàng!');
+        }
+
+        if ($variant->quantity < $item->qty) {
+            return back()->with('error', $product->name . ' không đủ hàng cho phiên bản này!');
+        }
+
+        $variant->quantity -= $item->qty;
+        if ($variant->quantity < 0) {
+            $variant->quantity = 0;
+        }
+        $variant->save();
+    } else {
+        if ($product->quantity <= 0) {
+            return back()->with('error', $product->name . ' đã hết hàng!');
+        }
+
+        if ($product->quantity < $item->qty) {
+            return back()->with('error', $product->name . ' không đủ hàng!');
+        }
+
+        $product->quantity -= $item->qty;
+        if ($product->quantity < 0) {
+            $product->quantity = 0;
+        }
+        $product->save();
     }
 
-    $product->save();
-
-    // 👉 ORDER ITEM phải nằm ngoài if
     $orderItem = new OrderItem();
     $orderItem->product_id = $item->id;
     $orderItem->order_id = $order->id;
     $orderItem->price = $item->price;
     $orderItem->quantity = $item->qty;
     $orderItem->options = [
+        'size_id' => $sizeId,
+        'color_id' => $colorId,
         'size' => $item->options['size'] ?? null,
         'color' => $item->options['color'] ?? null,
     ];

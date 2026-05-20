@@ -24,29 +24,50 @@
     font-style: normal;
     cursor: pointer;
     font-weight: bold;
+    
 }
-#galpreview {
-    display: flex !important;
-    flex-wrap: wrap !important;
+.size-item-box{
+    display: flex;
+    align-items: center;
     gap: 10px;
-    width: 100%;
+    padding: 8px 12px;
+    border-radius: 10px;
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    position: relative;
 }
 
-#galpreview .item {
-    width: 120px !important;
-    height: 120px;
-    overflow: hidden;
+.size-label{
+    font-weight: 600;
+    background: #343a40;
+    color: #fff;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
 }
 
-#galpreview .item img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+.size-item-box input{
+    width: 70px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 3px 6px;
+    text-align: center;
 }
 
-/* 👇 QUAN TRỌNG NHẤT */
-.upload-image {
-    overflow: visible !important;
+.btn-remove-item{
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    width: 18px;
+    height: 18px;
+    background: red;
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 12px;
+    cursor: pointer;
 }
 </style>
 <div class="main-content-inner">
@@ -172,17 +193,17 @@
                         <div class="body-title mb-10">Mã Sản Phẩm<span class="tf-color-1">*</span></div>
                         <input type="text" name="SKU" value="{{$product->SKU}}">
                     </fieldset>
-                    <fieldset class="name">
+                    <!-- <fieldset class="name">
                         <div class="body-title mb-10">Số Lượng<span class="tf-color-1">*</span></div>
                         <input type="text" name="quantity" value="{{$product->quantity}}">
-                    </fieldset>
+                    </fieldset> -->
                                  </div>
                                 <div class="mb-3">
-                                    <div class="body-title mb-10">Size & Số lượng</div>
+                                    <div class="body-title mb-10">Kích thước & Số lượng</div>
 
                                     <div class="d-flex gap-2 mb-2">
-                                        <input type="text" id="sizeInput" class="form-control" placeholder="Size (S, M, L)">
-                                        <input type="number" id="qtyInput" class="form-control" placeholder="SL" style="max-width:120px">
+                                        <input type="text" id="sizeInput" class="form-control" placeholder="Vui lòng nhập kích thước và số lượng rồi Enter" style="max-width:250px">
+                                        <input type="number" id="stockInput" class="form-control" placeholder="Số lượng" min="1" value="1" style="max-width:120px">
                                         <button type="button" class="btn btn-primary" onclick="addSize()">Thêm</button>
                                     </div>
 
@@ -193,7 +214,7 @@
 
                         <div class="mb-3">
                             <div class="body-title mb-10">Màu sắc</div>
-                            <input type="text" id="colorInput" class="form-control" placeholder="Nhập màu rồi Enter">
+                            <input type="text" id="colorInput" class="form-control" placeholder="Vui lòng nhập màu sắc rồi Enter">
 
                             <div id="colorList" class="mt-2 d-flex flex-wrap gap-2"></div>
 
@@ -292,7 +313,7 @@
   let sizes = @json($oldSizes ?? []);
 
     // Sự kiện nhấn Enter tại ô nhập số lượng kho để kích hoạt thêm nhanh
-    $("#qtyInput").on("keypress", function(e){
+    $("#stockInput").on("keypress", function(e){
         if(e.which === 13){
             e.preventDefault();
             addSize();
@@ -303,7 +324,7 @@
     // Hàm thêm mới hoặc cộng dồn số lượng Size
     function addSize() {
         let size = $("#sizeInput").val().trim().toUpperCase();
-        let quantity = $("#qtyInput").val().trim();
+        let quantity = $("#stockInput").val().trim();
 
         if (size && quantity) {
             let qtyInt = parseInt(quantity);
@@ -377,10 +398,27 @@
    let colors = @json($oldColors ?? []);
 
 
-    $(document).ready(function(){
-        renderSizes();
-        renderColors();
+   $(document).ready(function(){
+    renderSizes();
+    renderColors();
+
+    // Chốt chặn cuối cùng kiểm tra dữ liệu trước khi submit form
+    $("form").on("submit", function(e) {
+        // Kiểm tra xem mảng dữ liệu size có bị rỗng không
+        if (typeof sizes === 'undefined' || sizes.length === 0) {
+            alert("Vui lòng thêm ít nhất một Size và Số lượng trước khi lưu sản phẩm!");
+            e.preventDefault(); // Dừng việc gửi form lại
+            return false;
+        }
+
+        // Ép dữ liệu mảng đối tượng thành chuỗi JSON nạp vào input ẩn
+        $("#sizes").val(JSON.stringify(sizes));
+        $("#colors").val(JSON.stringify(colors));
+        
+        return true; 
     });
+});
+    
 
     // Sự kiện nhấn Enter tại ô Màu sắc để thêm nhanh
     $("#colorInput").on("keypress", function(e){

@@ -313,8 +313,7 @@
 
     list-style: none;
 
-    /* 💎 Glass gradient đẹp */
-    background: white
+    background: white;
 
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
@@ -846,6 +845,30 @@
         </a>
       </div>
     </div>
+    <div class="chat-widget" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999;">
+    <!-- Nút tròn kích hoạt Chat -->
+    <button id="chat-toggle" style="width: 50px; height: 50px; border-radius: 50%; background: #28a745; color: white; border: none; cursor: pointer;">
+        💬
+    </button>
+
+    <!-- Hộp thoại chat box (mặc định ẩn bằng thuộc tính display:none) -->
+    <div id="chat-box" style="display: none; width: 350px; height: 450px; background: white; border: 1px solid #ccc; box-shadow: 0 0 10px rgba(0,0,0,0.1); position: absolute; bottom: 60px; right: 0; border-radius: 8px; flex-direction: column;">
+        <div style="background: #28a745; color: white; padding: 10px; font-weight: bold; border-radius: 8px 8px 0 0;">
+            Trợ lý AI Hỗ Trợ Khách Hàng
+        </div>
+        
+        <!-- Khung hiển thị nội dung tin nhắn -->
+        <div id="chat-messages" style="flex: 1; padding: 10px; overflow-y: auto; background: #f9f9f9; display: flex; flex-direction: column; gap: 8px;">
+            <!-- Nội dung tin nhắn AJAX sẽ render vào đây -->
+        </div>
+
+        <!-- Khung input nhập tin nhắn -->
+        <div style="padding: 10px; border-top: 1px solid #ccc; display: flex; gap: 5px;">
+            <input type="text" id="chat-input" placeholder="Nhập câu hỏi của bạn..." style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+            <button id="send-button" style="padding: 8px 15px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">Gửi</button>
+        </div>
+    </div>
+</div>
   </footer>
 
   <div id="scrollTop" class="visually-hidden end-0"></div>
@@ -858,48 +881,341 @@
   <script src="{{ asset('assets/js/plugins/swiper.min.js') }}"></script>
   <script src="{{ asset('assets/js/plugins/countdown.js') }}"></script>
   <script>
+$(function () {
+
+    /* =========================
+       SEARCH PRODUCT
+    ========================= */
+    $('.search-field').on('submit', function (e) {
+        e.preventDefault();
+    });
+
+    $('#search-input').on('keyup', function () {
+        var searchQuery = $.trim($(this).val());
+
+        if (searchQuery.length >= 2) {
+            $.ajax({
+                type: "GET",
+                url: "{{ route('home.search') }}",
+                data: { query: searchQuery },
+                dataType: 'json',
+                success: function (data) {
+                    var $results = $("#box-content-search");
+                    $results.html('');
+
+                    if (data.length === 0) {
+                        $results.append('<li class="mb-10"><div class="text-muted">Không tìm thấy sản phẩm phù hợp.</div></li>');
+                        return;
+                    }
+
+                    $.each(data, function (index, item) {
+                        var url = "{{ route('shop.product.details', ['product_slug' => 'product_slug_pls']) }}";
+                        var link = url.replace('product_slug_pls', item.slug);
+
+                        $results.append(`
+                            <li>
+                                <ul>
+                                    <li class="product-item gap14 mb-10">
+                                        <div class="image no-bg">
+                                            <img src="{{ asset('uploads/products/thumbnails') }}/${item.image}" alt="${item.name}">
+                                        </div>
+                                        <div class="flex items-center justify-between gap20 flex-grow">
+                                            <div class="name">
+                                                <a href="${link}" class="body-text">${item.name}</a>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <li class="mb-10">
+                                        <div class="divider"></div>
+                                    </li>
+                                </ul>
+                            </li>
+                        `);
+                    });
+                },
+                error: function (xhr) {
+                    console.error(xhr.responseText);
+                    $("#box-content-search").html('<li class="mb-10 text-danger">Lỗi tìm kiếm</li>');
+                }
+            });
+        } else {
+            $("#box-content-search").html('');
+        }
+    });
+
+
+    /* =========================
+       AJAX SETUP CSRF
+    ========================= */
+    $.ajaxSetup({
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        }
+    });
+
+
+    /* =========================
+       CHAT BOX TOGGLE
+    ========================= */
+    $('#chat-toggle').click(function () {
+        var chatBox = $('#chat-box');
+
+        if (chatBox.is(':hidden')) {
+            chatBox.css('display', 'flex');
+            loadChatHistory();
+        } else {
+            chatBox.hide();
+        }
+    });
+
+
+    /* =========================
+       LOAD CHAT HISTORY
+    ========================= */
+    function loadChatHistory() {
+        $.ajax({
+            url: '{{ url('/chat/messages') }}',
+            method: 'GET',
+            success: function (messages) {
+                $('#chat-messages').empty();
+
+                if (!messages || messages.length === 0) {
+                    appendMessage('bot', 'Xin chào! Mình có thể giúp gì cho bạn?');
+                } else {
+                    messages.forEach(function (msg) {
+                        appendMessage(msg.sender, msg.message);
+                    });
+                }
+
+                scrollToBottom();
+            }
+        });
+    }
+
+
+    /* =========================
+       APPEND MESSAGE UI
+    ========================= */
+    function appendMessage(sender, text) {
+        var style = (sender === 'user')
+            ? 'align-self:flex-end;background:#d1ecf1;color:#0c5460;'
+            : 'align-self:flex-start;background:#e2e3e5;color:#383d41;';
+
+        $('#chat-messages').append(`
+            <div style="max-width:80%;padding:8px 12px;border-radius:12px;${style}">
+                ${text}
+            </div>
+        `);
+    }
+
+
+    function scrollToBottom() {
+        var box = $('#chat-messages');
+        box.scrollTop(box[0].scrollHeight);
+    }
+
+
+    /* =========================
+       SEND MESSAGE
+    ========================= */
+    function sendMessage() {
+        var message = $('#chat-input').val().trim();
+        if (!message) return;
+
+        appendMessage('user', message);
+        $('#chat-input').val('');
+        scrollToBottom();
+
+        $.ajax({
+            url: '{{ url('/chat/send') }}',
+            method: 'POST',
+            data: { message: message },
+            success: function (response) {
+
+                let botText =
+                    response?.bot_message?.message
+                    ?? 'Không có phản hồi từ hệ thống.';
+
+                appendMessage('bot', botText);
+                scrollToBottom();
+            },
+            error: function () {
+                appendMessage('bot', 'Lỗi server 😢');
+                scrollToBottom();
+            }
+        });
+    }
+
+
+    $('#send-button').click(sendMessage);
+
+    $('#chat-input').keypress(function (e) {
+        if (e.which === 13) {
+            e.preventDefault();
+            sendMessage();
+        }
+    });
+
+});
+</script>
+  {{-- <script>
     $(function() {
+    $('.search-field').on('submit', function(e) {
+        e.preventDefault();
+    });
+
     $('#search-input').on('keyup', function() {
-        var searchQuery = $(this).val();
-        if (searchQuery.length > 2) 
-        {
+        var searchQuery = $.trim($(this).val());
+
+        if (searchQuery.length >= 2) {
             $.ajax({
                 type: "GET",
                 url: "{{ route('home.search') }}",
                 data: { query: searchQuery },
                 dataType: 'json',
                 success: function(data) {
-                    $("#box-content-search").html('');
+                    var $results = $("#box-content-search");
+                    $results.html('');
+
+                    if (data.length === 0) {
+                        $results.append('<li class="mb-10"><div class="text-muted">Không tìm thấy sản phẩm phù hợp.</div></li>');
+                        return;
+                    }
+
                     $.each(data, function(index, item) {
-                       var url = "{{ route('shop.product.details', ['product_slug' => 'product_slug_pls']) }}";
-                       var link = url.replace('product_slug_pls', item.slug);
-                       
-                        $("#box-content-search").append(`
-                           <li>
-                            <ul>
-                                <li class="product-item gap14 mb-10">
-                                    <div class="image no-bg">
-                                        <img src="{{asset('uploads/products/thumbnails')}}/${item.image}" alt="${item.name}">
-                                    </div>
-                                    <div class="flex items-center justify-between gap20 flex-grow">
-                                        <div class="name">
-                                            <a href="${link}" class="body-text">${item.name}</a>
+                        var url = "{{ route('shop.product.details', ['product_slug' => 'product_slug_pls']) }}";
+                        var link = url.replace('product_slug_pls', item.slug);
+
+                        $results.append(`
+                            <li>
+                                <ul>
+                                    <li class="product-item gap14 mb-10">
+                                        <div class="image no-bg">
+                                            <img src="{{ asset('uploads/products/thumbnails') }}/${item.image}" alt="${item.name}">
                                         </div>
-                                    </div>
-                                </li>
-                                <li class="mb-10">
-                                    <div class="divider"></div>
-                                </li>
-                            </ul>
-                        </li>
+                                        <div class="flex items-center justify-between gap20 flex-grow">
+                                            <div class="name">
+                                                <a href="${link}" class="body-text">${item.name}</a>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <li class="mb-10">
+                                        <div class="divider"></div>
+                                    </li>
+                                </ul>
+                            </li>
                         `);
-                    });                  
+                    });
+                },
+                error: function(xhr, status, error) {
+                    console.error('Search AJAX error:', status, error, xhr.responseText);
+                    $("#box-content-search").html('<li class="mb-10"><div class="text-danger">Lỗi tìm kiếm, vui lòng thử lại.</div></li>');
                 }
             });
-          }
+        } else {
+            $("#box-content-search").html('');
+        }
     });
 });
-  </script>
+$(document).ready(function() {
+    // 1. Click ẩn/hiện hộp chat box
+    $('#chat-toggle').click(function() {
+        var chatBox = $('#chat-box');
+        if (chatBox.is(':hidden')) {
+            chatBox.css('display', 'flex');
+            loadChatHistory(); // Cứ mở lên là load lịch sử chat cũ
+        } else {
+            chatBox.hide();
+        }
+    });
+
+    // 2. Tự động gửi CSRF token cho mọi request AJAX Vue/ jQuery
+    $.ajaxSetup({
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        }
+    });
+
+    // 2. Hàm load lịch sử tin nhắn từ DB
+    function loadChatHistory() {
+        $.ajax({
+            url: '{{ url('/chat/messages') }}',
+            method: 'GET',
+            success: function(messages) {
+                $('#chat-messages').empty();
+                
+                if(messages.length === 0) {
+                    // Nếu chưa từng chat, hiển thị câu chào mặc định
+                    appendMessage('bot', 'Xin chào! Tôi có thể giúp gì cho bạn về sản phẩm của website?');
+                } else {
+                    messages.forEach(function(msg) {
+                        appendMessage(msg.sender, msg.message);
+                    });
+                }
+                scrollToBottom();
+            }
+        });
+    }
+
+    // 3. Hàm hiển thị tin nhắn lên giao diện
+    function appendMessage(sender, text) {
+        var align = (sender === 'user') ? 'align-self: flex-end; background: #d1ecf1; color: #0c5460;' : 'align-self: flex-start; background: #e2e3e5; color: #383d41;';
+        var msgHtml = `<div style="max-width: 80%; padding: 8px 12px; border-radius: 12px; ${align}">${text}</div>`;
+        $('#chat-messages').append(msgHtml);
+    }
+
+    function scrollToBottom() {
+        var container = $('#chat-messages');
+        container.scrollTop(container[0].scrollHeight);
+    }
+
+    // 4. Sự kiện click nút Gửi tin nhắn
+    $('#send-button').click(function() {
+        sendMessage();
+    });
+
+    // Bắt sự kiện nhấn phím Enter (Mã phím số 13)
+    $('#chat-input').keypress(function(e) {
+        if(e.which == 13) {
+            e.preventDefault();
+            sendMessage();
+        }
+    });
+
+    // 5. Logic gửi tin nhắn AJAX lên Backend
+    function sendMessage() {
+        var message = $('#chat-input').val().trim();
+        if(message === '') return;
+
+        // Hiển thị ngay tin nhắn của user lên màn hình trong lúc chờ AI
+        appendMessage('user', message);
+        $('#chat-input').val('');
+        scrollToBottom();
+
+        $.ajax({
+            url: '{{ url('/chat/send') }}',
+            method: 'POST',
+            data: {
+                _token: $('meta[name="csrf-token"]').attr('content'), // Nhớ thêm csrf token của Laravel vào header hoặc form
+                message: message
+            },
+            success: function(response) {
+    let botText = '';
+
+    if (response && response.bot_message && response.bot_message.message) {
+        botText = response.bot_message.message;
+    } else {
+        botText = 'Không có phản hồi từ hệ thống.';
+    }
+
+    appendMessage('bot', botText);
+    scrollToBottom();
+},
+            }
+        });
+    }
+});
+  </script> --}}
   <script src="{{ asset('assets/js/theme.js') }}"></script>
   @stack("scripts")
 </body>

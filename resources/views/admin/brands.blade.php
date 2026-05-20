@@ -64,7 +64,9 @@
                                                             </div>
                                                         </td>
                                                         <td>{{$brand->slug}}</td>
-                                                        <td><a href="#" target="_blank">{{ $brand->products()->where('quantity', '>', 0)->count()}}</a></td>
+                                                        <td><a href="#" target="_blank">{{ $brand->products()->whereHas('variants', function ($query) {
+                                                            $query->where('quantity', '>', 0);
+                                                        })->count() }}</a></td>
                                                         <td>
                                                             <div class="list-icon-function">
                                                                 <a href="{{route('admin.brand.edit',['id'=>$brand])}}">

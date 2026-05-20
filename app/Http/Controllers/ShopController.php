@@ -52,16 +52,17 @@ class ShopController extends Controller
          $brands = Brand::orderBy('name', 'ASC')->get();
          $categories = Category::orderBy('name', 'ASC')->get();
         //   $products = Product::where(function($query) use($f_brands){
-        $products = Product::withCount([
-        'reviews as reviews_count' => function ($q) {
-            $q->where('status', 'approved');
-        }
-    ])
-    ->withAvg([
-        'reviews as rating' => function ($q) {
-            $q->where('status', 'approved');
-        }
-    ], 'rating')
+        $products = Product::with(['variants.size', 'variants.color'])
+            ->withCount([
+                'reviews as reviews_count' => function ($q) {
+                    $q->where('status', 'approved');
+                }
+            ])
+            ->withAvg([
+                'reviews as rating' => function ($q) {
+                    $q->where('status', 'approved');
+                }
+            ], 'rating')
     ->where(function($query) use($f_brands){
             $query->whereIn('brand_id', explode(',', $f_brands))->orWhereRaw("'" . $f_brands . "' = ''");
           })
@@ -105,8 +106,10 @@ class ShopController extends Controller
 
     $avgRating = $reviews->avg('rating');
     $totalReviews = $reviews->count();
+    $totalStock = ProductVariant::where('product_id', $product->id)
+    ->sum('quantity');
 
-    return view('details', compact('product','rproducts','reviews','avgRating','totalReviews'));
+    return view('details', compact('product','rproducts','reviews','avgRating','totalReviews','totalStock'));
 }
 public function store_review(Request $request)
 {
@@ -138,13 +141,43 @@ public function buyNow(Request $request)
         return back()->with('error', 'Sản phẩm không tồn tại!');
     }
 
-    if ($product->quantity <= 0) {
+    if ($product->is_out_of_stock) {
+        return back()->with('error', 'Sản phẩm này hiện đã hết hàng!');
+    }
+
+    $stock = ProductVariant::where('product_id', $product->id)
+        ->sum('quantity');
+
+    if ($stock <= 0) {
         return back()->with('error', 'Sản phẩm đã hết hàng!');
     }
 
-    if ($request->quantity > $product->quantity) {
-        return back()->with('error', 'Số lượng vượt tồn kho!');
-    }
+if ($request->quantity > $stock) {
+    return back()->with('error', 'Số lượng vượt tồn kho!');
+}
+
+$variantQuery = ProductVariant::where('product_id', $product->id);
+
+if (is_numeric($request->size)) {
+    $variantQuery->where('size_id', $request->size);
+} elseif ($request->size) {
+    $variantQuery->whereHas('size', function ($q) use ($request) {
+        $q->where('name', $request->size);
+    });
+}
+
+if (is_numeric($request->color)) {
+    $variantQuery->where('color_id', $request->color);
+} elseif ($request->color) {
+    $variantQuery->whereHas('color', function ($q) use ($request) {
+        $q->where('name', $request->color);
+    });
+}
+
+$variant = $variantQuery->first();
+
+$sizeName = $variant ? $variant->size->name : $request->size;
+$colorName = $variant ? $variant->color->name : $request->color;
 
     // xoá cart cũ (buy now chỉ 1 sản phẩm)
     \Surfsidemedia\Shoppingcart\Facades\Cart::instance('cart')->destroy();
@@ -155,8 +188,10 @@ public function buyNow(Request $request)
         $request->quantity,
         $product->sale_price ?? $product->regular_price,
         [
-            'size' => $request->size,
-            'color' => $request->color,
+            'size_id' => $variant ? $variant->size_id : null,
+            'color_id' => $variant ? $variant->color_id : null,
+            'size' => $sizeName,
+            'color' => $colorName,
         ]
     )->associate(Product::class);
 

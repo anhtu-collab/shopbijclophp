@@ -15,6 +15,7 @@ use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\ManaController;
+use App\Http\Controllers\Client\ChatController;
 Auth::routes();
 
 // Password Reset Routes
@@ -168,7 +169,10 @@ Route::middleware(['auth'])->group(function() {
      });
      Route::post('/product/review', [ShopController::class, 'store_review'])->name('product.review')->middleware('auth');
      Route::get('/product/quickview/{id}', [ShopController::class, 'quickView'])->name('shop.product.quickview');
-     
+      
+
+    Route::get('/chat/messages', [ChatController::class, 'fetchMessages']);
+    Route::post('/chat/send', [ChatController::class, 'sendMessage']);
      
 
     

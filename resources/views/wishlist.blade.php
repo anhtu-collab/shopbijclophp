@@ -201,7 +201,7 @@
                       @endphp
                       <span class="discount-badge">-{{ $discount }}%</span>
                     @endif
-                      @if($item->model?->quantity <= 0)
+                      @if($item->model?->is_out_of_stock)
                           <div class="sold-out-glass">
                               <span>HẾT HÀNG</span>
                           </div>
@@ -240,7 +240,7 @@
 
             @empty
               <div class="col-12">
-                <p>Chưa có sản phẩm nao được yêu thích</p>
+                <p>Chưa có sản phẩm nào được yêu thích</p>
               </div>
             @endforelse
 

@@ -155,6 +155,7 @@
     border: none;
     background: transparent;
     cursor: pointer;
+    z-index: 10001; /* 👈 QUAN TRỌNG */
 }
 
 .modal-body{
@@ -739,7 +740,7 @@
 
   </div>
 </div>
-  @if($product->quantity <= 0)
+ @if($product->is_out_of_stock)
     <div class="sold-out-glass">
         <span>HẾT HÀNG</span>
     </div>
@@ -751,6 +752,64 @@
        Đến Giỏ Hàng
     </a>
 @else
+@php
+    $sizeOptions = $product->variants
+        ->where('quantity', '>', 0)
+        ->whereNotNull('size_id')
+        ->pluck('size.name')
+        ->filter()
+        ->unique()
+        ->values()
+        ->all();
+
+    if (empty($sizeOptions)) {
+        $rawSizes = is_array($product->sizes)
+            ? $product->sizes
+            : (json_decode($product->sizes, true) ?? []);
+
+        $sizeOptions = collect($rawSizes)
+            ->map(function ($item) {
+                if (is_array($item)) {
+                    return $item['size'] ?? $item['label'] ?? null;
+                }
+                if (is_object($item)) {
+                    return $item->size ?? $item->label ?? null;
+                }
+                return $item;
+            })
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    $colorOptions = $product->variants
+        ->where('quantity', '>', 0)
+        ->whereNotNull('color_id')
+        ->pluck('color.name')
+        ->filter()
+        ->unique()
+        ->values()
+        ->all();
+
+    if (empty($colorOptions)) {
+        $rawColors = is_array($product->colors)
+            ? $product->colors
+            : (json_decode($product->colors, true) ?? []);
+
+        $colorOptions = collect($rawColors)
+            ->map(function ($item) {
+                if (is_array($item) || is_object($item)) {
+                    return $item['color'] ?? $item->color ?? $item['label'] ?? null;
+                }
+                return $item;
+            })
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+    }
+@endphp
 <button 
     type="button"
     class="pc__atc btn anim_appear-bottom position-absolute border-0 text-uppercase fw-medium buy-now-btn"
@@ -759,12 +818,11 @@
     data-regular="{{ $product->regular_price }}"
     data-sale="{{ $product->sale_price }}"
     data-image="{{ asset('uploads/products/'.$product->image) }}"
-    {{-- data-images='@json(explode(",", $product->images))' --}}
     data-rating="{{ $product->rating }}"
     data-reviews="{{ $product->reviews_count }}"
     data-description="{{ $product->short_description }}"
-    data-sizes="{{ $product->sizes }}"
-    data-colors="{{ $product->colors }}"
+    data-sizes='@json($sizeOptions)'
+    data-colors='@json($colorOptions)'
 >
     Mua Ngay
 </button>
@@ -920,7 +978,7 @@
 
     <div class="modal-content">
 
-        <button id="closeModal" class="close-btn">&times;</button>
+        <button type="button" id="closeModal" class="close-btn">&times;</button>
 
         <div class="modal-body">
 
@@ -1009,213 +1067,179 @@ document.addEventListener('DOMContentLoaded', function () {
      BUY NOW MODAL
   ====================== */
   const modal = document.getElementById('buyNowModal');
-const closeBtn = document.getElementById('closeModal');
- console.log(closeBtn); // test
+  const closeBtn = modal ? modal.querySelector('#closeModal') : null;
+  const qtyInput = document.getElementById('quantityInput');
+  const plusBtn = document.querySelector('.qty-btn.plus');
+  const minusBtn = document.querySelector('.qty-btn.minus');
+  const sizeBox = document.getElementById('sizeOptions');
+  const colorBox = document.getElementById('colorOptions');
 
-    if (closeBtn) {
-        closeBtn.addEventListener('click', function () {
-            modal.style.display = 'none';
-        });
-    }
-const qtyInput = document.getElementById('quantityInput');
-const plusBtn = document.querySelector('.qty-btn.plus');
-const minusBtn = document.querySelector('.qty-btn.minus');
+  const setModalVisible = (visible) => {
+      if (!modal) return;
+      modal.style.display = visible ? 'flex' : 'none';
+  };
 
-plusBtn.addEventListener('click', function () {
-    let value = parseInt(qtyInput.value) || 1;
-    qtyInput.value = value + 1;
-});
+  const parseVariantValues = (rawData) => {
+      if (!rawData) {
+          return [];
+      }
 
-minusBtn.addEventListener('click', function () {
-    let value = parseInt(qtyInput.value) || 1;
-    if (value > 1) {
-        qtyInput.value = value - 1;
-    }
-});
+      let values = [];
+      try {
+          values = JSON.parse(rawData);
+      } catch (e) {
+          values = rawData.split(',');
+      }
+
+      return values
+          .map(item => {
+              if (item && typeof item === 'object') {
+                  return String(item.size || item.name || item.label || item.value || '').trim();
+              }
+              return String(item || '').trim();
+          })
+          .filter(v => v.length > 0);
+  };
+
+  const renderVariantButtons = (container, values, onSelect) => {
+      if (!container) return;
+      container.innerHTML = '';
+
+      values.forEach(value => {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'variant-btn';
+
+          const label = String(value).trim();
+          button.innerText = label;
+
+          button.addEventListener('click', function () {
+              container.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
+              button.classList.add('active');
+              onSelect(label);
+          });
+
+          container.appendChild(button);
+      });
+  };
+
+  const fillModal = (target) => {
+      if (!target) return;
+
+      const modalIdInput = document.getElementById('modalId');
+      const modalNameEl = document.getElementById('modalName');
+      const modalImage = document.getElementById('modalImage');
+      const regularEl = document.getElementById('modalRegularPrice');
+      const saleEl = document.getElementById('modalSalePrice');
+      const selectedSize = document.getElementById('selectedSize');
+      const selectedColor = document.getElementById('selectedColor');
+      const starsEl = document.getElementById('modalStars');
+      const reviewEl = document.getElementById('modalReviewCount');
+      const descEl = document.getElementById('modalDescription');
+
+      if (modalIdInput) modalIdInput.value = target.dataset.id || '';
+      if (modalNameEl) modalNameEl.innerText = target.dataset.name || '';
+      if (modalImage) modalImage.src = target.dataset.image || '';
+      if (qtyInput) qtyInput.value = 1;
+      if (selectedSize) selectedSize.value = '';
+      if (selectedColor) selectedColor.value = '';
+
+      const regular = parseInt(target.dataset.regular, 10) || 0;
+      const sale = target.dataset.sale ? parseInt(target.dataset.sale, 10) : null;
+
+      if (regularEl && saleEl) {
+          if (sale && sale < regular) {
+              regularEl.innerHTML = `<s>${regular.toLocaleString('vi-VN')} đ</s>`;
+              saleEl.innerHTML = `${sale.toLocaleString('vi-VN')} đ`;
+          } else {
+              regularEl.innerHTML = '';
+              saleEl.innerHTML = `${regular.toLocaleString('vi-VN')} đ`;
+          }
+      }
+
+      const sizes = parseVariantValues(target.dataset.sizes || '[]');
+      renderVariantButtons(sizeBox, sizes, value => {
+          if (selectedSize) selectedSize.value = value;
+      });
+
+      const colors = parseVariantValues(target.dataset.colors || '[]');
+      renderVariantButtons(colorBox, colors, value => {
+          let label = value;
+          const map = {
+              do: 'Đỏ',
+              den: 'Đen',
+              xanh: 'Xanh'
+          };
+          label = map[label.toLowerCase()] || label;
+          if (selectedColor) selectedColor.value = label;
+      });
+
+      if (starsEl && reviewEl) {
+          const rating = parseFloat(target.dataset.rating) || 0;
+          const reviews = parseInt(target.dataset.reviews, 10) || 0;
+          let stars = '';
+
+          for (let i = 1; i <= 5; i++) {
+              stars += i <= Math.floor(rating) ? '⭐' : '☆';
+          }
+
+          starsEl.innerText = stars;
+          reviewEl.innerText = `${rating.toFixed(1)} · ${reviews} đánh giá`;
+      }
+
+      if (descEl) {
+          descEl.innerHTML = target.dataset.description || 'Chưa có mô tả sản phẩm';
+      }
+  };
+
+  if (closeBtn) {
+      closeBtn.addEventListener('click', function (e) {
+          e.preventDefault();
+          setModalVisible(false);
+      });
+  }
+
+  document.addEventListener('click', function (e) {
+      if (e.target && e.target.matches && e.target.matches('#closeModal')) {
+          e.preventDefault();
+          setModalVisible(false);
+      }
+  });
+
+  if (modal) {
+      modal.addEventListener('click', function (e) {
+          if (e.target === modal || !e.target.closest('.modal-content')) {
+              setModalVisible(false);
+          }
+      });
+  }
+
+  window.addEventListener('keyup', function (e) {
+      if (e.key === 'Escape') {
+          setModalVisible(false);
+      }
+  });
+
+  if (plusBtn && qtyInput) {
+      plusBtn.addEventListener('click', function () {
+          qtyInput.value = (parseInt(qtyInput.value, 10) || 1) + 1;
+      });
+  }
+
+  if (minusBtn && qtyInput) {
+      minusBtn.addEventListener('click', function () {
+          const value = parseInt(qtyInput.value, 10) || 1;
+          if (value > 1) {
+              qtyInput.value = value - 1;
+          }
+      });
+  }
+
   document.querySelectorAll('.buy-now-btn').forEach(btn => {
       btn.addEventListener('click', function () {
-
-          document.getElementById('modalId').value = this.dataset.id;
-          document.getElementById('modalName').innerText = this.dataset.name;
-          const regularEl = document.getElementById('modalRegularPrice');
-const saleEl = document.getElementById('modalSalePrice');
-
-let regular = parseInt(this.dataset.regular) || 0;
-let sale = this.dataset.sale ? parseInt(this.dataset.sale) : null;
-
-if (sale && sale < regular) {
-    regularEl.innerHTML = `<s>${regular.toLocaleString('vi-VN')} đ</s>`;
-    saleEl.innerHTML = `${sale.toLocaleString('vi-VN')} đ`;
-} else {
-    regularEl.innerHTML = "";
-    saleEl.innerHTML = `${regular.toLocaleString('vi-VN')} đ`;
-}
-          document.getElementById('modalImage').src = this.dataset.image;
-
-          document.getElementById('quantityInput').value = 1;
-          const sizeBox = document.getElementById('sizeOptions');
-          const colorBox = document.getElementById('colorOptions');
-
-          sizeBox.innerHTML = '';
-          colorBox.innerHTML = '';
-
-          document.getElementById('selectedSize').value = '';
-          document.getElementById('selectedColor').value = '';
-
-          
-          // SIZE
- // SIZE
-if (this.dataset.sizes) {
-    let sizes = [];
-
-    try {
-        sizes = JSON.parse(this.dataset.sizes);
-    } catch (e) {
-        sizes = this.dataset.sizes.split(',');
-    }
-
-    sizes.forEach(s => {
-        let btnSize = document.createElement('button');
-        btnSize.type = 'button';
-        btnSize.className = 'variant-btn';
-
-        let label = s.trim().toUpperCase();
-        btnSize.innerText = label;
-
-        btnSize.onclick = () => {
-
-            // clear active
-            sizeBox.querySelectorAll('button').forEach(b => b.classList.remove('active'));
-
-            // active current
-            btnSize.classList.add('active');
-
-            // save value
-            document.getElementById('selectedSize').value = label;
-        };
-
-        sizeBox.appendChild(btnSize);
-    });
-}
-
-          // COLOR
-        // COLOR
-if (this.dataset.colors) {
-    let colors = [];
-
-    try {
-        colors = JSON.parse(this.dataset.colors);
-    } catch (e) {
-        colors = this.dataset.colors.split(',');
-    }
-
-    colors.forEach(c => {
-        let btnColor = document.createElement('button');
-        btnColor.type = 'button';
-        btnColor.className = 'variant-btn';
-
-        let label = c.trim();
-
-        const map = {
-            do: "Đỏ",
-            den: "Đen",
-            xanh: "Xanh"
-        };
-
-        label = map[label.toLowerCase()] || label;
-
-        btnColor.innerText = label;
-
-        btnColor.onclick = () => {
-
-            // clear active
-            colorBox.querySelectorAll('button').forEach(b => b.classList.remove('active'));
-
-            // active current
-            btnColor.classList.add('active');
-
-            // save value
-            document.getElementById('selectedColor').value = label;
-        };
-
-        colorBox.appendChild(btnColor);
-    });
-}
-// const thumbBox = document.getElementById('thumbnailList');
-//         if (thumbBox) {
-//             thumbBox.innerHTML = '';
-
-//             let images = [];
-
-//             if (this.dataset.images) {
-//                 try {
-//                     images = JSON.parse(this.dataset.images);
-//                 } catch (e) {
-//                     images = this.dataset.images.split(',');
-//                 }
-//             } else if (this.dataset.image) {
-//                 images = [this.dataset.image];
-//             }
-
-//             images.forEach(img => {
-//                 let thumb = document.createElement('img');
-//                 thumb.src = img.trim();
-//                 thumb.className = 'thumb-img';
-
-//                 thumb.onclick = () => {
-//                     document.getElementById('modalImage').src = thumb.src;
-//                 };
-
-//                 thumbBox.appendChild(thumb);
-//             });
-//         }
-
-        // ======================
-        // ⭐ RATING
-        // ======================
-        const starsEl = document.getElementById('modalStars');
-        const reviewEl = document.getElementById('modalReviewCount');
-
-        if (starsEl && reviewEl) {
-            let rating = parseFloat(this.dataset.rating) || 0;
-            let reviews = parseInt(this.dataset.reviews) || 0;
-
-            let stars = '';
-            for (let i = 1; i <= 5; i++) {
-                if (i <= Math.floor(rating)) {
-                    stars += '⭐';
-                } else {
-                    stars += '☆';
-                }
-            }
-
-            // ⭐ hiển thị sao
-            starsEl.innerText = stars;
-
-            // 🔥 hiển thị giống Blade
-            reviewEl.innerText = `${rating.toFixed(1)} · ${reviews} đánh giá`;
-        }
-
-        // ======================
-        // 📝 DESCRIPTION
-        // ======================
-        const descEl = document.getElementById('modalDescription');
-        if (descEl) {
-           descEl.innerHTML = this.dataset.description || "Chưa có mô tả sản phẩm";
-        }
-
-          modal.style.display = 'flex';
+          fillModal(this);
+          setModalVisible(true);
       });
-  });
-
-  closeBtn.addEventListener('click', function () {
-      modal.style.display = 'none';
-  });
-
-  modal.addEventListener('click', function (e) {
-      if (e.target === modal) {
-          modal.style.display = 'none';
-      }
   });
 
   /* ======================

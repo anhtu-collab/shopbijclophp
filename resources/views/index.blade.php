@@ -320,7 +320,7 @@
                                 class="pc__img img-hover">
                           @endif
                       </a>
-                       @if($sproduct->quantity <= 0)
+                       @if($sproduct->is_out_of_stock)
                             <div class="sold-out-glass">
                                 <span>HẾT HÀNG</span>
                             </div>
@@ -431,7 +431,7 @@
         @endif
 
     </a>
-    @if($fproduct->quantity <= 0)
+    @if($fproduct->is_out_of_stock)
     <div class="sold-out-glass">
         <span>HẾT HÀNG</span>
     </div>

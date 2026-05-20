@@ -376,7 +376,7 @@
 
                 <div class="policy-text">
                   Thông tin cá nhân của bạn sẽ được sử dụng để xử lý đơn hàng, hỗ trợ trải nghiệm của bạn trên website này, 
-                  và cho các mục đích khác được mô tả trong  <a href="terms.html" target="_blank">Chính sách bảo mật</a>.
+                  và cho các mục đích khác được mô tả trong Chính sách bảo mật.
                 </div>
 
 

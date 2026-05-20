@@ -21,8 +21,8 @@ class HomeController extends Controller
         
    $slides = Slide::where('status', 1)->take(3)->get();
    $categories = Category::orderBy('name')->get();
-   $sproducts = Product::whereNotNull('sale_price')->where('sale_price', '<>', '')->inRandomOrder()->get()->take(8);
-   $fproducts = Product::where('featured', 1)->get()->take(8);
+   $sproducts = Product::with('variants')->whereNotNull('sale_price')->where('sale_price', '<>', '')->inRandomOrder()->take(8)->get();
+   $fproducts = Product::with('variants')->where('featured', 1)->take(8)->get();
    return view('index', compact('slides', 'categories', 'sproducts','fproducts'));
     }
     public function contact() 
@@ -51,8 +51,21 @@ public function contact_store(Request $request) {
 
 public function search(Request $request)
 {
-    $query = $request->input('query');
-    $results = Product::where('name', 'LIKE', "%{$query}%")->take(8)->get();
+    $query = trim($request->input('query', ''));
+
+    if ($query === '') {
+        return response()->json([]);
+    }
+
+    $results = Product::select('id', 'name', 'slug', 'SKU', 'image')
+        ->where(function ($q) use ($query) {
+            $q->where('name', 'LIKE', "%{$query}%")
+              ->orWhere('SKU', 'LIKE', "%{$query}%")
+              ->orWhere('slug', 'LIKE', "%{$query}%");
+        })
+        ->take(8)
+        ->get();
+
     return response()->json($results);
 }
 public function blog_detail($slug)

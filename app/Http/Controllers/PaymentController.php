@@ -150,7 +150,7 @@ class PaymentController extends Controller
     // ❌ HASH SAI
     if ($secureHash !== $vnp_SecureHash) {
         if ($transaction) {
-            $transaction->status = 'failed';
+            $transaction->status = 'declined';
             $transaction->save();
         }
 
@@ -161,7 +161,7 @@ class PaymentController extends Controller
     // ✅ THANH TOÁN THÀNH CÔNG
     if ($request->input('vnp_ResponseCode') === '00') {
         if ($transaction) {
-            $transaction->status = 'success';
+            $transaction->status = 'approved';
             $transaction->save();
         }
 
@@ -173,7 +173,7 @@ class PaymentController extends Controller
 
     // ❌ FAIL / HỦY
     if ($transaction) {
-        $transaction->status = 'failed';
+        $transaction->status = 'declined';
         $transaction->save();
     }
 

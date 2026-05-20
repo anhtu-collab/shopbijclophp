@@ -26,34 +26,34 @@ public function down()
     });
 }
 };
-<?php
+// <?php
 
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
+// use Illuminate\Database\Migrations\Migration;
+// use Illuminate\Database\Schema\Blueprint;
+// use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
-    /**
-     * Run the migrations.
-     */
- public function up(): void
-{
-    if (!Schema::hasColumn('addresses', 'is_default')) {
-        Schema::table('addresses', function (Blueprint $table) {
-            $table->boolean('is_default')->default(0);
-        });
-    }
-}
+// return new class extends Migration
+// {
+//     /**
+//      * Run the migrations.
+//      */
+//  public function up(): void
+// {
+//     if (!Schema::hasColumn('addresses', 'is_default')) {
+//         Schema::table('addresses', function (Blueprint $table) {
+//             $table->boolean('is_default')->default(0);
+//         });
+//     }
+// }
 
-    public function down(): void
-    {
-        Schema::table('addresses', function (Blueprint $table) {
-            $table->boolean('is_default')->default(0);
-        });
-    }
+//     public function down(): void
+//     {
+//         Schema::table('addresses', function (Blueprint $table) {
+//             $table->boolean('is_default')->default(0);
+//         });
+//     }
 
-};
+// };
 // / <?php
 
 // use Illuminate\Database\Migrations\Migration;

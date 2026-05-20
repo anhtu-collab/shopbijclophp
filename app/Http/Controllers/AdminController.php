@@ -247,7 +247,9 @@ return view('admin.index', compact(
     }
     public function products()
     {
-        $products = Product::orderBy('created_at','DESC')->paginate(10);
+        $products = Product::with(['variants.size', 'variants.color'])
+            ->orderBy('created_at','DESC')
+            ->paginate(10);
         return view('admin.products',compact('products'));
     }
     public function product_add()
@@ -269,7 +271,7 @@ return view('admin.index', compact(
             'SKU' => 'required',
             'stock_status' => 'required',
             'featured' => 'required',
-            'quantity' => 'required',
+            // 'quantity' => 'required',
             'image' => 'required|mimes:png,jpg,jpeg|max:2048',
             'category_id' => 'required',
             'brand_id' => 'required',
@@ -462,7 +464,7 @@ public function product_update(Request $request)
         'SKU' => 'required',
         'stock_status' => 'required',
         'featured' => 'required',
-        'quantity' => 'required',
+        // 'quantity' => 'required',
         'image' => 'mimes:png,jpg,jpeg|max:2048',
         'category_id' => 'required',
         'brand_id' => 'required',
@@ -483,7 +485,6 @@ public function product_update(Request $request)
     $product->featured = $request->featured;
     $product->category_id = $request->category_id;
     $product->brand_id = $request->brand_id;
-
     $current_timestamp = Carbon::now()->timestamp;
 
     // Xử lý ảnh chính khi có thay đổi
@@ -530,23 +531,69 @@ public function product_update(Request $request)
     $product->save();
     // decode JSON
 $inputSizes = json_decode($request->sizes, true) ?? [];
-
+$inputColors = json_decode($request->colors, true) ?? [];
 // xoá hết variant cũ
 $product->variants()->delete();
 
 // thêm lại
-foreach ($inputSizes as $sItem) {
-    $size = \App\Models\Size::firstOrCreate([
-        'name' => strtoupper($sItem['size'])
-    ]);
+$sizeIds = [];
+    foreach ($inputSizes as $sItem) {
+        if (empty($sItem['size'])) continue;
+        $sizeName = trim(strtoupper($sItem['size']));
+        
+        $sizeModel = \App\Models\Size::firstOrCreate(['name' => $sizeName]);
+        $sizeIds[] = [
+            'id'       => $sizeModel->id,
+            'quantity' => intval($sItem['quantity']) ?? 0
+        ];
+    }
 
-    \App\Models\ProductVariant::create([
-        'product_id' => $product->id,
-        'size_id'    => $size->id,
-        'quantity'   => $sItem['quantity']
-    ]);
-}
-    return redirect()->route('admin.products')->with('status', 'Đã Cập Nhật Thành Công!');
+    // 4. Xử lý chuẩn hóa dữ liệu Tên Màu -> Trả về mảng chứa Color ID
+    $colorIds = [];
+    foreach ($inputColors as $colorName) {
+        if (empty($colorName)) continue;
+        $colorName = trim(mb_convert_case($colorName, MB_CASE_TITLE, "UTF-8"));
+        
+        $colorModel = \App\Models\Color::firstOrCreate(['name' => $colorName]);
+        $colorIds[] = $colorModel->id;
+    }
+
+    // 5. Tiến hành lặp phối hợp các cặp Thuộc tính để lưu vào bảng product_variants
+    if (count($sizeIds) > 0 && count($colorIds) > 0) {
+        // Trường hợp có cả Size lẫn Màu sắc (Tạo ma trận phối hợp đầy đủ)
+        foreach ($sizeIds as $sIdData) {
+            foreach ($colorIds as $cId) {
+                \App\Models\ProductVariant::create([
+                    'product_id' => $product->id,
+                    'size_id'    => $sIdData['id'],
+                    'color_id'   => $cId,
+                    'quantity'   => $sIdData['quantity'],
+                ]);
+            }
+        }
+    } elseif (count($sizeIds) > 0) {
+        // Trường hợp sản phẩm chỉ áp dụng quản lý theo Size
+        foreach ($sizeIds as $sIdData) {
+            \App\Models\ProductVariant::create([
+                'product_id' => $product->id,
+                'size_id'    => $sIdData['id'],
+                'color_id'   => null,
+                'quantity'   => $sIdData['quantity'],
+            ]);
+        }
+    } elseif (count($colorIds) > 0) {
+        // Trường hợp sản phẩm chỉ áp dụng cấu hình theo Màu sắc
+        foreach ($colorIds as $cId) {
+            \App\Models\ProductVariant::create([
+                'product_id' => $product->id,
+                'size_id'    => null,
+                'color_id'   => $cId,
+                'quantity'   => 0, // Mặc định hoặc lấy theo giá trị kho chung của sản phẩm
+            ]);
+        }
+    }
+
+    return redirect()->route('admin.products')->with('status', 'Đã Cập Nhật Sản Phẩm Thành Công!');
 }
 // Thêm vào AdminController.php
 
@@ -771,19 +818,11 @@ public function update_order_status(Request $request)
     $transaction = Transaction::where('order_id', $order->id)->first();
 
     if ($transaction) {
-
-        // if ($newStatus == 'delivered') {
-        //     $transaction->status = 'approved';
-        // } 
-        // elseif ($newStatus == 'canceled') {
-        //     $transaction->status = 'declined';
-        // }
         if ($newStatus == 'delivered') {
-    $transaction->status = 'success';
-} 
-elseif ($newStatus == 'canceled') {
-    $transaction->status = 'failed';
-}
+            $transaction->status = 'approved';
+        } elseif ($newStatus == 'canceled') {
+            $transaction->status = 'declined';
+        }
 
         $transaction->save();
     }
@@ -918,10 +957,26 @@ public function contact_delete($id) {
 }
 public function search(Request $request)
 {
-    $query = $request->input('query');
-    $results = Product::where('name', 'LIKE', "%{$query}%")
-                ->take(8) 
-                ->get();
+    $query = trim($request->input('query'));
+    $context = $request->input('context', 'products');
+
+    if ($query === '') {
+        return response()->json([]);
+    }
+
+    if ($context === 'users') {
+        $results = User::where(function ($q) use ($query) {
+            $q->whereRaw('name LIKE ? COLLATE utf8mb4_unicode_ci', ["%{$query}%"])
+              ->orWhere('email', 'LIKE', "%{$query}%")
+              ->orWhere('mobile', 'LIKE', "%{$query}%");
+        })->take(8)->get(['id', 'name', 'email']);
+    } else {
+        $results = Product::where(function ($q) use ($query) {
+            $q->whereRaw('name LIKE ? COLLATE utf8mb4_unicode_ci', ["%{$query}%"])
+              ->orWhereRaw('SKU LIKE ? COLLATE utf8mb4_unicode_ci', ["%{$query}%"])
+              ->orWhereRaw('slug LIKE ? COLLATE utf8mb4_unicode_ci', ["%{$query}%"]);
+        })->take(8)->get();
+    }
 
     return response()->json($results);
 }
@@ -979,7 +1034,7 @@ public function user_store(Request $request) {
 
     $user->save();
 
-    return redirect()->route('admin.users')->with("status", "User added successfully!");
+    return redirect()->route('admin.users')->with("status", "Người dùng đã được thêm thành công!");
 }
 
 // EDIT

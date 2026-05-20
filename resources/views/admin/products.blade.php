@@ -72,46 +72,93 @@
                                                     <td>{{$product->SKU}}</td>
                                                     <td>{{$product->Category->name}}</td>
                                                     <td>{{$product->brand->name}}</td>
-                                                    <td>
+                                                    {{-- <td>
                                                         @php
-                                                    
-                                                            $variantSizes = $product->variants->whereNotNull('size_id')->map(function ($variant) {
-                                                            
-                                                                $name = $variant->size ? $variant->size->name : 'N/A';
-                                                                return strtoupper($name) . ' [' . $variant->quantity . ']';
-                                                            })->unique()->toArray();
+                                                            $variantSizes = $product->variants->whereNotNull('size_id')
+                                                                ->groupBy(function ($variant) {
+                                                                    return $variant->size ? strtoupper($variant->size->name) : 'N/A';
+                                                                })
+                                                                ->map(function ($group, $sizeName) {
+                                                                    return $sizeName . ' [' . $group->sum('quantity') . ']';
+                                                                })
+                                                                ->values()
+                                                                ->toArray();
                                                         @endphp
 
                                                         {{ count($variantSizes) > 0 ? implode(', ', $variantSizes) : 'Không có' }}
+                                                    </td> --}}
+                                                    <td class="mb-3">
+                                                        <select name="size_id" id="sizeSelect" class="form-control">
+
+                                                            @foreach($product->variants->groupBy('size_id') as $sizeId => $variants)
+                                                                @php
+                                                                    $sizeName = optional($variants->first()->size)->name;
+                                                                    $totalQty = $variants->sum('quantity');
+                                                                @endphp
+
+                                                                @if($sizeName)
+                                                                    <option value="{{ $sizeId }}">
+                                                                        {{ strtoupper($sizeName) }} ({{ $totalQty }})
+                                                                    </option>
+                                                                @endif
+                                                            @endforeach
+                                                        </select>
                                                     </td>
 
-                                                    <td>
+
+                                                    {{-- <td>
                                                         @php
-        
-                                                            $variantColors = $product->variants->whereNotNull('color_id')->map(function ($variant) {
-                                                                return $variant->color ? $variant->color->name : 'N/A';
-                                                            })->unique()->toArray();
+                                                            $variantColors = $product->variants->whereNotNull('color_id')
+                                                                ->map(function ($variant) {
+                                                                    return $variant->color ? $variant->color->name : 'N/A';
+                                                                })
+                                                                ->unique()
+                                                                ->values()
+                                                                ->toArray();
                                                         @endphp
 
                                                         {{ count($variantColors) > 0 ? implode(', ', $variantColors) : 'Không có' }}
-                                                    </td>    
+                                                    </td>     --}}
+                                                    <td class="mb-5">
+                                                        @php
+                                                            $variantColors = $product->variants
+                                                                ->filter(fn($v) => $v->color)
+                                                                ->map(fn($v) => $v->color->name)
+                                                                ->unique()
+                                                                ->values();
+                                                        @endphp
+
+                                                        @if($variantColors->count())
+                                                            <select name="color" class="form-control">
+                                                                @foreach($variantColors as $color)
+                                                                    <option value="{{ $color }}">{{ $color }}</option>
+                                                                @endforeach
+                                                            </select>
+                                                        @else
+                                                            Không có
+                                                        @endif
+                                                    </td>
                                                     <td>{{$product->featured == 0? "không":"có"}}</td>
                                                     <!-- <td>{{$product->stock_status}}</td> -->
                                                     <td>
-                                                            @if($product->stock_status == 'instock')
-                                                                <span class="badge bg-success text-white" style="padding: 5px 10px; borderRadius: 4px;">Còn hàng</span>
-                                                            @else
-                                                                <span class="badge bg-danger text-white" style="padding: 5px 10px; borderRadius: 4px;">Hết hàng</span>
-                                                            @endif
-                                                            </td>
-
-                                                        <td>
-                                                            <div style="margin-top: 5px;">
-                                                                <small class="text-muted fs-5">
-                                                                    Tổng kho: <strong>{{ $product->variants->sum('quantity') }}</strong>
-                                                                </small>
-                                                            </div>
-                                                        </td>
+                                                        @php
+                                                            $totalQuantity = $product->variants->sum('quantity');
+                                                        @endphp
+                                                        @if($product->is_out_of_stock)
+                                                            <span class="badge bg-danger text-white" style="padding: 5px 10px; border-radius: 4px;">Hết hàng</span>
+                                                        @else
+                                                            <span class="badge bg-success text-white" style="padding: 5px 10px; border-radius: 4px;">Còn hàng</span>
+                                                        @endif
+                                                        
+                                                    </td>
+                                                    <td>
+                                                        <div style="margin-top: 5px;">
+                                                            <small class="text-muted fs-5">
+                                                                Tổng kho: <strong>{{ $totalQuantity }}</strong>
+                                                            </small>
+                                                        </div>
+                                                    </td>
+                                                    
                                                         <td>
                                                          <div class="list-icon-function">
                                                             <!-- <a href="#" target="_blank">

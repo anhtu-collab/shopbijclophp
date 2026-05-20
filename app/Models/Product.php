@@ -34,4 +34,9 @@ class Product extends Model
     {
         return $this->variants->sum('quantity');
     }
+
+    public function getIsOutOfStockAttribute()
+    {
+        return $this->stock_status === 'outofstock' || $this->total_stock <= 0;
+    }
 }

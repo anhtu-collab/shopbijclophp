@@ -94,6 +94,26 @@ position: absolute;
     left: 0;
     transition: all 0.7s ease;
 }
+.current-price{
+    margin: 0px 10px;
+
+}
+ #toast {
+     position: fixed;
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #000;
+        color: #fff;
+        padding: 10px 16px;
+        border-radius: 8px;
+        font-size: 14px;
+        opacity: 0;
+        pointer-events: none;
+        transition: 0.3s;
+        z-index: 9999;
+
+    }             
 
 .main-img {
     transform: translateX(0) scale(1);
@@ -297,15 +317,20 @@ position: absolute;
     </span>
 </div>
           <div class="product-single__price">
-            <span class="current-price">
-             @if($product->sale_price)
-    <s>{{ number_format($product->regular_price, 0, ',', '.') }} đ </s> 
-    {{ number_format($product->sale_price, 0, ',', '.') }} đ 
-@else
-    {{ number_format($product->regular_price, 0, ',', '.') }} đ
-@endif
+    <span class="current-price">
+        @if($product->sale_price)
+            <s style="margin-right:8px; color:#888;">
+                {{ number_format($product->regular_price, 0, ',', '.') }} đ
+            </s>
+
+            <span style="color:red; font-weight:600;">
+                {{ number_format($product->sale_price, 0, ',', '.') }} đ
             </span>
-          </div>
+        @else
+            {{ number_format($product->regular_price, 0, ',', '.') }} đ
+        @endif
+    </span>
+</div>
           <div class="product-single__short-desc">
             <p>{{$product->short_description}}</p>
           </div>
@@ -313,7 +338,7 @@ position: absolute;
    {{-- @if(Cart::instance('cart')->content()->where('id', $product->id)->count() > 0)
     <a href="{{ route('cart.index') }}" class="btn btn-warning mb-3">Đi đến trang giỏ hàng</a>
    @else --}}
-          @if($product->quantity <= 0)
+         @if($product->is_out_of_stock)
           <div class="border border-danger rounded-3 p-3 mb-3 bg-light">
                 <div class="d-flex align-items-center gap-2 text-danger fw-semibold">
                     <span >Sản phẩm hiện đã hết hàng</span>
@@ -330,9 +355,13 @@ position: absolute;
                   <div class="mb-2">
                 <select name="size" id="size" class="form-control">
                   <option value="">--Chọn Kích Thước--</option>
-                  @foreach(json_decode($product->sizes ?? '[]') as $size)
-                      <option value="{{ $size }}">{{ $size }}</option>
-                  @endforeach
+             @foreach($product->variants->unique('size_id') as $v)
+                <option 
+                    value="{{ $v->size_id }}"
+                    data-size-id="{{ $v->size_id }}">
+                    {{ $v->size->name }}
+                </option>
+                @endforeach
               </select>   
               <small id="sizeError" class="text-danger d-none">
           Vui lòng chọn kích thước
@@ -343,24 +372,27 @@ position: absolute;
             <div class="mb-2">
                 <select name="color" id="color" class="form-control">
                   <option value="">--Chọn Màu--</option>
-                  @foreach(json_decode($product->colors ?? '[]') as $color)
-                      <option value="{{ $color }}">{{ $color }}</option>
-                  @endforeach  
+                @foreach($product->variants->unique('color_id') as $v)
+                <option 
+                    value="{{ $v->color_id }}"
+                    data-color-id="{{ $v->color_id }}">
+                    {{ $v->color->name }}
+                </option>
+                @endforeach
               </select>
               <small id="colorError" class="text-danger d-none">
           Vui lòng chọn màu
         </small>      
             </div>
-                <div class="qty-control position-relative">
-                    {{-- Ô nhập số lượng --}}
+                <div class="qty-control qty-initialized position-relative">
                     <!-- <input type="number" name="quantity" value="1" min="1" class="qty-control__number text-center"> -->
-                     <input type="number" id="quantity-input" data-stock="{{ $product->quantity }}"name="quantity" value="1" min="1" class="qty-control__number text-center">
+                     <input type="number" id="quantity-input" data-stock="{{ $product->is_out_of_stock ? 0 : $product->total_stock }}" name="quantity"  value="1" min="1" class="qty-control__number text-center">
                     <div class="qty-control__reduce">-</div>
                     <div class="qty-control__increase">+</div>
                 </div>
                 <div id="qtyError" style="color:red; font-size:14px; display:none;">
-     Số lượng vượt quá tồn kho
-</div>
+                    Số lượng vượt quá tồn kho
+                </div>
                 <input type="hidden" name="id" value="{{ $product->id }}">
                 <input type="hidden" name="name" value="{{ $product->name }}">
                 <input type="hidden" name="price" value="{{ $product->sale_price ? $product->sale_price : $product->regular_price }}">
@@ -395,35 +427,18 @@ position: absolute;
               @endif
 
 
-            <share-button class="share-button">
-              <button class="menu-link menu-link_us-s to-share border-0 bg-transparent d-flex align-items-center">
-                <svg width="16" height="19" viewBox="0 0 16 19" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <use href="#icon_sharing" />
-                </svg>
-                <span>Chia Sẻ</span>
-              </button>
-              <details id="Details-share-template__main" class="m-1 xl:m-1.5" hidden="">
-                <summary class="btn-solid m-1 xl:m-1.5 pt-3.5 pb-3 px-5">+</summary>
-                <div id="Article-share-template__main"
-                  class="share-button__fallback flex items-center absolute top-full left-0 w-full px-2 py-4 bg-container shadow-theme border-t z-10">
-                  <div class="field grow mr-4">
-                    <label class="field__label sr-only" for="url">Link</label>
-                    <input type="text" class="field__input w-full" id="url"
-                      value="https://uomo-crystal.myshopify.com/blogs/news/go-to-wellness-tips-for-mental-health"
-                      placeholder="Link" onclick="this.select();" readonly="">
-                  </div>
-                  <button class="share-button__copy no-js-hidden">
-                    <svg class="icon icon-clipboard inline-block mr-1" width="11" height="13" fill="none"
-                      xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" viewBox="0 0 11 13">
-                      <path fill-rule="evenodd" clip-rule="evenodd"
-                        d="M2 1a1 1 0 011-1h7a1 1 0 011 1v9a1 1 0 01-1 1V1H2zM1 2a1 1 0 00-1 1v9a1 1 0 001 1h7a1 1 0 001-1V3a1 1 0 00-1-1H1zm0 10V3h7v9H1z"
-                        fill="currentColor"></path>
-                    </svg>
-                    <span class="sr-only">Sao Chép link</span>
-                  </button>
-                </div>
-              </details>
-            </share-button>
+          <div class="share-button">
+  <button id="shareBtn" class="menu-link border-0 bg-transparent d-flex align-items-center">
+    <svg width="16" height="19" viewBox="0 0 16 19" fill="none">
+      <use href="#icon_sharing"></use>
+    </svg>
+    <span>Chia Sẻ</span>
+  </button>
+
+            <div id="toast" >
+                Đã sao chép link 🔗
+            </div>
+            </div>
             <script src="js/details-disclosure.html" defer="defer"></script>
             <script src="js/share.html" defer="defer"></script>
           </div>
@@ -436,10 +451,10 @@ position: absolute;
         <label>Danh muc:</label>
         <span>{{ $product->category->name }}</span>
     </div>
-    <div class="meta-item">
+    {{-- <div class="meta-item">
               <label>Tags:</label>
               <span>NA</span>
-            </div>
+            </div> --}}
 </div>
         </div>
       </div>
@@ -679,7 +694,7 @@ position: absolute;
                   <span class="discount-badge">-{{ $discount }}%</span>
               @endif
                 
-                    @if($rproduct->quantity <= 0)
+                    @if($rproduct->is_out_of_stock)
                         <div class="sold-out-glass">
                             <span>HẾT HÀNG</span>
                         </div>
@@ -717,8 +732,10 @@ position: absolute;
 
         </section><!-- /.products-carousel container -->
       </main>
-      <script>
-        document.querySelector("form[action='{{ route('cart.add') }}']").addEventListener("submit", function(e) {
+      {{-- <script>
+        let variants = @json($product->variants);
+   document.querySelector("form[action='{{ route('cart.add') }}']")
+.addEventListener("submit", function(e) {
 
     let size = document.getElementById("size").value;
     let color = document.getElementById("color").value;
@@ -736,25 +753,18 @@ position: absolute;
     document.getElementById("colorError").classList.add("d-none");
     if (qtyError) qtyError.style.display = "none";
 
-    // check size
     if (size === "") {
         document.getElementById("sizeError").classList.remove("d-none");
         hasError = true;
     }
 
-    // check color
     if (color === "") {
         document.getElementById("colorError").classList.remove("d-none");
         hasError = true;
     }
 
-    // check quantity
     if (quantity > maxStock) {
-        if (qtyError) {
-            qtyError.style.display = "block";
-        } else {
-            alert("Chỉ còn " + maxStock + " sản phẩm!");
-        }
+        qtyError.style.display = "block";
         hasError = true;
     }
 
@@ -767,47 +777,211 @@ position: absolute;
         e.preventDefault();
     }
 });
-//     document.querySelector("form[action='{{ route('cart.add') }}']").addEventListener("submit", function(e) {
-//         let size = document.getElementById("size").value;
-//         let color = document.getElementById("color").value;
-//         let quantity = document.getElementById("quantity-input").value;
-//         let maxStock = document.getElementById("quantity-input").dataset.stock;
-//         let qtyError = document.getElementById("qtyError");
+function updateStock() {
+    let sizeSelect = document.getElementById("size");
+    let colorSelect = document.getElementById("color");
 
-//         let hasError = false;
+    let sizeId = sizeSelect.options[sizeSelect.selectedIndex]?.dataset.sizeId;
+    let colorId = colorSelect.options[colorSelect.selectedIndex]?.dataset.colorId;
 
-//         // reset
-//         document.getElementById("sizeError").classList.add("d-none");
-//         document.getElementById("colorError").classList.add("d-none");
+    let quantityInput = document.getElementById("quantity-input");
 
-//         // check size
-//         if (size === "") {
-//             document.getElementById("sizeError").classList.remove("d-none");
-//             hasError = true;
-//         }
+    if (!sizeId || !colorId) return;
 
-//         // check color
-//         if (color === "") {
-//             document.getElementById("colorError").classList.remove("d-none");
-//             hasError = true;
-//         }
-//          if (parseInt(quantity) > parseInt(maxStock)) {
-//         if (qtyError) {
-//             qtyError.classList.remove("d-none");
-//         } else {
-//             alert("Chỉ còn " + maxStock + " sản phẩm trong kho!");
-//         }
-//         hasError = true;
-//     }
+    let found = variants.find(v => 
+        v.size_id == sizeId && v.color_id == colorId
+    );
 
-//     if (parseInt(quantity) < 1) {
-//         alert("Số lượng phải >= 1");
-//         hasError = true;
-//     }
+    if (found) {
+        quantityInput.dataset.stock = found.quantity;
+    } else {
+        quantityInput.dataset.stock = 0;
+    }
+}
 
-//         if (hasError) {
-//             e.preventDefault(); // CHẶN SUBMIT
-//         }
-// });
+document.getElementById("size").addEventListener("change", updateStock);
+document.getElementById("color").addEventListener("change", updateStock);
+</script> --}}
+<script>
+    // Lấy toàn bộ danh sách biến thể từ Controller truyền xuống
+    let variants = @json($product->variants);
+
+    const sizeSelect = document.getElementById("size");
+    const colorSelect = document.getElementById("color");
+    const quantityInput = document.getElementById("quantity-input");
+    const qtyError = document.getElementById("qtyError");
+    const formAtc = document.querySelector("form[action='{{ route('cart.add') }}']");
+
+    if (formAtc) {
+        // 1. XỬ LÝ SỰ KIỆN NÚT GIẢM SỐ LƯỢNG (-)
+        document.querySelector(".qty-control__reduce").addEventListener("click", function() {
+            let currentQty = parseInt(quantityInput.value) || 1;
+            if (currentQty > 1) {
+                quantityInput.value = currentQty - 1;
+                validateQuantity();
+            }
+        });
+
+        // 2. XỬ LÝ SỰ KIỆN NÚT TĂNG SỐ LƯỢNG (+)
+        document.querySelector(".qty-control__increase").addEventListener("click", function() {
+            let currentQty = parseInt(quantityInput.value) || 1;
+            let maxStock = parseInt(quantityInput.dataset.stock) || 0;
+            
+            if (currentQty < maxStock) {
+                quantityInput.value = currentQty + 1;
+                qtyError.style.display = "none";
+            } else {
+                qtyError.style.display = "block";
+                qtyError.textContent = "Số lượng đạt tối đa trong kho (" + maxStock + " sản phẩm)";
+            }
+        });
+
+        // 3. CẬP NHẬT TỒN KHO THEO BIẾN THỂ ĐƯỢC CHỌN
+        function updateStock() {
+            let sizeId = sizeSelect.options[sizeSelect.selectedIndex]?.dataset.sizeId;
+            let colorId = colorSelect.options[colorSelect.selectedIndex]?.dataset.colorId;
+
+            // Nếu người dùng chưa chọn đủ cả Size và Màu
+            if (!sizeId || !colorId) {
+                quantityInput.dataset.stock = 0; 
+                return;
+            }
+
+            // Tìm biến thể khớp với Size và Màu đã chọn
+            let found = variants.find(v => v.size_id == sizeId && v.color_id == colorId);
+
+            if (found) {
+                quantityInput.dataset.stock = found.quantity;
+                // Nếu số lượng hiện tại lớn hơn số lượng trong kho của biến thể mới chọn, reset về 1
+                if (parseInt(quantityInput.value) > found.quantity) {
+                    quantityInput.value = found.quantity > 0 ? 1 : 0;
+                }
+            } else {
+                quantityInput.dataset.stock = 0;
+                quantityInput.value = 0;
+            }
+            validateQuantity();
+        }
+
+        sizeSelect.addEventListener("change", updateStock);
+        colorSelect.addEventListener("change", updateStock);
+
+        // 4. KIỂM TRA SỐ LƯỢNG HỢP LỆ
+        function validateQuantity() {
+            let quantity = parseInt(quantityInput.value) || 0;
+            let maxStock = parseInt(quantityInput.dataset.stock) || 0;
+
+            if (maxStock === 0) {
+                qtyError.style.display = "block";
+                qtyError.textContent = "Sản phẩm với kích cỡ và màu này hiện đang hết hàng!";
+                return false;
+            }
+
+            if (quantity > maxStock) {
+                qtyError.style.display = "block";
+                qtyError.textContent = "Số lượng vượt quá tồn kho khả dụng (" + maxStock + ")";
+                return false;
+            } else if (quantity < 1) {
+                qtyError.style.display = "block";
+                qtyError.textContent = "Số lượng chọn mua phải lớn hơn hoặc bằng 1";
+                return false;
+            } {
+                qtyError.style.display = "none";
+                return true;
+            }
+        }
+
+        // 5. CHẶN SUBMIT FORM NẾU LỖI
+        formAtc.addEventListener("submit", function(e) {
+            let size = sizeSelect.value;
+            let color = colorSelect.value;
+            let hasError = false;
+
+            // Reset trạng thái lỗi ẩn đi ban đầu
+            document.getElementById("sizeError").classList.add("d-none");
+            document.getElementById("colorError").classList.add("d-none");
+            qtyError.style.display = "none";
+
+            if (size === "") {
+                document.getElementById("sizeError").classList.remove("d-none");
+                hasError = true;
+            }
+
+            if (color === "") {
+                document.getElementById("colorError").classList.remove("d-none");
+                hasError = true;
+            }
+
+            if (!validateQuantity()) {
+                hasError = true;
+            }
+
+            if (hasError) {
+                e.preventDefault(); // Chặn không cho thực hiện gửi dữ liệu lên hệ thống giỏ hàng
+            }
+        });
+    }
+    document.addEventListener("DOMContentLoaded", function () {
+  const shareBtn = document.querySelector(".to-share");
+  const input = document.querySelector("#url");
+
+  if (shareBtn && input) {
+    shareBtn.addEventListener("click", function () {
+      input.select();
+      input.setSelectionRange(0, 99999);
+
+      navigator.clipboard.writeText(input.value).then(() => {
+        showToast("Đã copy link ");
+      }).catch(() => {
+        document.execCommand("copy");
+        showToast("Đã copy link ");
+      });
+    });
+  }
+
+  function showToast(msg) {
+    let toast = document.createElement("div");
+    toast.innerText = msg;
+
+    toast.style.position = "fixed";
+    toast.style.bottom = "20px";
+    toast.style.left = "50%";
+    toast.style.transform = "translateX(-50%)";
+    toast.style.background = "#000";
+    toast.style.color = "#fff";
+    toast.style.padding = "10px 16px";
+    toast.style.borderRadius = "8px";
+    toast.style.zIndex = "9999";
+    toast.style.fontSize = "14px";
+
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+      toast.remove();
+    }, 1500);
+  }
+});
+ const shareBtn = document.getElementById("shareBtn");
+  const toast = document.getElementById("toast");
+
+  const link = window.location.href; // lấy link trang hiện tại
+
+  function showToast() {
+    toast.style.opacity = "1";
+
+    setTimeout(() => {
+      toast.style.opacity = "0";
+    }, 1500);
+  }
+
+  shareBtn.addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(link);
+      showToast();
+    } catch (err) {
+      console.log("Copy lỗi:", err);
+    }
+  });
+    
 </script>
 @endsection

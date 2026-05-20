@@ -194,10 +194,10 @@
                         <div class="body-title mb-10">Mã Sản Phẩm <span class="tf-color-1">*</span></div>
                         <input class="mb-10" type="text" placeholder="Nhập mã sản phẩm" name="SKU" value="{{old('SKU')}}">
                     </fieldset>
-                    <fieldset class="name">
+                    <!-- <fieldset class="name">
                         <div class="body-title mb-10">Số Lượng Hàng <span class="tf-color-1">*</span></div>
                         <input class="mb-10" type="text" placeholder="nhập số lượng hàng" name="quantity" value="{{old('quantity')}}">
-                    </fieldset>
+                    </fieldset> -->
                 </div>
 
                 <div class="cols gap22">
@@ -227,12 +227,10 @@
 
                 <div class="d-flex gap-2 mb-3">
                     <!-- size -->
-                    <input type="text" id="sizeInput" class="form-control"
-                        placeholder="Nhập size (S, M, L...)">
+                    <input type="text" id="sizeInput" class="form-control" placeholder="Vui lòng nhập kích thước và số lượng rồi Enter" style="max-width:220px">
 
-                    <!-- stock -->
-                    <input type="number" id="stockInput" class="form-control"
-                        placeholder="Số lượng" min="1" style="max-width:120px">
+                    <input type="number" id="stockInput" class="form-control" placeholder="Số lượng" min="1" value="1" style="max-width:120px">
+                        
 
                     <!-- add button -->
                     <button type="button" class="btn btn-primary text-nowrap" onclick="addSize()">

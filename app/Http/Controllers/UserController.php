@@ -144,14 +144,13 @@ public function order_cancel(Request $request)
         return back()->with('error', 'Không tìm thấy đơn hàng!');
     }
 
-    if ($order->status !== 'pending') {
+    if ($order->status !== 'ordered') {
         return back()->with('error', 'Không thể hủy đơn này!');
     }
 
     $order->update([
         'status' => 'canceled',
-        'canceled_date' => Carbon::now()
-        
+        'canceled_date' => Carbon::now(),
     ]);
 
     return back()->with('status', 'Đã hủy thành công!');
