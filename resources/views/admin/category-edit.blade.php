@@ -27,7 +27,6 @@
                                         </li>
                                     </ul>
                                 </div>
-                                <!-- new-category -->
                                 <div class="wg-box">
                                     <form class="form-new-product form-style-1" action="{{route('admin.category.update')}}" method="POST" enctype="multipart/form-data">
                                         @csrf  
@@ -78,7 +77,7 @@
     
 @endsection
 @push('scripts')
-    <<script>
+    <script>
     $(function(){
         $("#myFile").on("change", function(){
             const [file] = this.files;
@@ -95,12 +94,12 @@
 
     function StringToSlug(text){
         return text.toLowerCase()
-            .normalize('NFD')                     // xử lý tiếng Việt
-            .replace(/[\u0300-\u036f]/g, '')      // bỏ dấu
-            .replace(/đ/g, 'd')                   // đ -> d
-            .replace(/[^a-z0-9\s-]/g, '')         // bỏ ký tự đặc biệt
+            .normalize('NFD')                    
+            .replace(/[\u0300-\u036f]/g, '')     
+            .replace(/đ/g, 'd')                   
+            .replace(/[^a-z0-9\s-]/g, '')         
             .trim()
-            .replace(/\s+/g, '-');                // space -> -
+            .replace(/\s+/g, '-');               
     }
 </script>
 @endpush

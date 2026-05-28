@@ -5,7 +5,7 @@
     <div class="main-content-wrap">
 
         <div class="flex items-center flex-wrap justify-between gap20 mb-27">
-            <h3>TẤT CẢ REVIEW</h3>
+            <h3>TẤT CẢ ĐÁNH GIÁ</h3>
 
             <ul class="breadcrumbs flex items-center flex-wrap justify-start gap10">
                 <li>
@@ -14,27 +14,28 @@
                     </a>
                 </li>
                 <li><i class="icon-chevron-right"></i></li>
-                <li><div class="text-tiny">Quản Lý Review</div></li>
+                <li><div class="text-tiny">Quản Lý Đánh Giá</div></li>
             </ul>
         </div>
 
         <div class="wg-box">
 
-            {{-- SEARCH --}}
+          
             <div class="flex items-center justify-between gap10 flex-wrap">
                 <div class="wg-filter flex-grow">
-                    <form class="form-search">
+                    <form class="form-search" method="GET" action="{{ route('admin.reviews') }}">
                         <fieldset class="name">
-                            <input type="text" placeholder="Tìm user / sản phẩm..." name="keyword">
+                            <input type="text" placeholder="Tìm Kiếm..." class="" name="search" tabindex="2" value="{{ request('search') }}" aria-required="true" required="">
                         </fieldset>
                         <div class="button-submit">
                             <button type="submit"><i class="icon-search"></i></button>
                         </div>
                     </form>
                 </div>
+               
             </div>
 
-            {{-- TABLE --}}
+
             <div class="wg-table table-all-user">
                 <div class="table-responsive">
 
@@ -49,7 +50,7 @@
                                 <th class="text-center">STT</th>
                                 <th class="text-center">Tên</th>
                                 <th class="text-center">Sản Phẩm</th>
-                                <th class="text-center">Rating</th>
+                                <th class="text-center">Số sao</th>
                                 <th class="text-center">Nội dung</th>
                                 <th class="text-center">Trạng thái</th>
                                 <th class="text-center">Hoạt động</th>
@@ -88,23 +89,39 @@
                                 <td>
                                     <div class="list-icon-function">
 
-                                        {{-- DUYỆT --}}
+                                 
                                         @if($review->status == 'pending')
-                                        <form method="POST" action="{{ route('admin.review.status', $review->id) }}">
+                                            <div class="btn-group">
+                                                <button type="button" class="btn btn-success btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    Duyệt
+                                                </button>
+                                                <ul class="dropdown-menu">
+                                                    <li>
+                                                        <form method="POST" action="{{ route('admin.review.status', $review->id) }}" class="m-0">
+                                                            @csrf
+                                                            @method('PUT')
+                                                            <input type="hidden" name="status" value="approved">
+                                                            <button type="submit" class="dropdown-item">Duyệt</button>
+                                                        </form>
+                                                    </li>
+                                                    <li>
+                                                        <form method="POST" action="{{ route('admin.reviews.approve_all') }}" class="m-0">
+                                                            @csrf
+                                                            @method('PUT')
+                                                            <button type="submit" class="dropdown-item">Duyệt toàn bộ</button>
+                                                        </form>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                            <form method="POST" action="{{ route('admin.review.status', $review->id) }}" class="d-inline-block ms-1">
                                                 @csrf
                                                 @method('PUT')
-
-                                                <button name="status" value="approved" class="btn btn-success btn-sm">
-                                                    ✔ Duyệt
-                                                </button>
-
                                                 <button name="status" value="rejected" class="btn btn-danger btn-sm">
-                                                    ✖ Từ chối
+                                                    Từ chối
                                                 </button>
                                             </form>
                                         @endif
 
-                                        {{-- XOÁ --}}
                                         <form action="{{route('admin.review.delete',$review->id)}}" method="POST">
                                             @csrf
                                             @method('DELETE')
@@ -127,7 +144,7 @@
 
             <div class="divider"></div>
 
-            {{-- PAGINATION --}}
+       
             <div class="flex items-center justify-between flex-wrap gap10 wgp-pagination">
                 {{ $reviews->links('pagination::bootstrap-5') }}
             </div>

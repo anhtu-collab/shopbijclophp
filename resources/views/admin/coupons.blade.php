@@ -22,10 +22,10 @@
                                 <div class="wg-box">
                                     <div class="flex items-center justify-between gap10 flex-wrap">
                                         <div class="wg-filter flex-grow">
-                                            <form class="form-search">
+                                            <form class="form-search" method="GET" action="{{ route('admin.coupons') }}">
                                                 <fieldset class="name">
-                                                    <input type="text" placeholder="Tìm Kiếm..." class="" name="name"
-                                                        tabindex="2" value="" aria-required="true" required="">
+                                                    <input type="text" placeholder="Tìm Kiếm..." class="" name="search"
+                                                        tabindex="2" value="{{ request('search') }}" aria-required="true" required="">
                                                 </fieldset>
                                                 <div class="button-submit">
                                                     <button class="" type="submit"><i class="icon-search"></i></button>
@@ -48,6 +48,7 @@
                                                         <th class="text-center">Mức Giảm Giá</th>
                                                         <th class="text-center">Áp Dụng Cho Đơn Hàng</th>
                                                         <th class="text-center">Ngày Hết Hạn</th>
+                                                        <th class="text-center">Trạng thái</th>
                                                         <th class="text-center">Hoạt Động</th>
                                                     </tr>
                                                 </thead>
@@ -75,12 +76,27 @@
                                                         <td>{{ number_format((float) $coupon->cart_value, 0, ',', '.') }} đ</td>
                                                         <td>{{ $coupon->expiry_date }}</td>
                                                         <td>
+                                                            @if($coupon->expiry_date && \Carbon\Carbon::parse($coupon->expiry_date)->isPast())
+                                                                <span class="text-danger">Hết hạn</span>
+                                                            @else
+                                                                <span class="text-success">Còn hạn</span>
+                                                            @endif
+                                                        </td>
+                                                        <td>
                                                             <div class="list-icon-function">
+                                                                <a href="{{ route('admin.coupon.details', $coupon->id) }}">
+                                                                <div class="list-icon-function view-icon">
+                                                                    <div class="item eye">
+                                                                        <i class="icon-eye"></i>
+                                                                    </div>
+                                                                </div>
+                                                            </a>
                                                                 <a href="{{ route('admin.coupon.edit',['id'=>$coupon->id]) }}">
                                                                     <div class="item edit">
                                                                         <i class="icon-edit-3"></i>
                                                                     </div>
                                                                 </a>
+            
                                                                 <form action="{{ route('admin.coupon.delete', ['id' => $coupon->id]) }}" method="POST">
                                                                     @csrf
                                                                      @method('DELETE')
@@ -89,6 +105,7 @@
                                                                     </div>
                                                                 </form>
                                                             </div>
+                                                            
                                                         </td>
                                                     </tr>
                                                     @endforeach

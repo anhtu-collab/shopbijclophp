@@ -4,7 +4,7 @@
     <div class="mb-4 pb-4"></div>
     <section class="container" style="max-width:860px;">
 
-        {{-- Breadcrumb --}}
+
         <nav class="mb-4" style="font-size:13px;">
             <a href="{{ route('home.index') }}" class="text-muted text-decoration-none">Home</a>
             <span class="mx-2 text-muted">/</span>
@@ -13,7 +13,7 @@
             <span>{{ Str::limit($blog->title, 40) }}</span>
         </nav>
 
-        {{-- Category + Date --}}
+
         <div class="d-flex align-items-center gap-3 mb-3">
             @if($blog->category)
                 <span class="badge rounded-pill text-dark px-3 py-1 fw-medium" style="background:#f0f0f0;font-size:12px;">
@@ -24,21 +24,21 @@
                 {{ $blog->created_at->format('d M, Y') }}
             </span>
             <span class="text-muted" style="font-size:13px;">
-                ✍️ {{ $blog->author ?? 'Admin' }}
+                 {{ $blog->author ?? 'Admin' }}
             </span>
         </div>
 
-        {{-- Title --}}
+
         <h1 class="fw-bold mb-4" style="font-size:32px;line-height:1.3;">{{ $blog->title }}</h1>
 
-        {{-- Excerpt --}}
+
         @if($blog->excerpt)
             <p class="lead text-muted mb-4" style="font-size:16px;border-left:4px solid #000;padding-left:16px;">
                 {{ $blog->excerpt }}
             </p>
         @endif
 
-        {{-- Thumbnail --}}
+
         @if($blog->thumbnail)
             <div class="mb-5" style="border-radius:16px;overflow:hidden;max-height:480px;">
                 <img src="{{ asset('uploads/blogs/' . $blog->thumbnail) }}" class="w-100"
@@ -46,12 +46,12 @@
             </div>
         @endif
 
-        {{-- Content --}}
+
         <div class="blog-content mb-5" style="font-size:16px;line-height:1.9;color:#333;">
             {!! $blog->content !!}
         </div>
 
-        {{-- Share --}}
+
         <div class="d-flex align-items-center gap-3 py-4 border-top border-bottom mb-5">
             <span class="fw-medium">Chia sẻ:</span>
             <a href="https://www.facebook.com/sharer/sharer.php?u={{ urlencode(request()->url()) }}" target="_blank"
@@ -69,7 +69,7 @@
         </div>
     </section>
 
-    {{-- Bài viết liên quan --}}
+   
     @if($related->count() > 0)
         <section class="container mb-5">
             <h4 class="fw-bold mb-4">Bài viết liên quan</h4>
@@ -96,7 +96,7 @@
         </section>
     @endif
 
-    {{-- Style cho nội dung blog --}}
+
     @push('styles')
         <style>
             .blog-content img {

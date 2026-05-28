@@ -11,7 +11,7 @@
 <div class="main-content-inner">
                             <div class="main-content-wrap">
                                 <div class="flex items-center flex-wrap justify-between gap20 mb-27">
-                                    <h3>TẤT CẢ ẢNH QUẢNG CÁO</h3>
+                                    <h3>TẤT CẢ BANNER</h3>
                                     <ul class="breadcrumbs flex items-center flex-wrap justify-start gap10">
                                         <li>
                                             <a href="{{route('admin.index')}}">
@@ -22,7 +22,7 @@
                                             <i class="icon-chevron-right"></i>
                                         </li>
                                         <li>
-                                            <div class="text-tiny">Tất Cả Ảnh Quảng Cáo</div>
+                                            <div class="text-tiny">Tất Cả Banner</div>
                                         </li>
                                     </ul>
                                 </div>
@@ -30,10 +30,10 @@
                                 <div class="wg-box">
                                     <div class="flex items-center justify-between gap10 flex-wrap">
                                         <div class="wg-filter flex-grow">
-                                            <form class="form-search">
+                                            <form class="form-search" method="GET" action="{{ route('admin.slides') }}">
                                                 <fieldset class="name">
-                                                    <input type="text" placeholder="Tìm Kiếm..." class="" name="name"
-                                                        tabindex="2" value="" aria-required="true" required="">
+                                                    <input type="text" placeholder="Tìm Kiếm..." class="" name="search"
+                                                        tabindex="2" value="{{ request('search') }}" aria-required="true" required="">
                                                 </fieldset>
                                                 <div class="button-submit">
                                                     <button class="" type="submit"><i class="icon-search"></i></button>

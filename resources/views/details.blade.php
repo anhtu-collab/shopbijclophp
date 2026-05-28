@@ -85,6 +85,51 @@ position: absolute;
     overflow: hidden;
 }
 
+/* Mobile Responsive Styles for Product Details */
+@media (max-width: 768px) {
+    .product-details__gallery {
+        margin-bottom: 20px;
+    }
+
+    .product-details__title {
+        font-size: 24px !important;
+    }
+
+    .product-price {
+        font-size: 24px !important;
+    }
+
+    .product-old-price {
+        font-size: 18px !important;
+    }
+
+    .product-single__addtocart {
+        padding: 15px !important;
+    }
+
+    .btn-add-cart {
+        width: 100%;
+        padding: 12px 24px;
+        font-size: 16px;
+    }
+
+    .qty-control {
+        max-width: 150px;
+    }
+
+    .size-option,
+    .color-option {
+        width: 40px;
+        height: 40px;
+        margin: 5px;
+    }
+
+    #sizeError,
+    #colorError {
+        font-size: 11px;
+    }
+}
+
 .pc__img {
     width: 100%;
     height: 100%;
@@ -205,7 +250,7 @@ position: absolute;
     color: #6b7280;
 }
 .qty-wrapper {
-    display: inline-block; /* gom lại 1 khối */
+    display: inline-block; 
 }
 
 .qty-control {
@@ -215,7 +260,7 @@ position: absolute;
 }
 
 #qtyError {
-    flex-basis: 100%;   /* ép nó chiếm 1 dòng riêng */
+    flex-basis: 100%; 
     width: 100%;
     margin-top: 4px;
     font-size: 13px;
@@ -243,10 +288,10 @@ position: absolute;
                     </a>
                 </div>
                 {{-- Ảnh Gallery --}}
-                @foreach(explode(',', $product->images) as $gimg)
+                @foreach(array_values(array_filter(array_map('trim', explode(',', $product->images)))) as $gimg)
                 <div class="swiper-slide product-single__image-item">
-                    <img loading="lazy" class="h-auto" src="{{ asset('uploads/products/' . trim($gimg)) }}" width="674" height="674" alt="" />
-                    <a data-fancybox="gallery" href="{{ asset('uploads/products/' . trim($gimg)) }}" data-bs-toggle="tooltip" data-bs-placement="left" title="Zoom">
+                    <img loading="lazy" class="h-auto" src="{{ asset('uploads/products/' . $gimg) }}" width="674" height="674" alt="" />
+                    <a data-fancybox="gallery" href="{{ asset('uploads/products/' . $gimg) }}" data-bs-toggle="tooltip" data-bs-placement="left" title="Zoom">
                         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <use href="#icon_zoom" />
                         </svg>
@@ -262,16 +307,15 @@ position: absolute;
                 </div>
                   </div>
     </div>
-    {{-- Phần Thumbnail (ảnh nhỏ bên dưới/cạnh) --}}
     <div class="product-single__thumbnail">
         <div class="swiper-container">
             <div class="swiper-wrapper">
                 <div class="swiper-slide product-single__image-item">
                     <img loading="lazy" class="h-auto" src="{{ asset('uploads/products/thumbnails/' . $product->image) }}" width="104" height="104" alt="" />
                 </div>
-                @foreach(explode(',', $product->images) as $gimg)
+                @foreach(array_values(array_filter(array_map('trim', explode(',', $product->images)))) as $gimg)
                 <div class="swiper-slide product-single__image-item">
-                    <img loading="lazy" class="h-auto" src="{{ asset('uploads/products/thumbnails/' . trim($gimg)) }}" width="104" height="104" alt="" />
+                    <img loading="lazy" class="h-auto" src="{{ asset('uploads/products/thumbnails/' . $gimg) }}" width="104" height="104" alt="" />
                 </div>
                 @endforeach
             </div>
@@ -285,19 +329,7 @@ position: absolute;
               <a href="#" class="menu-link menu-link_us-s text-uppercase fw-medium">Trang Chủ</a>
               <span class="breadcrumb-separator menu-link fw-medium ps-1 pe-1">/</span>
               <a href="#" class="menu-link menu-link_us-s text-uppercase fw-medium">Mua Sắm</a>
-            </div><!-- /.breadcrumb -->
-
-            {{-- <div
-              class="product-single__prev-next d-flex align-items-center justify-content-between justify-content-md-end flex-grow-1">
-              <a href="#" class="text-uppercase fw-medium"><svg width="10" height="10" viewBox="0 0 25 25"
-                  xmlns="http://www.w3.org/2000/svg">
-                  <use href="#icon_prev_md" />
-                </svg><span class="menu-link menu-link_us-s">Trước</span></a>
-              <a href="#" class="text-uppercase fw-medium"><span class="menu-link menu-link_us-s">Sau</span><svg
-                  width="10" height="10" viewBox="0 0 25 25" xmlns="http://www.w3.org/2000/svg">
-                  <use href="#icon_next_md" />
-                </svg></a>
-            </div> --}}
+            </div>
           </div>
      <h1 class="product-single__name">{{ $product->name }}</h1>
     <div class="d-flex align-items-center mt-1">
@@ -334,10 +366,7 @@ position: absolute;
           <div class="product-single__short-desc">
             <p>{{$product->short_description}}</p>
           </div>
-   {{-- Thay thế form cũ bằng form này --}}
-   {{-- @if(Cart::instance('cart')->content()->where('id', $product->id)->count() > 0)
-    <a href="{{ route('cart.index') }}" class="btn btn-warning mb-3">Đi đến trang giỏ hàng</a>
-   @else --}}
+
          @if($product->is_out_of_stock)
           <div class="border border-danger rounded-3 p-3 mb-3 bg-light">
                 <div class="d-flex align-items-center gap-2 text-danger fw-semibold">
@@ -368,7 +397,7 @@ position: absolute;
         </small>  
             </div>
 
-            {{-- COLOR --}}
+ 
             <div class="mb-2">
                 <select name="color" id="color" class="form-control">
                   <option value="">--Chọn Màu--</option>
@@ -385,7 +414,6 @@ position: absolute;
         </small>      
             </div>
                 <div class="qty-control qty-initialized position-relative">
-                    <!-- <input type="number" name="quantity" value="1" min="1" class="qty-control__number text-center"> -->
                      <input type="number" id="quantity-input" data-stock="{{ $product->is_out_of_stock ? 0 : $product->total_stock }}" name="quantity"  value="1" min="1" class="qty-control__number text-center">
                     <div class="qty-control__reduce">-</div>
                     <div class="qty-control__increase">+</div>
@@ -451,19 +479,13 @@ position: absolute;
         <label>Danh muc:</label>
         <span>{{ $product->category->name }}</span>
     </div>
-    {{-- <div class="meta-item">
-              <label>Tags:</label>
-              <span>NA</span>
-            </div> --}}
+  
 </div>
         </div>
       </div>
       <div class="product-single__details-tab">
         <ul class="nav nav-tabs" id="myTab" role="tablist">
-          {{-- <li class="nav-item" role="presentation">
-            <a class="nav-link nav-link_underscore active" id="tab-description-tab" data-bs-toggle="tab"
-              href="#tab-description" role="tab" aria-controls="tab-description" aria-selected="true">MÔ TẢ</a>
-          </li> --}}
+    
           <li class="nav-item" role="presentation">
             <a class="nav-link nav-link_underscore" id="tab-additional-info-tab" data-bs-toggle="tab"
               href="#tab-additional-info" role="tab" aria-controls="tab-additional-info"
@@ -496,7 +518,7 @@ position: absolute;
 
   <div class="product-single__addtional-info">
 
-    {{-- CÂN NẶNG --}}
+ 
     @if($product->weight)
     <div class="item d-flex justify-content-between align-items-center py-2 border-bottom">
       <span class="text-muted">Cân nặng</span>
@@ -504,7 +526,7 @@ position: absolute;
     </div>
     @endif
 
-    {{-- KÍCH THƯỚC --}}
+
     @if($product->dimensions)
     <div class="item d-flex justify-content-between align-items-center py-2 border-bottom">
       <span class="text-muted">Kích thước</span>
@@ -512,7 +534,7 @@ position: absolute;
     </div>
     @endif
 
-    {{-- SIZE --}}
+
 @if(!empty($sizes))
 <div class="item py-2 border-bottom">
   <div class="text-muted mb-1 fw-medium">Kích thước</div>
@@ -527,7 +549,7 @@ position: absolute;
 </div>
 @endif
 
-{{-- COLOR --}}
+
 @if(!empty($colors))
 <div class="item py-2 border-bottom">
   <div class="text-muted mb-1 fw-medium">Màu sắc</div>
@@ -542,7 +564,7 @@ position: absolute;
   </div>
 </div>
 @endif
-    {{-- MÔ TẢ --}}
+   
     @if($product->description)
     <div class="item py-3">
       <span class="text-muted d-block mb-1">Mô tả sản phẩm</span>
@@ -606,7 +628,7 @@ position: absolute;
     <h5>Hãy là người đầu tiên đánh giá</h5>
     <p>Email của bạn sẽ không được hiển thị công khai. Các trường bắt buộc được đánh dấu *</p>
 
-    {{-- ⭐ RATING --}}
+
     <label>Đánh giá của bạn *</label>
     <span class="star-rating">
         @for($i = 1; $i <= 5; $i++)
@@ -619,13 +641,11 @@ position: absolute;
 
     <input type="hidden" name="rating" id="form-input-rating" required>
 
-    {{-- COMMENT --}}
     <div class="mb-4 mt-2">
         <textarea name="comment" class="form-control form-control_gray"
             placeholder="Điền nội dung..." cols="30" rows="5" required></textarea>
     </div>
 
-    {{-- CHECK LOGIN --}}
     @guest
         <p class="text-danger"> Vui lòng đăng nhập để đánh giá</p>
     @endguest
@@ -682,9 +702,9 @@ position: absolute;
             <div class="pc__img-wrapper">
                 <a href="{{ route('shop.product.details', ['product_slug' => $rproduct->slug]) }}">
                     <img loading="lazy" src="{{ asset('uploads/products/' . $rproduct->image) }}" width="330" height="400" alt="{{ $rproduct->name }}" class="pc__img">
-                    @php $gimages = explode(',', $rproduct->images); @endphp
-                    @if(count($gimages) > 0 && $gimages[0] != '')
-                        <img loading="lazy" src="{{ asset('uploads/products/' . trim($gimages[0])) }}" width="330" height="400" alt="{{ $rproduct->name }}" class="pc__img pc__img-second">
+                    @php $gimages = array_values(array_filter(array_map('trim', explode(',', $rproduct->images)))); @endphp
+                    @if(count($gimages) > 0 && reset($gimages) != '')
+                        <img loading="lazy" src="{{ asset('uploads/products/' . reset($gimages)) }}" width="330" height="400" alt="{{ $rproduct->name }}" class="pc__img pc__img-second">
                     @endif
                 </a>
                               @if($rproduct->sale_price && $rproduct->regular_price > 0)
@@ -713,7 +733,7 @@ position: absolute;
         </div>
         @endforeach
     </div>
-            </div><!-- /.swiper-container js-swiper-slider -->
+            </div>
 
             <div class="products-carousel__prev position-absolute top-50 d-flex align-items-center justify-content-center">
               <svg width="25" height="25" viewBox="0 0 25 25" xmlns="http://www.w3.org/2000/svg">
@@ -724,86 +744,16 @@ position: absolute;
               <svg width="25" height="25" viewBox="0 0 25 25" xmlns="http://www.w3.org/2000/svg">
                 <use href="#icon_next_md" />
               </svg>
-            </div><!-- /.products-carousel__next -->
+            </div>
 
             <div class="products-pagination mt-4 mb-5 d-flex align-items-center justify-content-center"></div>
-            <!-- /.products-pagination -->
-          </div><!-- /.position-relative -->
+        
+          </div>
 
-        </section><!-- /.products-carousel container -->
+        </section>
       </main>
-      {{-- <script>
-        let variants = @json($product->variants);
-   document.querySelector("form[action='{{ route('cart.add') }}']")
-.addEventListener("submit", function(e) {
-
-    let size = document.getElementById("size").value;
-    let color = document.getElementById("color").value;
-
-    let quantityInput = document.getElementById("quantity-input");
-    let quantity = parseInt(quantityInput.value);
-    let maxStock = parseInt(quantityInput.dataset.stock);
-
-    let qtyError = document.getElementById("qtyError");
-
-    let hasError = false;
-
-    // reset
-    document.getElementById("sizeError").classList.add("d-none");
-    document.getElementById("colorError").classList.add("d-none");
-    if (qtyError) qtyError.style.display = "none";
-
-    if (size === "") {
-        document.getElementById("sizeError").classList.remove("d-none");
-        hasError = true;
-    }
-
-    if (color === "") {
-        document.getElementById("colorError").classList.remove("d-none");
-        hasError = true;
-    }
-
-    if (quantity > maxStock) {
-        qtyError.style.display = "block";
-        hasError = true;
-    }
-
-    if (quantity < 1) {
-        alert("Số lượng phải >= 1");
-        hasError = true;
-    }
-
-    if (hasError) {
-        e.preventDefault();
-    }
-});
-function updateStock() {
-    let sizeSelect = document.getElementById("size");
-    let colorSelect = document.getElementById("color");
-
-    let sizeId = sizeSelect.options[sizeSelect.selectedIndex]?.dataset.sizeId;
-    let colorId = colorSelect.options[colorSelect.selectedIndex]?.dataset.colorId;
-
-    let quantityInput = document.getElementById("quantity-input");
-
-    if (!sizeId || !colorId) return;
-
-    let found = variants.find(v => 
-        v.size_id == sizeId && v.color_id == colorId
-    );
-
-    if (found) {
-        quantityInput.dataset.stock = found.quantity;
-    } else {
-        quantityInput.dataset.stock = 0;
-    }
-}
-
-document.getElementById("size").addEventListener("change", updateStock);
-document.getElementById("color").addEventListener("change", updateStock);
-</script> --}}
 <script>
-    // Lấy toàn bộ danh sách biến thể từ Controller truyền xuống
+   
     let variants = @json($product->variants);
 
     const sizeSelect = document.getElementById("size");
@@ -813,7 +763,7 @@ document.getElementById("color").addEventListener("change", updateStock);
     const formAtc = document.querySelector("form[action='{{ route('cart.add') }}']");
 
     if (formAtc) {
-        // 1. XỬ LÝ SỰ KIỆN NÚT GIẢM SỐ LƯỢNG (-)
+   
         document.querySelector(".qty-control__reduce").addEventListener("click", function() {
             let currentQty = parseInt(quantityInput.value) || 1;
             if (currentQty > 1) {
@@ -822,7 +772,6 @@ document.getElementById("color").addEventListener("change", updateStock);
             }
         });
 
-        // 2. XỬ LÝ SỰ KIỆN NÚT TĂNG SỐ LƯỢNG (+)
         document.querySelector(".qty-control__increase").addEventListener("click", function() {
             let currentQty = parseInt(quantityInput.value) || 1;
             let maxStock = parseInt(quantityInput.dataset.stock) || 0;
@@ -836,23 +785,23 @@ document.getElementById("color").addEventListener("change", updateStock);
             }
         });
 
-        // 3. CẬP NHẬT TỒN KHO THEO BIẾN THỂ ĐƯỢC CHỌN
+   
         function updateStock() {
             let sizeId = sizeSelect.options[sizeSelect.selectedIndex]?.dataset.sizeId;
             let colorId = colorSelect.options[colorSelect.selectedIndex]?.dataset.colorId;
 
-            // Nếu người dùng chưa chọn đủ cả Size và Màu
+         
             if (!sizeId || !colorId) {
                 quantityInput.dataset.stock = 0; 
                 return;
             }
 
-            // Tìm biến thể khớp với Size và Màu đã chọn
+     
             let found = variants.find(v => v.size_id == sizeId && v.color_id == colorId);
 
             if (found) {
                 quantityInput.dataset.stock = found.quantity;
-                // Nếu số lượng hiện tại lớn hơn số lượng trong kho của biến thể mới chọn, reset về 1
+                
                 if (parseInt(quantityInput.value) > found.quantity) {
                     quantityInput.value = found.quantity > 0 ? 1 : 0;
                 }
@@ -866,7 +815,7 @@ document.getElementById("color").addEventListener("change", updateStock);
         sizeSelect.addEventListener("change", updateStock);
         colorSelect.addEventListener("change", updateStock);
 
-        // 4. KIỂM TRA SỐ LƯỢNG HỢP LỆ
+       
         function validateQuantity() {
             let quantity = parseInt(quantityInput.value) || 0;
             let maxStock = parseInt(quantityInput.dataset.stock) || 0;
@@ -891,13 +840,12 @@ document.getElementById("color").addEventListener("change", updateStock);
             }
         }
 
-        // 5. CHẶN SUBMIT FORM NẾU LỖI
         formAtc.addEventListener("submit", function(e) {
             let size = sizeSelect.value;
             let color = colorSelect.value;
             let hasError = false;
 
-            // Reset trạng thái lỗi ẩn đi ban đầu
+           
             document.getElementById("sizeError").classList.add("d-none");
             document.getElementById("colorError").classList.add("d-none");
             qtyError.style.display = "none";
@@ -917,7 +865,7 @@ document.getElementById("color").addEventListener("change", updateStock);
             }
 
             if (hasError) {
-                e.preventDefault(); // Chặn không cho thực hiện gửi dữ liệu lên hệ thống giỏ hàng
+                e.preventDefault(); 
             }
         });
     }
@@ -964,7 +912,7 @@ document.getElementById("color").addEventListener("change", updateStock);
  const shareBtn = document.getElementById("shareBtn");
   const toast = document.getElementById("toast");
 
-  const link = window.location.href; // lấy link trang hiện tại
+  const link = window.location.href; 
 
   function showToast() {
     toast.style.opacity = "1";

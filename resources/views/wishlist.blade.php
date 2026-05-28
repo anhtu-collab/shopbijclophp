@@ -69,10 +69,9 @@
     align-items: center;
     justify-content: center;
     z-index: 20;
-    overflow: hidden; /* QUAN TRỌNG */
+    overflow: hidden;
 }
 
-/* VỆT ĐEN CHÉO */
 .sold-out-glass span {
     position: absolute;
     top: 50%;
@@ -128,7 +127,7 @@
 
     <div class="row">
 
-      {{-- LEFT MENU --}}
+      
       <div class="col-lg-3">
         <ul class="account-nav">
           <li><a href="{{route('user.index')}}" class="menu-link menu-link_us-s">Bảng điều khiển</a></li>
@@ -148,7 +147,7 @@
         
       </div>
 
-      {{-- RIGHT CONTENT --}}
+      
       <div class="col-lg-9">
         <div class="page-content my-account__wishlist">
 
@@ -159,7 +158,7 @@
               <div class="product-card-wrapper">
                 <div class="product-card mb-3 mb-md-4 mb-xxl-5">
 
-                  {{-- IMAGE --}}
+                  
                  <div class="pc__img-wrapper">
 
                     <a href="{{ route('shop.product.details', ['product_slug' => $item->model?->slug]) }}">
@@ -171,12 +170,12 @@
                             $images = json_decode($item->model->images, true);
 
                             if(!$images){
-                                $images = explode(',', $item->model->images);
+                                $images = array_values(array_filter(array_map('trim', explode(',', $item->model->images))));
                             }
                         }
                       @endphp
 
-                      {{-- ảnh chính --}}
+                      
                       <img loading="lazy"
                           src="{{ !empty($item->model?->image) 
                                 ? asset('uploads/products/'.$item->model->image) 
@@ -184,7 +183,7 @@
                           width="330" height="400"
                           class="pc__img main-img">
 
-                      {{-- ảnh hover --}}
+                      
                       @if(!empty($images) && !empty($images[0]))
                         <img loading="lazy"
                             src="{{ asset('uploads/products/'.trim($images[0])) }}"
@@ -194,7 +193,7 @@
 
                     </a>
 
-                    {{-- badge --}}
+                    
                     @if($item->model?->sale_price && $item->model?->regular_price > 0)
                       @php
                         $discount = round(100 - ($item->model->sale_price / $item->model->regular_price * 100));
@@ -207,7 +206,7 @@
                           </div>
                       @endif
 
-                    {{-- remove --}}
+                    
                     <form method="POST" action="{{ route('wishlist.item.remove', $item->rowId) }}">
                       @csrf
                       @method('DELETE')
@@ -216,7 +215,7 @@
 
                   </div>
 
-                  {{-- INFO --}}
+                  
                   <div class="pc__info position-relative">
 
                     <p class="pc__category">

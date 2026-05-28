@@ -54,7 +54,7 @@
                                         </fieldset>
                                         @error('link')<span class="alert alert-danger text-center">{{ $message }}</span>@enderror
                                         <fieldset>
-                                            <div class="body-title">Ảnh Quảng Cáo <span class="tf-color-1">*</span>
+                                            <div class="body-title">Hình Ảnh <span class="tf-color-1">*</span>
                                             </div>
                                             @if($slide->image)
                                             <div class="upload-image flex-grow">

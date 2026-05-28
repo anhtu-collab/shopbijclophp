@@ -51,7 +51,7 @@ class ShopController extends Controller
     }
          $brands = Brand::orderBy('name', 'ASC')->get();
          $categories = Category::orderBy('name', 'ASC')->get();
-        //   $products = Product::where(function($query) use($f_brands){
+    
         $products = Product::with(['variants.size', 'variants.color'])
             ->withCount([
                 'reviews as reviews_count' => function ($q) {
@@ -88,12 +88,8 @@ class ShopController extends Controller
 {
     $product = Product::where('slug', $product_slug)->firstOrFail();
 
-    // $rproducts = Product::where('slug', '!=', $product_slug)
-    //     ->inRandomOrder()
-    //     ->take(8)
-    //     ->get();
     $rproducts = Product::where('category_id', $product->category_id)
-    ->where('id', '!=', $product->id) // bỏ chính nó
+    ->where('id', '!=', $product->id)
     ->latest()
     ->take(8)
     ->get();
@@ -178,10 +174,6 @@ $variant = $variantQuery->first();
 
 $sizeName = $variant ? $variant->size->name : $request->size;
 $colorName = $variant ? $variant->color->name : $request->color;
-
-    // xoá cart cũ (buy now chỉ 1 sản phẩm)
-    \Surfsidemedia\Shoppingcart\Facades\Cart::instance('cart')->destroy();
-
     \Surfsidemedia\Shoppingcart\Facades\Cart::instance('cart')->add(
         $product->id,
         $product->name,

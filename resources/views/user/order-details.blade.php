@@ -174,15 +174,44 @@
                                             <tr>
                                                 <th>Trạng thái đơn hàng</th>
                                                 <td colspan="5">
-                                                    @if($order->status == 'delivered')
-                                                        <span class="badge bg-success">Đã giao</span>
+                                                    @switch($order->status)
 
-                                                    @elseif($order->status == 'canceled')
-                                                        <span class="badge bg-danger">Đã huỷ</span>
+                                                        @case('pending')
+                                                            <span class="badge bg-secondary">Chờ xác nhận</span>
+                                                            @break
 
-                                                    @else
-                                                        <span class="badge bg-warning">Đang xử lý</span>
-                                                    @endif
+                                                        @case('confirmed')
+                                                            <span class="badge bg-info">Đã xác nhận</span>
+                                                            @break
+
+                                                        @case('processing')
+                                                            <span class="badge bg-primary">Đang chuẩn bị hàng</span>
+                                                            @break
+
+                                                        @case('shipping')
+                                                            <span class="badge bg-warning">Đang giao hàng</span>
+                                                            @break
+
+                                                        @case('delivered')
+                                                            <span class="badge bg-success">Đã giao</span>
+                                                            @break
+
+                                                        @case('completed')
+                                                            <span class="badge bg-success text-dark">Hoàn tất</span>
+                                                            @break
+
+                                                        @case('canceled')
+                                                            <span class="badge bg-danger">Đã huỷ</span>
+                                                            @break
+
+                                                        @case('returned')
+                                                            <span class="badge bg-dark">Trả hàng</span>
+                                                            @break
+
+                                                        @default
+                                                            <span class="badge bg-secondary">Không xác định</span>
+
+                                                    @endswitch
                                                 </td>
                                             </tr>
                                         </table>
@@ -306,18 +335,22 @@
 
                                                 <th>Trạng thái thanh toán</th>
                                                 <td>
-                                                    @if($transaction?->status == 'approved')
-                                                        <span class="badge bg-success">Đã duyệt</span>
+                                                  @switch($order->status)
+                                                    @case('processing')
+                                                        <span class="badge bg-primary">Đang xử lý</span>
+                                                        @break
 
-                                                    @elseif($transaction?->status == 'declined')
-                                                        <span class="badge bg-danger">Từ chối</span>
+                                                    @case('delivered')
+                                                        <span class="badge bg-success">Đã giao</span>
+                                                        @break
 
-                                                    @elseif($transaction?->status == 'refunded')
+                                                    @case('canceled')
+                                                        <span class="badge bg-danger">Đã huỷ</span>
+                                                        @break
+
+                                                    @default
                                                         <span class="badge bg-secondary">Hoàn tiền</span>
-
-                                                    @else
-                                                        <span class="badge bg-warning">Đang xử lý</span>
-                                                    @endif
+                                                @endswitch
                                                 </td>
                                             </tr>
 
@@ -325,7 +358,7 @@
                                     </table>
                                 </div>
 
-                                @if($order->status == 'ordered')
+                               @if($order->status == 'processing')
                                 <div class="wg-box mt-5 text-right">
                                     <form action="{{ route('user.order.cancel') }}" method="POST">
                                         @csrf

@@ -227,18 +227,59 @@
                                                         <td class="text-center">{{ number_format($order->subtotal, 0, ',', '.') }} đ</td>
                                                         <td class="text-center">{{ number_format($order->tax, 0, ',', '.') }} đ</td>
                                                         <td class="text-center">{{ number_format($order->total, 0, ',', '.') }} đ</td>
-                                                        <td class="text-center">
-                                                            @if($order->status == 'delivered')
-                                                         <span class="badge bg-success">Đã Giao</span>
-                                                     @elseif($order->status == 'canceled')
-                                                         <span class="badge bg-danger">Đã Hủy</span>
-                                                     @else
-                                                         <span class="badge bg-warning">Chờ Xử Lý</span>
-                                                     @endif
+                                                       <td class="text-center">
+                                                            @switch($order->status)
+
+                                                                @case('pending')
+                                                                    <span class="badge bg-secondary">Chờ Xác Nhận</span>
+                                                                    @break
+
+                                                                @case('confirmed')
+                                                                    <span class="badge bg-info">Đã Xác Nhận</span>
+                                                                    @break
+
+                                                                @case('processing')
+                                                                    <span class="badge bg-primary">Đang Chuẩn Bị Hàng</span>
+                                                                    @break
+
+                                                                @case('shipping')
+                                                                    <span class="badge bg-warning">Đang Giao Hàng</span>
+                                                                    @break
+
+                                                                @case('delivered')
+                                                                    <span class="badge bg-success">Đã Giao</span>
+                                                                    @break
+
+                                                                @case('completed')
+                                                                    <span class="badge bg-success text-dark">Hoàn Tất</span>
+                                                                    @break
+
+                                                                @case('canceled')
+                                                                    <span class="badge bg-danger">Đã Hủy</span>
+                                                                    @break
+
+                                                                @case('returned')
+                                                                    <span class="badge bg-warning text-dark">Trả Hàng</span>
+                                                                    @break
+
+                                                                @default
+                                                                    <span class="badge bg-secondary">Chờ Xác Nhận</span>
+
+                                                            @endswitch
                                                         </td>
                                                         <td class="text-center">{{$order->created_at}}</td>
                                                         {{-- <td class="text-center">{{$order->orderItems->count()}}</td> --}}
-                                                        <td class="text-center">{{$order->delivered_date}}</td>
+                                                            <td class="text-center">
+                                                                @if($order->status === 'delivered')
+                                                                    {{ $order->delivered_date ? \Carbon\Carbon::parse($order->delivered_date)->format('d/m/Y') : '-' }}
+                                                                @elseif($order->status === 'canceled')
+                                                                    {{ $order->canceled_date ? \Carbon\Carbon::parse($order->canceled_date)->format('d/m/Y') : '-' }}
+                                                                @elseif($order->status === 'returned')
+                                                                    {{ $order->returned_date ? \Carbon\Carbon::parse($order->returned_date)->format('d/m/Y') : '-' }}
+                                                                @else
+                                                                    -
+                                                                @endif
+                                                            </td>
                                                         <td class="text-center">
                                                             <a href="{{ route('admin.order.details', ['order_id' => $order->id])}}">
                                                                 <div class="list-icon-function view-icon">

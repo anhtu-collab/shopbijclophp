@@ -138,29 +138,23 @@ class CartController extends Controller
 
 public function increase_cart_quantity($rowId)
 {
-    // 1. Lấy thông tin item trong giỏ hàng
     $productCart = Cart::instance('cart')->get($rowId);
 
-    // ❗ Check item tồn tại trong cart
     if (!$productCart) {
         return back()->with('error', 'Sản phẩm không tồn tại trong giỏ!');
     }
 
-    // 2. Tìm sản phẩm gốc
     $product = Product::find($productCart->id);
 
-    // ❗ Check sản phẩm tồn tại
     if (!$product) {
         return back()->with('error', 'Sản phẩm đã bị xoá!');
     }
 
-    // 3. Lấy size và color từ options của giỏ hàng
     $sizeId = $productCart->options->size_id ?? null;
     $colorId = $productCart->options->color_id ?? null;
     $sizeName = $productCart->options->size ?? null;
     $colorName = $productCart->options->color ?? null;
 
-    // 4. Truy vấn số lượng tồn kho từ bảng biến thể (ProductVariant)
     $variantQuery = ProductVariant::where('product_id', $productCart->id);
 
     if ($sizeId) {
@@ -181,12 +175,10 @@ public function increase_cart_quantity($rowId)
 
     $variant = $variantQuery->first();
 
-    // ❗ Trường hợp không tìm thấy biến thể tương ứng trong database
     if (!$variant) {
         return back()->with('error', 'Phiên bản sản phẩm này không còn tồn tại hoặc đã ngừng bán!');
     }
 
-    // 🚨 CHẶN VƯỢT KHO BIẾN THỂ
     if ($productCart->qty >= $variant->quantity) {
         return back()->with(
             'error',
@@ -194,45 +186,35 @@ public function increase_cart_quantity($rowId)
         );
     }
 
-    // ✅ Tăng số lượng trong giỏ hàng thêm 1
     Cart::instance('cart')->update($rowId, $productCart->qty + 1);
 
     return back()->with('success', 'Đã tăng số lượng!');
 }
 
-// Hàm giảm số lượng
 public function decrease_cart_quantity($rowId) {
-    // 1. Lấy thông tin item trong giỏ hàng
     $productCart = Cart::instance('cart')->get($rowId);
     
-    // ❗ Check xem item có tồn tại trong giỏ hàng không
     if (!$productCart) {
         return back()->with('error', 'Sản phẩm không tồn tại trong giỏ!');
     }
 
-    // 2. Tính toán số lượng mới sau khi giảm
-    $qty = $productCart->qty - 1; // Giảm đi 1
+    $qty = $productCart->qty - 1;
     
-    // 3. Nếu số lượng giảm xuống bằng 0, thực hiện xóa sản phẩm khỏi giỏ hàng
     if ($qty <= 0) {
         Cart::instance('cart')->remove($rowId);
         return redirect()->back()->with('success', 'Đã xóa sản phẩm khỏi giỏ hàng!');
     }
     
-    // 4. Nếu số lượng vẫn > 0, cập nhật lại giỏ hàng bình thường
     Cart::instance('cart')->update($rowId, $qty);
     
     return redirect()->back()->with('success', 'Đã giảm số lượng!');
 }
 public function remove_item($rowId) {
-    // Sử dụng phương thức remove() với rowId [00:01:11]
     Cart::instance('cart')->remove($rowId);
     return redirect()->back();
 }
 
-// Hàm xóa sạch giỏ hàng
 public function empty_cart() {
-    // Sử dụng phương thức destroy() để xóa toàn bộ [00:07:26]
     Cart::instance('cart')->destroy();
     return redirect()->back();
 }
@@ -328,51 +310,7 @@ public function place_an_order(Request $request) {
         'mode.in' => 'Phương thức thanh toán không hợp lệ.',
     ]);
     $user_id = Auth::user()->id;
-  
-// $address = null;
-
-// // 1. nếu user chọn địa chỉ
-// if ($request->address_id) {
-//     $address = Address::where('user_id', $user_id)
-//         ->where('id', $request->address_id)
-//         ->first();
-// }
-
-// // 2. nếu không chọn → lấy default
-// if (!$address) {
-//     $address = Address::where('user_id', $user_id)
-//         ->where('is_default', 1)
-//         ->first();
- 
-
-//     // Nếu chưa có địa chỉ mặc định, yêu cầu nhập và lưu mới
-//     if (!$address && $request->filled('address')) {
-//         $request->validate([
-//             'name' => 'required|max:100',
-//             'phone' => 'required|numeric|digits:10',
-//             'zip' => 'required|numeric|digits:6',
-//             'state' => 'required',
-//             'city' => 'required',
-//             'address' => 'required',
-//             'locality' => 'required',
-//             'landmark' => 'required',
-//         ]);
-
-//         $address = new Address();
-//         $address->name = $request->name;
-//         $address->phone = $request->phone;
-//         $address->zip = $request->zip;
-//         $address->state = $request->state;
-//         $address->city = $request->city;
-//         $address->address = $request->address;
-//         $address->locality = $request->locality;
-//         $address->landmark = $request->landmark;
-//         $address->country = 'Vietnam'; // Hoặc lấy từ input
-//         $address->user_id = $user_id;
-//         $address->is_default = 0;
-//         $address->save();
-//     }
-$address = null;
+    $address = null;
 
 if ($request->address_id) {
     $address = Address::where('user_id', $user_id)
@@ -418,16 +356,21 @@ if (!$address) {
     return back()->with('error', 'Vui lòng chọn hoặc nhập địa chỉ giao hàng!');
 }
 
-    // 2. Thiết lập số tiền thanh toán (lấy từ Session hoặc Cart)
     $this->setAmountforCheckout();
 
-    // 3. Tạo đơn hàng mới (Order)
     $order = new Order();
     $order->user_id = $user_id;
     $order->subtotal = Session::get('checkout')['subtotal'];
     $order->discount = Session::get('checkout')['discount'];
     $order->tax = Session::get('checkout')['tax'];
     $order->total = Session::get('checkout')['total'];
+    $order->status = 'pending';
+
+    if (Session::has('coupon')) {
+        $coupon = \App\Models\Coupon::where('code', Session::get('coupon')['code'])->first();
+        $order->coupon_id = $coupon ? $coupon->id : null;
+    }
+
     $order->name = $address->name;
     $order->phone = $address->phone;
     $order->locality = $address->locality;
@@ -439,7 +382,6 @@ if (!$address) {
     $order->zip = $address->zip;
     $order->save();
 
-    // 4. Lưu chi tiết sản phẩm (Order Items)
 foreach (Cart::instance('cart')->content() as $item) 
 {
     $product = Product::find($item->id);
@@ -516,23 +458,9 @@ foreach (Cart::instance('cart')->content() as $item)
     $orderItem->save();
 }
 
-    //5. Lưu giao dịch (Transaction) - Ở đây xử lý COD
-     if ($request->mode == 'card') 
+    if ($request->mode == 'card') 
     {
-        //
     }
-    // elseif($request->mode == 'vnpay') 
-    // {
-    // // Trả về view chứa form auto-submit
-    //     $transaction = new Transaction();
-    //     $transaction->user_id = $user_id;
-    //     $transaction->order_id = $order->id;
-    //     $transaction->mode = 'vnpay';
-    //     $transaction->status = 'pending'; // Đang chờ xử lý
-    //     $transaction->save();
-    //     return redirect()->route('payment.vnpay');
-    //     // return redirect($response['payment.vnpay']);
-    // }
     elseif($request->mode == 'vnpay') 
 {
     $transaction = new Transaction();
@@ -542,7 +470,6 @@ foreach (Cart::instance('cart')->content() as $item)
     $transaction->status = 'pending';
     $transaction->save();
 
-    // 🔥 LƯU order để dùng khi return
     Session::put('order_id', $order->id);
   
 
@@ -555,28 +482,26 @@ foreach (Cart::instance('cart')->content() as $item)
         $transaction->user_id = $user_id;
         $transaction->order_id = $order->id;
         $transaction->mode = 'cod';
-        $transaction->status = 'pending'; // Đang chờ xử lý
+        $transaction->status = 'pending';
         $transaction->save();
     }
 
 
 
-    //6. Xóa giỏ hàng và Session
     Cart::instance('cart')->destroy();
     Session::forget('checkout');
     Session::forget('coupon');
     Session::forget('discounts');
     Session::put('order_id', $order->id);
-    // return redirect()->route('cart.order.confirmation',compact('order'));
+
     return redirect()->route('cart.order.confirmation');
 
     
 }
 
-// Hàm phụ để tính toán số tiền
 public function setAmountforCheckout() {
     if (Cart::instance('cart')->content()->count() <= 0)
-        {
+    {
         Session::forget('checkout');
         return;
     }
@@ -587,15 +512,14 @@ public function setAmountforCheckout() {
             'subtotal' => Session::get('discounts')['subtotal'] ?? Cart::instance('cart')->subtotal(),
             'tax'      => Session::get('discounts')['tax'] ?? Cart::instance('cart')->tax(),
             'total'    => Session::get('discounts')['total'] ?? Cart::instance('cart')->total(),
-                ]);
+        ]);
     } else {
         Session::put('checkout', [
             'discount' => 0,
             'subtotal' => floatval(str_replace(',', '', Cart::instance('cart')->subtotal())),
             'tax' => floatval(str_replace(',', '', Cart::instance('cart')->tax())),
             'total' => floatval(str_replace(',', '', Cart::instance('cart')->total()))
-                    ]);
-            
+        ]);
     }
 }
  public function order_confirmation()
@@ -614,8 +538,6 @@ public function vnpayReturn(Request $request)
 {
     $order_id = Session::get('order_id');
     $transaction = Transaction::where('order_id', $order_id)->first();
-
-    // xử lý trạng thái VNPay: success / failed
 }
 public function execPostRequest($url, $data)
 {
@@ -629,9 +551,7 @@ public function execPostRequest($url, $data)
     );
     curl_setopt($ch, CURLOPT_TIMEOUT, 5);
     curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
-    //execute post
     $result = curl_exec($ch);
-    //close connection
     curl_close($ch);
     return $result;
 }

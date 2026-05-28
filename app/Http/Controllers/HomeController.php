@@ -47,7 +47,6 @@ public function contact_store(Request $request) {
 
     return redirect()->back()->with('success', 'Tin nhắn của bạn đã được gửi thành công!');
 }
-// app/Http/Controllers/HomeController.php
 
 public function search(Request $request)
 {

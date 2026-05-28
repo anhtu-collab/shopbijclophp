@@ -30,10 +30,10 @@
                                 <div class="wg-box">
                                     <div class="flex items-center justify-between gap10 flex-wrap">
                                         <div class="wg-filter flex-grow">
-                                            <form class="form-search">
+                                            <form class="form-search" method="GET" action="{{ route('admin.users') }}">
                                                 <fieldset class="name">
-                                                    <input type="text" placeholder="Tìm Kiếm..." class="" name="name"
-                                                        tabindex="2" value="" aria-required="true" required="">
+                                                    <input type="text" placeholder="Tìm Kiếm..." class="" name="search"
+                                                        tabindex="2" value="{{ request('search') }}" aria-required="true" required="">
                                                 </fieldset>
                                                 <div class="button-submit">
                                                     <button class="" type="submit"><i class="icon-search"></i></button>
@@ -49,6 +49,9 @@
                                          @if(Session::has('status')) 
                                             <p class="alert alert-success">{{Session::get('status')}}</p>
                                         @endif 
+                                        @if(Session::has('error')) 
+                                            <p class="alert alert-danger">{{Session::get('error')}}</p>
+                                        @endif 
                                         <table class="table table-striped table-bordered">
                                             <thead>
                                                 <tr>
@@ -56,7 +59,7 @@
                                                     <th>Tên</th>
                                                     <th>Email</th>
                                                     <th>Số điện thoại</th>
-                                                    {{-- <th>Mật khẩu</th> --}}
+                                            
                                                     <th>Chức năng</th>
                                                     <th>Hoạt Động</th>
                                                 </tr>
@@ -71,7 +74,7 @@
                                                     <td>{{ $user->email }}</td>
                                                     <td>{{ $user->mobile }}</td>
 
-                                                    {{-- <td>{{ $user->password }}</td> --}}
+                                                
                                                     
                                                     <td class="link-col">{{ $user->utype }}</td>
                                                     <td>
@@ -104,7 +107,7 @@
                                     </div>
                                     <div class="divider"></div>
                                     <div class="flex items-center justify-between flex-wrap gap10 wgp-pagination">
-                                        {{-- {{ $user->links('pagination::bootstrap-5') }}  --}}
+                                        {{ $users->withQueryString()->links('pagination::bootstrap-5') }}
 
                                  </div>
                                 </div>

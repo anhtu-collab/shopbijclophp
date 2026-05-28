@@ -288,7 +288,6 @@
     margin-bottom: 10px;
 }
 
-/* ===== DROPDOWN FIX ===== */
 
 .navigation {
     position: relative;
@@ -298,9 +297,6 @@
     position: relative;
 }
 
-/* =========================
-   DROPDOWN MENU
-========================= */
 .dropdown-menu {
     position: absolute;
     top: 100%;
@@ -334,18 +330,12 @@
     display: block !important;
 }
 
-/* =========================
-   SHOW HOVER
-========================= */
+
 .navigation__item:hover .dropdown-menu {
     opacity: 1;
     visibility: visible;
     transform: translateY(0) scale(1);
 }
-
-/* =========================
-   ITEM STYLE
-========================= */
 .dropdown-menu li a {
     display: block;
 
@@ -366,7 +356,7 @@
     position: relative;
 }
 
-/* hover item */
+
 .dropdown-menu li a:hover {
     background: rgba(59, 91, 219, 0.15);
     color: #0b3d91;
@@ -374,7 +364,7 @@
     transform: translateX(6px);
 }
 
-/* small left indicator */
+
 .dropdown-menu li a::before {
     content: "";
     position: absolute;
@@ -391,14 +381,10 @@
     transition: all 0.2s ease;
 }
 
-/* show indicator on hover */
 .dropdown-menu li a:hover::before {
     height: 60%;
 }
 
-/* =========================
-   FIX OVERFLOW BUG
-========================= */
 .header,
 .header-desk,
 .navigation,
@@ -411,15 +397,56 @@
     z-index: 9999;
 }
 
-/* =========================
-   OPTIONAL: ICON STYLE (nếu có icon)
-========================= */
 .dropdown-menu li a i {
     margin-right: 8px;
     opacity: 0.8;
 }
 
-  </style>
+.header-mobile__navigation {
+    visibility: hidden !important;
+    opacity: 0 !important;
+    height: 0 !important;
+    max-height: 0 !important;
+    overflow: hidden !important;
+}
+
+.mobile-menu-opened .header-mobile__navigation {
+    visibility: visible !important;
+    opacity: 1 !important;
+    height: calc(100vh - 4rem) !important;
+    max-height: calc(100vh - 4rem) !important;
+    overflow: auto !important;
+}
+        /* Đảm bảo chatbot luôn hiển thị */
+        .chat-widget {
+      position: fixed !important;
+      z-index: 9999999 !important;
+      display: block !important;
+      visibility: visible !important;
+  }
+  .social-links {
+  margin: 0;
+  padding: 0;
+}
+
+.social-links li {
+ margin-left: 20px;
+}
+
+.footer__social-link {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.footer__social-link svg {
+  display: block;
+}
+    </style>
+
   <div class="header-mobile header_sticky">
     <div class="container d-flex align-items-center h-100">
       <a class="mobile-nav-activator d-block position-relative" href="#">
@@ -435,11 +462,13 @@
         </a>
       </div>
 
-      <a href="#" class="header-tools__item header-tools__cart js-open-aside" data-aside="cartDrawer">
+      <a href="{{ route('cart.index') }}" class="header-tools__item header-tools__cart js-open-aside" data-aside="cartDrawer">
         <svg class="d-block" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
           <use href="#icon_cart" />
         </svg>
-        <span class="cart-amount d-block position-absolute js-cart-items-count">3</span>
+        @if(Cart::instance('cart')->content()->count() > 0)
+          <span class="cart-amount d-block position-absolute js-cart-items-count">{{ Cart::instance('cart')->content()->count() }}</span>
+        @endif
       </a>
     </div>
 
@@ -490,10 +519,10 @@
               <a href="{{route('cart.index')}}" class="navigation__link">GIỎ HÀNG</a>
             </li>
             <li class="navigation__item">
-              <a href="about.html" class="navigation__link">GIỚI THIỆU</a>
+              <a href="{{ route('views.blogs') }}" class="navigation__link">GIỚI THIỆU</a>
             </li>
             <li class="navigation__item">
-              <a href="contact.html" class="navigation__link">LIÊN HỆ</a>
+              <a href="{{ route('home.contact') }}" class="navigation__link">LIÊN HỆ</a>
             </li>
           </ul>
         </div>
@@ -510,46 +539,27 @@
 
         <ul class="container social-links list-unstyled d-flex flex-wrap mb-0">
           <li>
-            <a href="#" class="footer__social-link d-block ps-0">
-              <svg class="svg-icon svg-icon_facebook" width="9" height="15" viewBox="0 0 9 15"
-                xmlns="http://www.w3.org/2000/svg">
-                <use href="#icon_facebook" />
-              </svg>
-            </a>
+            <a href="https://www.facebook.com/brijclo/" 
+            target="_blank"
+            class="footer__social-link d-block ps-0">
+            <svg class="svg-icon svg-icon_facebook" width="9" height="15" viewBox="0 0 9 15"
+              xmlns="http://www.w3.org/2000/svg">
+              <use href="#icon_facebook" />
+            </svg>
+          </a>
           </li>
+
           <li>
-            <a href="#" class="footer__social-link d-block">
-              <svg class="svg-icon svg-icon_twitter" width="14" height="13" viewBox="0 0 14 13"
-                xmlns="http://www.w3.org/2000/svg">
-                <use href="#icon_twitter" />
-              </svg>
-            </a>
-          </li>
-          <li>
-            <a href="#" class="footer__social-link d-block">
+            <a href="https://www.instagram.com/brijclo/" 
+   target="_blank"
+   class="footer__social-link d-block">
               <svg class="svg-icon svg-icon_instagram" width="14" height="13" viewBox="0 0 14 13"
                 xmlns="http://www.w3.org/2000/svg">
                 <use href="#icon_instagram" />
               </svg>
             </a>
           </li>
-          <li>
-            <a href="#" class="footer__social-link d-block">
-              <svg class="svg-icon svg-icon_youtube" width="16" height="11" viewBox="0 0 16 11"
-                xmlns="http://www.w3.org/2000/svg">
-                <path
-                  d="M15.0117 1.8584C14.8477 1.20215 14.3281 0.682617 13.6992 0.518555C12.5234 0.19043 7.875 0.19043 7.875 0.19043C7.875 0.19043 3.19922 0.19043 2.02344 0.518555C1.39453 0.682617 0.875 1.20215 0.710938 1.8584C0.382812 3.00684 0.382812 5.46777 0.382812 5.46777C0.382812 5.46777 0.382812 7.90137 0.710938 9.07715C0.875 9.7334 1.39453 10.2256 2.02344 10.3896C3.19922 10.6904 7.875 10.6904 7.875 10.6904C7.875 10.6904 12.5234 10.6904 13.6992 10.3896C14.3281 10.2256 14.8477 9.7334 15.0117 9.07715C15.3398 7.90137 15.3398 5.46777 15.3398 5.46777C15.3398 5.46777 15.3398 3.00684 15.0117 1.8584ZM6.34375 7.68262V3.25293L10.2266 5.46777L6.34375 7.68262Z" />
-              </svg>
-            </a>
-          </li>
-          <li>
-            <a href="#" class="footer__social-link d-block">
-              <svg class="svg-icon svg-icon_pinterest" width="14" height="15" viewBox="0 0 14 15"
-                xmlns="http://www.w3.org/2000/svg">
-                <use href="#icon_pinterest" />
-              </svg>
-            </a>
-          </li>
+       
         </ul>
       </div>
     </nav>
@@ -668,7 +678,7 @@
         <use href="#icon_cart" />
     </svg>
     
-    {{-- Kiểm tra: Nếu giỏ hàng có sản phẩm thì mới hiển thị Badge --}}
+
     @if(Cart::instance('cart')->content()->count() > 0)
         <span class="cart-amount d-block position-absolute js-cart-items-count">
             {{ Cart::instance('cart')->content()->count() }}
@@ -696,74 +706,38 @@
          <p class="footer-address">Sao biển 23-455,kdt Vinhomes Ocean Pank</p>
         <p class="m-0"><strong class="fw-medium">Email: brijclo.adm@gmail.com</strong></p>
         <p><strong class="fw-medium">Hotline: +84 925 7724 99</strong></p>
-          <ul class="social-links list-unstyled d-flex flex-wrap mb-0">
-            <li>
-              <a href="#" class="footer__social-link d-block">
-                <svg class="svg-icon svg-icon_facebook" width="9" height="15" viewBox="0 0 9 15"
-                  xmlns="http://www.w3.org/2000/svg">
-                  <use href="#icon_facebook" />
-                </svg>
-              </a>
-            </li>
-            <li>
-              <a href="#" class="footer__social-link d-block">
-                <svg class="svg-icon svg-icon_twitter" width="14" height="13" viewBox="0 0 14 13"
-                  xmlns="http://www.w3.org/2000/svg">
-                  <use href="#icon_twitter" />
-                </svg>
-              </a>
-            </li>
-            <li>
-              <a href="#" class="footer__social-link d-block">
-                <svg class="svg-icon svg-icon_instagram" width="14" height="13" viewBox="0 0 14 13"
-                  xmlns="http://www.w3.org/2000/svg">
-                  <use href="#icon_instagram" />
-                </svg>
-              </a>
-            </li>
-            <li>
-              <a href="#" class="footer__social-link d-block">
-                <svg class="svg-icon svg-icon_youtube" width="16" height="11" viewBox="0 0 16 11"
-                  xmlns="http://www.w3.org/2000/svg">
-                  <path
-                    d="M15.0117 1.8584C14.8477 1.20215 14.3281 0.682617 13.6992 0.518555C12.5234 0.19043 7.875 0.19043 7.875 0.19043C7.875 0.19043 3.19922 0.19043 2.02344 0.518555C1.39453 0.682617 0.875 1.20215 0.710938 1.8584C0.382812 3.00684 0.382812 5.46777 0.382812 5.46777C0.382812 5.46777 0.382812 7.90137 0.710938 9.07715C0.875 9.7334 1.39453 10.2256 2.02344 10.3896C3.19922 10.6904 7.875 10.6904 7.875 10.6904C7.875 10.6904 12.5234 10.6904 13.6992 10.3896C14.3281 10.2256 14.8477 9.7334 15.0117 9.07715C15.3398 7.90137 15.3398 5.46777 15.3398 5.46777C15.3398 5.46777 15.3398 3.00684 15.0117 1.8584ZM6.34375 7.68262V3.25293L10.2266 5.46777L6.34375 7.68262Z" />
-                </svg>
-              </a>
-            </li>
-            <li>
-              <a href="#" class="footer__social-link d-block">
-                <svg class="svg-icon svg-icon_pinterest" width="14" height="15" viewBox="0 0 14 15"
-                  xmlns="http://www.w3.org/2000/svg">
-                  <use href="#icon_pinterest" />
-                </svg>
-              </a>
-            </li>
-          </ul>
+         <ul class="social-links d-flex align-items-center gap-2 list-unstyled m-0 p-0">
+  <li>
+    <a href="https://www.facebook.com/brijclo/"
+       target="_blank"
+       class="footer__social-link d-flex align-items-center justify-content-center">
+      <svg width="9" height="15" viewBox="0 0 9 15">
+        <use href="#icon_facebook"></use>
+      </svg>
+    </a>
+  </li>
+
+  <li>
+    <a href="https://www.instagram.com/brijclo/"
+       target="_blank"
+       class="footer__social-link d-flex align-items-center justify-content-center">
+      <svg width="14" height="13" viewBox="0 0 14 13">
+        <use href="#icon_instagram"></use>
+      </svg>
+    </a>
+  </li>
+</ul>
         </div>
 
-{{-- <div class="footer-column footer-menu mb-4 mb-lg-0">
-  <h6 class="sub-menu__title text-uppercase">MUA SẮM</h6>
-  <ul class="sub-menu__list list-unstyled">
-    <li class="sub-menu__item"><a href="shop2.html" class="menu-link menu-link_us-s">Hàng mới về</a></li>
-    <li class="sub-menu__item"><a href="shop3.html" class="menu-link menu-link_us-s">Phụ kiện</a></li>
-    <li class="sub-menu__item"><a href="shop4.html" class="menu-link menu-link_us-s">Nam</a></li>
-    <li class="sub-menu__item"><a href="shop5.html" class="menu-link menu-link_us-s">Nữ</a></li>
-    <li class="sub-menu__item"><a href="shop1.html" class="menu-link menu-link_us-s">Tất cả sản phẩm</a></li>
-  </ul>
-</div> --}}
 
 <div class="footer-column footer-menu mb-4 mb-lg-0">
   <h6 class="sub-menu__title text-uppercase">Hỗ trợ</h6>
   <ul class="sub-menu__list list-unstyled">
-    {{-- <li class="sub-menu__item"><a href="#" class="menu-link menu-link_us-s">Chăm sóc khách hàng</a></li>
-    <li class="sub-menu__item"><a href="account_dashboard.html" class="menu-link menu-link_us-s">Tài khoản của tôi</a></li>
-    <li class="sub-menu__item"><a href="store_location.html" class="menu-link menu-link_us-s">MUA SẮM</a></li>
-    <li class="sub-menu__item"><a href="#" class="menu-link menu-link_us-s">Pháp lý & quyền riêng tư</a></li>
-    <li class="sub-menu__item"><a href="#" class="menu-link menu-link_us-s">Thẻ quà tặng</a></li> --}}
-     <li class="sub-menu__item"><a href="{{ route('home.contact') }}" class="menu-link menu-link_us-s">Chăm sóc khách hàng</a></li>
-    <li class="sub-menu__item"><a href="{{ route('user.index') }}" class="menu-link menu-link_us-s">Tài khoản của tôi</a></li>
-    <li class="sub-menu__item" ><a href="{{ route('shop.index') }}" class="menu-link menu-link_us-s">Mua sắm</a></li>
-    <li class="sub-menu__item"><a href="{{ route('home.index') }}" class="menu-link menu-link_us-s">Trang chủ</a></li>
+
+     <li class="sub-menu__title text-uppercase"><a href="{{ route('home.contact') }}" class="menu-link menu-link_us-s">Chăm sóc khách hàng</a></li>
+    <li class="sub-menu__title text-uppercase"><a href="{{ route('user.index') }}" class="menu-link menu-link_us-s">Tài khoản của tôi</a></li>
+    <li class="sub-menu__title text-uppercase" ><a href="{{ route('shop.index') }}" class="menu-link menu-link_us-s">Mua sắm</a></li>
+    <li class="sub-menu__title text-uppercase"><a href="{{ route('home.index') }}" class="menu-link menu-link_us-s">Trang chủ</a></li>
     
   </ul>
 </div>
@@ -773,7 +747,7 @@
 
   <ul class="sub-menu__list list-unstyled">
     @foreach($categories as $category)
-      <li class="sub-menu__item">
+      <li class="sub-menu__title text-uppercase">
         <a href="{{ route('shop.index', ['category' => $category->id]) }}"
            class="menu-link menu-link_us-s">
           {{ $category->name }}
@@ -788,25 +762,10 @@
  <div class="footer-column footer-menu mb-4 mb-lg-0">
   <h6 class="sub-menu__title text-uppercase">Công ty</h6>
   <ul class="sub-menu__list list-unstyled">
-    {{-- <li class="sub-menu__item"><a href="about-2.html" class="menu-link menu-link_us-s">Về chúng tôi</a></li>
-    <li class="sub-menu__item"><a href="#" class="menu-link menu-link_us-s">Tuyển dụng</a></li>
-    <li class="sub-menu__item"><a href="#" class="menu-link menu-link_us-s">Đối tác liên kết</a></li>
-    <li class="sub-menu__item"><a href="blog_list1.html" class="menu-link menu-link_us-s">Bài viết</a></li>
-    <li class="sub-menu__item"><a href="contact-2.html" class="menu-link menu-link_us-s">Liên hệ</a></li> --}}
-    <li class="sub-menu__item"><a href="{{ url('/blogs') }}" class="menu-link menu-link_us-s">Bài viết</a></li>
-    <li class="sub-menu__item"><a href="{{ route('home.contact') }}" class="menu-link menu-link_us-s">Liên hệ</a></li>
+    <li class="sub-menu__title text-uppercase"><a href="{{ url('/blogs') }}" class="menu-link menu-link_us-s">Bài viết</a></li>
+    <li class="sub-menu__title text-uppercase"><a href="{{ route('home.contact') }}" class="menu-link menu-link_us-s">Liên hệ</a></li>
   </ul>
 </div>
-    {{-- <div class="footer-bottom">
-      <div class="container d-md-flex align-items-center">
-        <span class="footer-copyright me-auto text-center">©2026 Brijclo</span>
-        <div class="footer-settings d-md-flex align-items-center gap-2">
-        <a href="privacy-policy.html">Chính sách bảo mật</a>
-        <span>|</span>
-        <a href="terms-conditions.html">Điều khoản &amp; Điều kiện</a>
-      </div>
-            </div>
-    </div> --}}
   </footer>
 
 
@@ -823,7 +782,7 @@
       </div>
 
       <div class="col-4">
-        <a href="{{route('home.index')}}" class="footer-mobile__link d-flex flex-column align-items-center">
+        <a href="{{route('shop.index')}}" class="footer-mobile__link d-flex flex-column align-items-center">
           <svg class="d-block" width="18" height="18" viewBox="0 0 18 18" fill="none"
             xmlns="http://www.w3.org/2000/svg">
             <use href="#icon_hanger" />
@@ -833,42 +792,20 @@
       </div>
 
       <div class="col-4">
-        <a href="{{route('home.index')}}" class="footer-mobile__link d-flex flex-column align-items-center">
+        <a href="{{route('wishlist.index')}}" class="footer-mobile__link d-flex flex-column align-items-center">
           <div class="position-relative">
             <svg class="d-block" width="18" height="18" viewBox="0 0 20 20" fill="none"
               xmlns="http://www.w3.org/2000/svg">
               <use href="#icon_heart" />
             </svg>
-            <span class="wishlist-amount d-block position-absolute js-wishlist-count">3</span>
+            @if(Cart::instance('wishlist')->content()->count() > 0)
+              <span class="wishlist-amount d-block position-absolute js-wishlist-count">{{ Cart::instance('wishlist')->content()->count() }}</span>
+            @endif
           </div>
          <span>Yêu thích</span>
         </a>
       </div>
     </div>
-    <div class="chat-widget" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999;">
-    <!-- Nút tròn kích hoạt Chat -->
-    <button id="chat-toggle" style="width: 50px; height: 50px; border-radius: 50%; background: #28a745; color: white; border: none; cursor: pointer;">
-        💬
-    </button>
-
-    <!-- Hộp thoại chat box (mặc định ẩn bằng thuộc tính display:none) -->
-    <div id="chat-box" style="display: none; width: 350px; height: 450px; background: white; border: 1px solid #ccc; box-shadow: 0 0 10px rgba(0,0,0,0.1); position: absolute; bottom: 60px; right: 0; border-radius: 8px; flex-direction: column;">
-        <div style="background: #28a745; color: white; padding: 10px; font-weight: bold; border-radius: 8px 8px 0 0;">
-            Trợ lý AI Hỗ Trợ Khách Hàng
-        </div>
-        
-        <!-- Khung hiển thị nội dung tin nhắn -->
-        <div id="chat-messages" style="flex: 1; padding: 10px; overflow-y: auto; background: #f9f9f9; display: flex; flex-direction: column; gap: 8px;">
-            <!-- Nội dung tin nhắn AJAX sẽ render vào đây -->
-        </div>
-
-        <!-- Khung input nhập tin nhắn -->
-        <div style="padding: 10px; border-top: 1px solid #ccc; display: flex; gap: 5px;">
-            <input type="text" id="chat-input" placeholder="Nhập câu hỏi của bạn..." style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-            <button id="send-button" style="padding: 8px 15px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">Gửi</button>
-        </div>
-    </div>
-</div>
   </footer>
 
   <div id="scrollTop" class="visually-hidden end-0"></div>
@@ -883,9 +820,7 @@
   <script>
 $(function () {
 
-    /* =========================
-       SEARCH PRODUCT
-    ========================= */
+
     $('.search-field').on('submit', function (e) {
         e.preventDefault();
     });
@@ -944,9 +879,7 @@ $(function () {
     });
 
 
-    /* =========================
-       AJAX SETUP CSRF
-    ========================= */
+  
     $.ajaxSetup({
         headers: {
             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
@@ -954,9 +887,7 @@ $(function () {
     });
 
 
-    /* =========================
-       CHAT BOX TOGGLE
-    ========================= */
+
     $('#chat-toggle').click(function () {
         var chatBox = $('#chat-box');
 
@@ -969,9 +900,6 @@ $(function () {
     });
 
 
-    /* =========================
-       LOAD CHAT HISTORY
-    ========================= */
     function loadChatHistory() {
         $.ajax({
             url: '{{ url('/chat/messages') }}',
@@ -993,9 +921,6 @@ $(function () {
     }
 
 
-    /* =========================
-       APPEND MESSAGE UI
-    ========================= */
     function appendMessage(sender, text) {
         var style = (sender === 'user')
             ? 'align-self:flex-end;background:#d1ecf1;color:#0c5460;'
@@ -1015,9 +940,7 @@ $(function () {
     }
 
 
-    /* =========================
-       SEND MESSAGE
-    ========================= */
+
     function sendMessage() {
         var message = $('#chat-input').val().trim();
         if (!message) return;
@@ -1029,7 +952,10 @@ $(function () {
         $.ajax({
             url: '{{ url('/chat/send') }}',
             method: 'POST',
-            data: { message: message },
+            data: {
+                _token: $('meta[name="csrf-token"]').attr('content'),
+                message: message
+            },
             success: function (response) {
 
                 let botText =
@@ -1039,8 +965,12 @@ $(function () {
                 appendMessage('bot', botText);
                 scrollToBottom();
             },
-            error: function () {
-                appendMessage('bot', 'Lỗi server 😢');
+            error: function (xhr) {
+                let errorMsg = 'Lỗi server';
+                if (xhr.status === 419) {
+                    errorMsg = 'Phiên đã hết hạn, vui lòng tải lại trang';
+                }
+                appendMessage('bot', errorMsg);
                 scrollToBottom();
             }
         });
@@ -1058,165 +988,42 @@ $(function () {
 
 });
 </script>
-  {{-- <script>
-    $(function() {
-    $('.search-field').on('submit', function(e) {
-        e.preventDefault();
-    });
-
-    $('#search-input').on('keyup', function() {
-        var searchQuery = $.trim($(this).val());
-
-        if (searchQuery.length >= 2) {
-            $.ajax({
-                type: "GET",
-                url: "{{ route('home.search') }}",
-                data: { query: searchQuery },
-                dataType: 'json',
-                success: function(data) {
-                    var $results = $("#box-content-search");
-                    $results.html('');
-
-                    if (data.length === 0) {
-                        $results.append('<li class="mb-10"><div class="text-muted">Không tìm thấy sản phẩm phù hợp.</div></li>');
-                        return;
-                    }
-
-                    $.each(data, function(index, item) {
-                        var url = "{{ route('shop.product.details', ['product_slug' => 'product_slug_pls']) }}";
-                        var link = url.replace('product_slug_pls', item.slug);
-
-                        $results.append(`
-                            <li>
-                                <ul>
-                                    <li class="product-item gap14 mb-10">
-                                        <div class="image no-bg">
-                                            <img src="{{ asset('uploads/products/thumbnails') }}/${item.image}" alt="${item.name}">
-                                        </div>
-                                        <div class="flex items-center justify-between gap20 flex-grow">
-                                            <div class="name">
-                                                <a href="${link}" class="body-text">${item.name}</a>
-                                            </div>
-                                        </div>
-                                    </li>
-                                    <li class="mb-10">
-                                        <div class="divider"></div>
-                                    </li>
-                                </ul>
-                            </li>
-                        `);
-                    });
-                },
-                error: function(xhr, status, error) {
-                    console.error('Search AJAX error:', status, error, xhr.responseText);
-                    $("#box-content-search").html('<li class="mb-10"><div class="text-danger">Lỗi tìm kiếm, vui lòng thử lại.</div></li>');
-                }
-            });
-        } else {
-            $("#box-content-search").html('');
-        }
-    });
-});
-$(document).ready(function() {
-    // 1. Click ẩn/hiện hộp chat box
-    $('#chat-toggle').click(function() {
-        var chatBox = $('#chat-box');
-        if (chatBox.is(':hidden')) {
-            chatBox.css('display', 'flex');
-            loadChatHistory(); // Cứ mở lên là load lịch sử chat cũ
-        } else {
-            chatBox.hide();
-        }
-    });
-
-    // 2. Tự động gửi CSRF token cho mọi request AJAX Vue/ jQuery
-    $.ajaxSetup({
-        headers: {
-            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-        }
-    });
-
-    // 2. Hàm load lịch sử tin nhắn từ DB
-    function loadChatHistory() {
-        $.ajax({
-            url: '{{ url('/chat/messages') }}',
-            method: 'GET',
-            success: function(messages) {
-                $('#chat-messages').empty();
-                
-                if(messages.length === 0) {
-                    // Nếu chưa từng chat, hiển thị câu chào mặc định
-                    appendMessage('bot', 'Xin chào! Tôi có thể giúp gì cho bạn về sản phẩm của website?');
-                } else {
-                    messages.forEach(function(msg) {
-                        appendMessage(msg.sender, msg.message);
-                    });
-                }
-                scrollToBottom();
-            }
-        });
-    }
-
-    // 3. Hàm hiển thị tin nhắn lên giao diện
-    function appendMessage(sender, text) {
-        var align = (sender === 'user') ? 'align-self: flex-end; background: #d1ecf1; color: #0c5460;' : 'align-self: flex-start; background: #e2e3e5; color: #383d41;';
-        var msgHtml = `<div style="max-width: 80%; padding: 8px 12px; border-radius: 12px; ${align}">${text}</div>`;
-        $('#chat-messages').append(msgHtml);
-    }
-
-    function scrollToBottom() {
-        var container = $('#chat-messages');
-        container.scrollTop(container[0].scrollHeight);
-    }
-
-    // 4. Sự kiện click nút Gửi tin nhắn
-    $('#send-button').click(function() {
-        sendMessage();
-    });
-
-    // Bắt sự kiện nhấn phím Enter (Mã phím số 13)
-    $('#chat-input').keypress(function(e) {
-        if(e.which == 13) {
-            e.preventDefault();
-            sendMessage();
-        }
-    });
-
-    // 5. Logic gửi tin nhắn AJAX lên Backend
-    function sendMessage() {
-        var message = $('#chat-input').val().trim();
-        if(message === '') return;
-
-        // Hiển thị ngay tin nhắn của user lên màn hình trong lúc chờ AI
-        appendMessage('user', message);
-        $('#chat-input').val('');
-        scrollToBottom();
-
-        $.ajax({
-            url: '{{ url('/chat/send') }}',
-            method: 'POST',
-            data: {
-                _token: $('meta[name="csrf-token"]').attr('content'), // Nhớ thêm csrf token của Laravel vào header hoặc form
-                message: message
-            },
-            success: function(response) {
-    let botText = '';
-
-    if (response && response.bot_message && response.bot_message.message) {
-        botText = response.bot_message.message;
-    } else {
-        botText = 'Không có phản hồi từ hệ thống.';
-    }
-
-    appendMessage('bot', botText);
-    scrollToBottom();
-},
-            }
-        });
-    }
-});
-  </script> --}}
   <script src="{{ asset('assets/js/theme.js') }}"></script>
+  <script>
+    window.addEventListener('DOMContentLoaded', function() {
+      document.body.classList.remove('mobile-menu-opened');
+    });
+    window.addEventListener('pageshow', function() {
+      document.body.classList.remove('mobile-menu-opened');
+    });
+  </script>
   @stack("scripts")
 </body>
+
+
+<div class="chat-widget" style="position: fixed; bottom: 20px; right: 20px; z-index: 999999; display: block !important; visibility: visible !important;">
+   
+    <button id="chat-toggle" style="border: none; background: #ffffff; cursor: pointer; padding: 0; width: 60px; height: 60px; border-radius: 50%; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center;">
+    <img src="/images/logo/logo.jpg" 
+         alt="Chatbot Logo"
+         style="width: 80%; height: auto; object-fit: contain;">
+</button>
+
+  
+    <div id="chat-box" style="display: none; width: 350px; height: 450px; background: white; border: 1px solid #ccc; box-shadow: 0 0 10px rgba(0,0,0,0.1); position: absolute; bottom: 60px; right: 0; border-radius: 8px; flex-direction: column;">
+        <div style="background: #181918; color: white; padding: 10px; font-weight: bold; border-radius: 8px 8px 0 0;">
+            Trợ lý AI Hỗ Trợ Khách Hàng
+        </div>
+
+       
+        <div id="chat-messages" style="flex: 1; padding: 10px; overflow-y: auto; background: #f9f9f9; display: flex; flex-direction: column; gap: 8px;">
+         
+        </div>
+
+        <div style="padding: 10px; border-top: 1px solid #ccc; display: flex; gap: 5px;">
+            <input type="text" id="chat-input" placeholder="Nhập câu hỏi của bạn..." style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+            <button id="send-button" style="padding: 8px 15px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">Gửi</button>
+        </div>
+    </div>
+</div>
 </html>

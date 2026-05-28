@@ -51,11 +51,10 @@
         font-size: 13px;
         font-weight: 600;
         background: #ecfdf5;
-        color: #059669; /* Xanh lá cho Paid */
+        color: #059669; 
         border: 1px solid #d1fae5;
     }
 
-    /* Grid thông tin */
     .info-grid {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
@@ -243,8 +242,6 @@
 
 </div>
             </div>
-
-            {{-- Info Grid --}}
             <div class="info-grid">
                 <div>
                     <span class="info-label">Gửi từ</span>
@@ -275,7 +272,6 @@
                 </div>
             </div>
 
-            {{-- Bảng hàng hóa --}}
             <div class="table-container">
                 <table class="modern-table">
                     <thead>
@@ -317,8 +313,6 @@
                     </tbody>
                 </table>
             </div>
-
-            {{-- Tổng kết tiền --}}
             <div class="summary-wrapper">
                 <div class="summary-box">
                     <div class="summary-row">

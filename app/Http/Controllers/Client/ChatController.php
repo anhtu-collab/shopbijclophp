@@ -13,7 +13,6 @@ use Illuminate\Support\Str;
 
 class ChatController extends Controller
 {
-    // Lấy lịch sử chat cũ khi vừa mở box chat
     public function fetchMessages(Request $request)
     {
         $userId = Auth::id();
@@ -30,7 +29,6 @@ class ChatController extends Controller
         return response()->json($messages);
     }
 
-    // Gửi tin nhắn và nhận phản hồi từ Gemini
     public function sendMessage(Request $request)
     {
         $request->validate([
@@ -42,16 +40,13 @@ class ChatController extends Controller
         $token = $request->cookie('chat_token');
         $cookieToSet = null;
 
-        // Xử lý cookie token cho khách chưa đăng nhập
         if (!$userId) {
             if (!$token) {
                 $token = 'guest_' . Str::random(32);
-                // Set cookie lưu trong 180 ngày (nửa năm như video giải thích)
                 $cookieToSet = cookie('chat_token', $token, 60 * 24 * 180);
             }
         }
 
-        // 1. Lưu tin nhắn của User vào DB
         $userChat = ChatMessage::create([
             'user_id' => $userId,
             'token' => $userId ? null : $token,
@@ -59,29 +54,39 @@ class ChatController extends Controller
             'message' => $userMessage,
         ]);
 
-        // 2. Chuẩn bị dữ liệu Sản Phẩm để "huấn luyện" (Context Prompt)
-        $products = Product::where('stock', '>', 0)->get(['name', 'price', 'unit', 'description']);
-        // Lấy một số sản phẩm nổi bật hoặc ngẫu nhiên để làm ngữ cảnh,
-        // tránh gửi quá nhiều dữ liệu làm vượt quá giới hạn token của Gemini.
-        // Đồng thời, sử dụng accessor getTotalStockAttribute để kiểm tra tồn kho.
-        $products = Product::where('featured', true) // Lấy sản phẩm nổi bật
-                           ->orWhere(function($query) {
-                               $query->inRandomOrder()->limit(10); // Hoặc 10 sản phẩm ngẫu nhiên
-                           })
-                           ->get(['name', 'price', 'sale_price', 'description'])
-                           ->filter(fn($product) => $product->total_stock > 0); // Lọc sản phẩm còn hàng
+        $products = $this->searchProducts($userMessage);
+
+        if ($products->count() == 0) {
+            $products = Product::with('variants')
+                ->whereHas('variants', function ($q) {
+                    $q->where('quantity', '>', 0);
+                })
+                ->inRandomOrder()
+                ->limit(3)
+                ->get(['name', 'regular_price', 'sale_price', 'description']);
+        }
+
+        Log::info("Found " . $products->count() . " products with stock");
         $productArray = $products->map(function ($prod) {
-            return "- Tên: {$prod->name}, Giá: " . number_format($prod->price) . "đ/{$prod->unit}. Mô tả: {$prod->description}";
-            $price = $prod->sale_price ?? $prod->price; // Ưu tiên giá khuyến mãi
+            $price = $prod->sale_price ?? $prod->regular_price;
             return "- Tên: {$prod->name}, Giá: " . number_format($price) . "đ. Mô tả: {$prod->description}";
         })->toArray();
         $productContext = implode("\n", $productArray);
 
-        $systemInstruction = "Bạn là trợ lý bán hàng chuyên nghiệp cho website bán rau củ quả và thực phẩm sạch. "
-            . "Dưới đây là danh sách sản phẩm hiện có trong kho hàng:\n" . $productContext . "\n"
-            . "Hãy trả lời khách hàng thật ngắn gọn, trung thực, lịch sự và CHỈ sử dụng thông tin từ danh sách sản phẩm được cung cấp bên trên. Nếu sản phẩm khách cần không có trong danh sách, hãy khéo léo từ chối.";
+        $systemInstruction = 
+            "Bạn là trợ lý bán hàng cho website thời trang BrijClo, chuyên bán quần áo hiện đại, trẻ trung và hợp xu hướng.\n\n"
+            . "Danh sách sản phẩm hiện có:\n"
+            . $productContext . "\n\n"
+            . "Quy tắc trả lời:\n"
+            . "- Chỉ được sử dụng thông tin từ danh sách sản phẩm trên\n"
+            . "- Trả lời ngắn gọn, thân thiện, giống nhân viên tư vấn thời trang\n"
+            . "- Luôn xưng hô lịch sự (bạn - shop)\n"
+            . "- Nếu khách hỏi chung chung (ví dụ: 'có đồ đẹp không') → gợi ý 2-3 sản phẩm nổi bật\n"
+            . "- Nếu khách hỏi theo nhu cầu (đi chơi, đi học, đi tiệc...) → tư vấn outfit phù hợp\n"
+            . "- Nếu không có sản phẩm → từ chối lịch sự và gợi ý sản phẩm gần giống\n"
+            . "- Ưu tiên giới thiệu sản phẩm đang giảm giá hoặc hot trend\n"
+            . "- Không được bịa thông tin ngoài danh sách\n";
 
-        // 3. Lấy 6 tin nhắn gần nhất làm lịch sử hội thoại (Chat History)
         $historyLogs = ChatMessage::where($userId ? 'user_id' : 'token', $userId ? $userId : $token)
             ->orderBy('created_at', 'desc')
             ->limit(6)
@@ -96,40 +101,49 @@ class ChatController extends Controller
             ];
         }
 
-        // Thêm câu hỏi hiện tại vào chuỗi hội thoại gửi lên Gemini
         $contents[] = [
             'role' => 'user',
             'parts' => [['text' => $userMessage]],
         ];
 
-        // 4. Gọi API Gemini
         $apiKey = env('GOOGLE_GEMINI_API_KEY');
+        Log::info("API Key check: " . ($apiKey ? "Found" : "Not found"));
         $botReply = "Xin lỗi, hệ thống AI đang bận. Vui lòng thử lại sau!";
 
         if ($apiKey) {
             try {
-                $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" . $apiKey;
+                $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
+                Log::info("Calling Gemini API URL: " . $url);
 
                 $response = Http::withHeaders([
-                    'Content-Type' => 'application/json'
+                    'Content-Type' => 'application/json',
+                    'x-goog-api-key' => $apiKey,
                 ])->post($url, [
                     'systemInstruction' => [
-                        'parts' => [['text' => $systemInstruction]]
+                        'parts' => [
+                            ['text' => $systemInstruction]
+                        ]
                     ],
                     'contents' => $contents
                 ]);
 
+                Log::info("Gemini API Status: " . $response->status());
+                Log::info("Gemini API Response: " . $response->body());
+
                 if ($response->successful()) {
                     $data = $response->json();
                     $botReply = $data['candidates'][0]['content']['parts'][0]['text'] ?? "Tôi chưa hiểu câu hỏi của bạn.";
+                } else {
+                    Log::error("Gemini API failed: " . $response->status() . " - " . $response->body());
                 }
             } catch (\Exception $e) {
                 Log::error("Gemini API Error: " . $e->getMessage());
                 $botReply = "Xin lỗi, AI không thể xử lý lúc này.";
             }
+        } else {
+            Log::error("API KEY is missing or empty");
         }
 
-        // 5. Lưu câu trả lời của Bot vào DB
         $botChat = ChatMessage::create([
             'user_id' => $userId,
             'token' => $userId ? null : $token,
@@ -137,7 +151,6 @@ class ChatController extends Controller
             'message' => $botReply
         ]);
 
-        // Trả kết quả về cho giao diện (AJAX)
         $res = response()->json([
             'user_message' => $userChat,
             'bot_message' => $botChat
@@ -148,5 +161,14 @@ class ChatController extends Controller
         }
         return $res;
     }
+
+   function searchProducts($keyword)
+{
+    return Product::with('variants')
+        ->where('name', 'like', "%$keyword%")
+        ->orWhere('description', 'like', "%$keyword%")
+        ->limit(5)
+        ->get();
+}
 }
 

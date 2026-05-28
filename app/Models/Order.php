@@ -26,6 +26,7 @@ class Order extends Model
         'status',
         'delivered_date',
         'canceled_date',
+        'coupon_id',
     ];
 
     public function user() {
@@ -43,5 +44,10 @@ class Order extends Model
     public function items()
     {
         return $this->hasMany(OrderItem::class, 'order_id');
+    }
+
+    public function coupon()
+    {
+        return $this->belongsTo(Coupon::class);
     }
 }

@@ -334,26 +334,11 @@
                   </table>
                 @endif
               </div>
-              {{-- thanh toán --}}
 
-              {{-- <div class="checkout_payment-methods">
-                <div class="form-check">
-                  <form action={{ url('/vnpay_payment') }} method='POST'>
-                    @csrf
-                    <button type="submit" name="redirect" class="primary-btn checkout-btn" style="">Thanh toán
-                      VNPay</button>
-                  </form>
-                </div>
-              </div> --}}
 
               <div class="checkout__payment-methods">
                 <h5 class="mb-3">PHƯƠNG THỨC THANH TOÁN</h5>
-                <div class="form-check">
-                  <input class="form-check-input form-check-input_fill" type="radio" name="mode" id="mode1" value="card">
-                  <label class="form-check-label" for="mode1">
-                    Thẻ Tín Dụng / Ghi Nợ (Visa / Mastercard)
-                  </label>
-                </div>
+            
                 <div class="form-check">
                   <input class="form-check-input form-check-input_fill" type="radio" name="mode" id="mode2" value="vnpay">
                   <label class="form-check-label" for="mode2">
@@ -401,7 +386,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
             addressInput.value = this.value;
 
-            // preview nhưng KHÔNG đóng modal
             detailBox.innerHTML = `
                 <p><strong>Họ tên:</strong> ${this.dataset.name}</p>
                 <p><strong>Địa chỉ:</strong> ${this.dataset.address}</p>

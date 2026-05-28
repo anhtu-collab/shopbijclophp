@@ -12,6 +12,44 @@
     cursor: pointer;
 }
 
+.gitems {
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--Input);
+}
+
+.gitems img {
+    width: 100%;
+    height: 206px;
+    object-fit: cover;
+    display: block;
+}
+
+.btn-remove-gallery {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    width: 28px;
+    height: 28px;
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.gitems:hover .btn-remove-gallery {
+    opacity: 1;
+}
+
 .tag-size{
     background: #343a40;
 }
@@ -145,8 +183,9 @@
                 <fieldset>
                     <div class="body-title mb-10">Ảnh Sản Phấm Gốc<span class="tf-color-1">*</span></div>
                     <div class="upload-image flex-grow">
-                        <div class="item" id="imgpreview" style="display:none">
-                            <img src="preview.jpg" class="effect8" alt="">
+                        <div class="item" id="imgpreview" style="display:none;position:relative;">
+                            <img src="" class="effect8" alt="">
+                            <button type="button" class="btn-remove-main-image" onclick="removeMainImage()" style="position:absolute;top:5px;right:5px;width:28px;height:28px;background:#dc3545;color:white;border:none;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;">×</button>
                         </div>
                         <div id="upload-file" class="item up-load">
                             <label class="uploadfile" for="myFile">
@@ -194,13 +233,42 @@
                         <div class="body-title mb-10">Mã Sản Phẩm <span class="tf-color-1">*</span></div>
                         <input class="mb-10" type="text" placeholder="Nhập mã sản phẩm" name="SKU" value="{{old('SKU')}}">
                     </fieldset>
-                    <!-- <fieldset class="name">
-                        <div class="body-title mb-10">Số Lượng Hàng <span class="tf-color-1">*</span></div>
-                        <input class="mb-10" type="text" placeholder="nhập số lượng hàng" name="quantity" value="{{old('quantity')}}">
-                    </fieldset> -->
+                
                 </div>
 
-                <div class="cols gap22">
+                <div class="mb-4">
+                <div class="body-title mb-2 fw-bold">
+                    Kích thước & Số lượng <span class="text-danger">*</span>
+                </div>
+
+                <div class="d-flex gap-2 mb-3">
+                
+                    <input type="text" id="sizeInput" class="form-control" placeholder="Vui lòng nhập kích thước và số lượng rồi Enter" style="max-width:220px">
+
+                    <input type="number" id="stockInput" class="form-control" placeholder="Số lượng" min="1" value="1" style="max-width:120px">
+                        
+
+                  
+                    <button type="button" class="btn btn-primary text-nowrap" onclick="addSize()">
+                        Thêm
+                    </button>
+                </div>
+
+           
+                <div id="sizeList" class="d-flex flex-wrap gap-2 mb-2"></div>
+
+              
+                <input type="hidden" name="sizes" id="sizes" value="[]">
+              </div>
+                    <div class="mb-3">
+                         <div class="body-title mb-10">Màu sắc <span class="tf-color-1">*</span></div>
+                        <input type="text" id="colorInput" class="form-control" placeholder="Nhập màu cho sản phẩm">
+                    
+                        <div id="colorList" class="mt-2 d-flex flex-wrap gap-2"></div>
+                    
+                        <input type="hidden" name="colors" id="colors">
+                    </div>
+                      <div class="cols gap22">
                     <fieldset class="name">
                         <div class="body-title mb-10">Trạng Thái <span class="tf-color-1">*</span></div>
                         <div class="select">
@@ -220,38 +288,6 @@
                         </div>
                     </fieldset>
                 </div>
-                <div class="mb-4">
-                <div class="body-title mb-2 fw-bold">
-                    Kích thước & Số lượng <span class="text-danger">*</span>
-                </div>
-
-                <div class="d-flex gap-2 mb-3">
-                    <!-- size -->
-                    <input type="text" id="sizeInput" class="form-control" placeholder="Vui lòng nhập kích thước và số lượng rồi Enter" style="max-width:220px">
-
-                    <input type="number" id="stockInput" class="form-control" placeholder="Số lượng" min="1" value="1" style="max-width:120px">
-                        
-
-                    <!-- add button -->
-                    <button type="button" class="btn btn-primary text-nowrap" onclick="addSize()">
-                        Thêm
-                    </button>
-                </div>
-
-                <!-- list hiển thị các size đã thêm -->
-                <div id="sizeList" class="d-flex flex-wrap gap-2 mb-2"></div>
-
-                <!-- hidden input chứa JSON để gửi lên backend -->
-                <input type="hidden" name="sizes" id="sizes" value="[]">
-            </div>
-                    <div class="mb-3">
-                         <div class="body-title mb-10">Màu sắc <span class="tf-color-1">*</span></div>
-                        <input type="text" id="colorInput" class="form-control" placeholder="Nhập màu cho sản phẩm">
-                    
-                        <div id="colorList" class="mt-2 d-flex flex-wrap gap-2"></div>
-                    
-                        <input type="hidden" name="colors" id="colors">
-                    </div>
                         
                 <div class="cols gap10">
                     <button class="tf-button w-full" type="submit">Lưu</button>
@@ -273,12 +309,54 @@
             }
         });
 
+        window.removeMainImage = function() {
+            $("#myFile").val('');
+            $("#imgpreview").hide();
+        };
+
         // Xem trước gallery ảnh
+        let existingFiles = [];
+
         $("#gFile").on("change", function(e){
             const gphotos = this.files;
-            $.each(gphotos, function(key, val){
-                $("#galpreview").append(`<div class="item gitems"><img src="${URL.createObjectURL(val)}"></div>`);
+
+            // Thêm file mới vào danh sách hiện có
+            for (let i = 0; i < gphotos.length; i++) {
+                // Check tồn tại trong mảng
+                const fileExists = existingFiles.some(file => file.name === gphotos[i].name && file.size === gphotos[i].size);
+                // Check tồn tại trong DOM
+                const alreadyShown = $(`[data-file-name="${gphotos[i].name}-${gphotos[i].size}"]`).length > 0;
+
+                if (!fileExists && !alreadyShown) {
+                    existingFiles.push(gphotos[i]);
+                    const fileIndex = existingFiles.length - 1;
+                    $("#galpreview").append(`
+                        <div class="item gitems" data-index="${fileIndex}" data-file-name="${gphotos[i].name}-${gphotos[i].size}">
+                            <img src="${URL.createObjectURL(gphotos[i])}">
+                            <button type="button" class="btn-remove-gallery" onclick="removeGalleryImage(${fileIndex})">×</button>
+                        </div>
+                    `);
+                }
+            }
+
+            // Reset input để chọn file tiếp theo
+            this.value = '';
+        });
+
+        window.removeGalleryImage = function(index) {
+            existingFiles.splice(index, 1);
+            $(`[data-index="${index}"]`).remove();
+        };
+
+        // Gửi files khi submit form
+        $('form.form-add-product').on('submit', function(e) {
+            if (existingFiles.length === 0) return;
+
+            const dataTransfer = new DataTransfer();
+            existingFiles.forEach(file => {
+                dataTransfer.items.add(file);
             });
+            document.getElementById('gFile').files = dataTransfer.files;
         });
 
 

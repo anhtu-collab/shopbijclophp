@@ -34,7 +34,7 @@
                     @method('PUT')
                     <input type="hidden" name="id" value="{{ $user->id }}" />
 
-                    {{-- Name --}}
+              
                     <fieldset class="name">
                         <div class="body-title">Tên <span class="tf-color-1">*</span></div>
                         <input class="flex-grow" type="text" placeholder="Họ và tên" name="name" tabindex="0"
@@ -44,7 +44,7 @@
                         <span class="alert alert-danger text-center">{{ $message }}</span>
                     @enderror
 
-                    {{-- Email --}}
+             
                     <fieldset class="name">
                         <div class="body-title">Email <span class="tf-color-1">*</span></div>
                         <input class="flex-grow" type="email" placeholder="Email" name="email" tabindex="0"
@@ -54,7 +54,7 @@
                         <span class="alert alert-danger text-center">{{ $message }}</span>
                     @enderror
 
-                    {{-- Mobile --}}
+          
                     <fieldset class="name">
                         <div class="body-title">Số điện thoại</div>
                         <input class="flex-grow" type="text" placeholder="Số điện thoại" name="mobile" tabindex="0"
@@ -64,7 +64,7 @@
                         <span class="alert alert-danger text-center">{{ $message }}</span>
                     @enderror
 
-                    {{-- Password (optional on edit) --}}
+                   
                     <fieldset class="name">
                         <div class="body-title">Mật khẩu mới <span class="text-muted"
                                 style="font-weight:normal;font-size:12px;">(để trống nếu không đổi)</span></div>
@@ -74,7 +74,7 @@
                         <span class="alert alert-danger text-center">{{ $message }}</span>
                     @enderror
 
-                    {{-- Role / utype --}}
+                  
                     <fieldset class="category">
                         <div class="body-title">Chức năng <span class="tf-color-1">*</span></div>
                         <div class="select flex-grow">

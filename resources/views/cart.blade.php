@@ -111,12 +111,6 @@
                 </td>
                 <td>
 
-          {{-- <div class="qty-control position-relative qty-initialized">
-                      
-                      <input type="number" name="quantity" value="1" min="1" class="qty-control__number text-center" fdprocessedid="6bt6ff" data-has-listeners="true">
-                      <div class="qty-control__reduce">-</div>
-                      <div class="qty-control__increase">+</div>
-                  </div> --}}
 
                   <div class="qty-control d-flex align-items-center">
                     <form method="POST" action="{{ route('cart.qty.decrease', ['rowId' => $item->rowId]) }}">

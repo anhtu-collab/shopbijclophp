@@ -14,8 +14,6 @@
     align-items: center;
     cursor: pointer;
 }
-
-/* hover card vẫn được nhưng không ảnh hưởng layout */
 .product-card:hover .pc__btn-wl {
     opacity: 1;
 }
@@ -54,9 +52,52 @@
     50% { transform: scale(1.08); }
     100% { transform: scale(1); }
 }
+
+@media (max-width: 768px) {
+    .pc__img-wrapper {
+        aspect-ratio: 1/1;
+        max-height: 300px;
+    }
+
+    .product-card {
+        margin-bottom: 20px;
+    }
+
+    .discount-badge {
+        font-size: 12px;
+        padding: 4px 8px;
+    }
+
+    .product-price {
+        font-size: 18px !important;
+    }
+
+    .product-old-price {
+        font-size: 14px !important;
+    }
+
+    .btn-add-cart {
+        padding: 8px 16px;
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 576px) {
+    .pc__img-wrapper {
+        aspect-ratio: 1/1;
+        height: 250px;
+    }
+
+    .discount-badge {
+        font-size: 10px;
+        padding: 3px 6px;
+    }
+}
 .pc__img-wrapper {
     position: relative;
     overflow: hidden;
+    width: 100%;
+    aspect-ratio: 330 / 400;
 }
 
 
@@ -97,10 +138,8 @@
     align-items: center;
     justify-content: center;
     z-index: 20;
-    overflow: hidden; /* QUAN TRỌNG */
+    overflow: hidden;
 }
-
-/* VỆT ĐEN CHÉO */
 .sold-out-glass span {
     position: absolute;
     top: 50%;
@@ -131,8 +170,8 @@
 }
 
 .modal-content{
-      width: 1100px;      /* tăng từ 900 → 1100 */
-    max-width: 98%;     /* chiếm gần full màn */
+      width: 1100px;      
+    max-width: 98%;     
     height: 85vh;
     background: #fff;
     border-radius: 18px;
@@ -155,15 +194,13 @@
     border: none;
     background: transparent;
     cursor: pointer;
-    z-index: 10001; /* 👈 QUAN TRỌNG */
+    z-index: 10001;
 }
 
 .modal-body{
     display: flex;
     width: 100%;
 }
-
-/* LEFT IMAGE */
 .product-preview{
      width: 50%;
     padding: 25px;
@@ -200,8 +237,6 @@
     color: #eb1313;
     font-weight: 700;
 }
-
-/* VARIANTS */
 .variant-section label{
     font-weight: 600;
     margin-bottom: 6px;
@@ -226,8 +261,6 @@
 .swatch-group button:hover{
     border-color: #000;
 }
-
-/* QUANTITY */
 .quantity-picker{
     display: flex;
     align-items: center;
@@ -249,8 +282,6 @@
     border: 1px solid #ddd;
     border-radius: 8px;
 }
-
-/* BUTTON */
 .btn-buy-now{
     margin-top: auto;
     padding: 12px;
@@ -287,14 +318,11 @@
     margin-top: 10px;
 }
 
-/* giữ cụm số lượng gọn lại */
 .qty-buy-row .quantity-picker{
     display: flex;
     align-items: center;
     gap: 8px;
 }
-
-/* nút mua ngay nằm ngang hàng */
 .qty-buy-row .btn-buy-now{
     height: 38px;
     padding: 0 18px;
@@ -306,11 +334,31 @@
     cursor: pointer;
     white-space: nowrap;
 }
-
-/* input số lượng gọn hơn */
 .qty-buy-row #quantityInput{
     width: 50px;
     text-align: center;
+}
+.qty-toast {
+    margin-top: 6px;
+    padding: 8px 10px;
+    font-size: 13px;
+    border-radius: 6px;
+    text-align: center;
+    display: none;
+    background: #111;
+    color: #e1d3d3;
+}
+
+.qty-toast.error {
+    background: #e90707;
+}
+
+.qty-toast.success {
+    background: #2ecc71;
+}
+.d-flex.text-warning i {
+    color: #efac79 !important; 
+    text-shadow: 0 1px 2px rgba(0,0,0,0.25);
 }
 </style>
 <main class="pt-90">
@@ -339,19 +387,6 @@
             </h5>
             <div id="accordion-filter-1" class="accordion-collapse collapse show border-0"
               aria-labelledby="accordion-heading-1" data-bs-parent="#categories-list">
-              {{-- <div class="accordion-body px-0 pb-0 pt-3 category-list">
-                <ul class="list list-inline mb-0">
-                 @foreach ($categories as $category)
-                  <li class="list-item">
-                  <span class="menu-link py-1">
-                    <input type="checkbox" class="chk-category" name="categories" value="{{ $category->id }}"
-                     @if(in_array($category->id, explode(',', $f_categories))) checked ="checked" @endif >
-                    {{ $category->name }}
-                     </span>
-                        <span class="text-right float-end">{{ $category->products->count() }}</span> </li>
-                              @endforeach
-                </ul>
-              </div> --}}
               <form method="GET" action="{{ route('shop.index') }}">
               <div class="accordion-body px-0 pb-0 pt-3 category-list">
 
@@ -397,74 +432,6 @@
             </div>
           </div>
         </div>
-
-
-        <!-- {{-- <div class="accordion" id="color-filters">
-          <div class="accordion-item mb-4 pb-3">
-            <h5 class="accordion-header" id="accordion-heading-1">
-              <button class="accordion-button p-0 border-0 fs-5 text-uppercase" type="button" data-bs-toggle="collapse"
-                data-bs-target="#accordion-filter-2" aria-expanded="true" aria-controls="accordion-filter-2">
-                Màu Sắc
-                <svg class="accordion-button__icon type2" viewBox="0 0 10 6" xmlns="http://www.w3.org/2000/svg">
-                  <g aria-hidden="true" stroke="none" fill-rule="evenodd">
-                    <path
-                      d="M5.35668 0.159286C5.16235 -0.053094 4.83769 -0.0530941 4.64287 0.159286L0.147611 5.05963C-0.0492049 5.27473 -0.049205 5.62357 0.147611 5.83813C0.344427 6.05323 0.664108 6.05323 0.860924 5.83813L5 1.32706L9.13858 5.83867C9.33589 6.05378 9.65507 6.05378 9.85239 5.83867C10.0492 5.62357 10.0492 5.27473 9.85239 5.06018L5.35668 0.159286Z" />
-                  </g>
-                </svg>
-              </button>
-            </h5>
-            <div id="accordion-filter-2" class="accordion-collapse collapse show border-0"
-              aria-labelledby="accordion-heading-1" data-bs-parent="#color-filters">
-              <div class="accordion-body px-0 pb-0">
-                <div class="d-flex flex-wrap">
-                  <a href="#" class="swatch-color js-filter" style="color: #0a2472"></a>
-                  <a href="#" class="swatch-color js-filter" style="color: #d7bb4f"></a>
-                  <a href="#" class="swatch-color js-filter" style="color: #282828"></a>
-                  <a href="#" class="swatch-color js-filter" style="color: #b1d6e8"></a>
-                  <a href="#" class="swatch-color js-filter" style="color: #9c7539"></a>
-                  <a href="#" class="swatch-color js-filter" style="color: #d29b48"></a>
-                  <a href="#" class="swatch-color js-filter" style="color: #e6ae95"></a>
-                  <a href="#" class="swatch-color js-filter" style="color: #d76b67"></a>
-                  <a href="#" class="swatch-color swatch_active js-filter" style="color: #bababa"></a>
-                  <a href="#" class="swatch-color js-filter" style="color: #bfdcc4"></a>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div> --}} -->
-
-
-        {{-- <div class="accordion" id="size-filters">
-          <div class="accordion-item mb-4 pb-3">
-            <h5 class="accordion-header" id="accordion-heading-size">
-              <button class="accordion-button p-0 border-0 fs-5 text-uppercase" type="button" data-bs-toggle="collapse"
-                data-bs-target="#accordion-filter-size" aria-expanded="true" aria-controls="accordion-filter-size">
-                Size
-                <svg class="accordion-button__icon type2" viewBox="0 0 10 6" xmlns="http://www.w3.org/2000/svg">
-                  <g aria-hidden="true" stroke="none" fill-rule="evenodd">
-                    <path
-                      d="M5.35668 0.159286C5.16235 -0.053094 4.83769 -0.0530941 4.64287 0.159286L0.147611 5.05963C-0.0492049 5.27473 -0.049205 5.62357 0.147611 5.83813C0.344427 6.05323 0.664108 6.05323 0.860924 5.83813L5 1.32706L9.13858 5.83867C9.33589 6.05378 9.65507 6.05378 9.85239 5.83867C10.0492 5.62357 10.0492 5.27473 9.85239 5.06018L5.35668 0.159286Z" />
-                  </g>
-                </svg>
-              </button>
-            </h5>
-            <div id="accordion-filter-size" class="accordion-collapse collapse show border-0"
-              aria-labelledby="accordion-heading-size" data-bs-parent="#size-filters">
-              <div class="accordion-body px-0 pb-0">
-                <div class="d-flex flex-wrap">
-                  <a href="#" class="swatch-size btn btn-sm btn-outline-light mb-3 me-3 js-filter">XS</a>
-                  <a href="#" class="swatch-size btn btn-sm btn-outline-light mb-3 me-3 js-filter">S</a>
-                  <a href="#" class="swatch-size btn btn-sm btn-outline-light mb-3 me-3 js-filter">M</a>
-                  <a href="#" class="swatch-size btn btn-sm btn-outline-light mb-3 me-3 js-filter">L</a>
-                  <a href="#" class="swatch-size btn btn-sm btn-outline-light mb-3 me-3 js-filter">XL</a>
-                  <a href="#" class="swatch-size btn btn-sm btn-outline-light mb-3 me-3 js-filter">XXL</a>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div> --}}
-
-
         <div class="accordion" id="brand-filters">
           <div class="accordion-item mb-4 pb-3">
             <h5 class="accordion-header" id="accordion-heading-brand">
@@ -481,7 +448,7 @@
             </h5>
             <div id="accordion-filter-brand" class="accordion-collapse collapse show border-0"
               aria-labelledby="accordion-heading-brand" data-bs-parent="#brand-filters">
-              <div class="search-field multi-select accordion-body px-0 pb-0">
+              <div class="accordion-body px-0 pb-0">
               <ul class="list-inline brand-list">
                    @foreach ($brands as $brand)
                         <li class="list-item">
@@ -695,28 +662,25 @@
       <div class="swiper-container background-img js-swiper-slider" data-settings='{"resizeObserver": true}'>
   <div class="swiper-wrapper">
 
-    {{-- ẢNH CHÍNH + HOVER --}}
     @php
       $images = !empty($product->images)
-          ? explode(',', $product->images)
+          ? array_values(array_filter(array_map('trim', explode(',', $product->images))))
           : [];
     @endphp
 
     <div class="swiper-slide">
       <a href="{{route('shop.product.details',['product_slug'=>$product->slug])}}">
-        
+
         <div class="pc__img-wrapper">
 
-          {{-- ảnh chính --}}
-          <img 
-            src="{{ asset('uploads/products/'.$product->image) }}" 
+          <img
+            src="{{ asset('uploads/products/'.$product->image) }}"
             width="330" height="400"
             class="pc__img main-img">
 
-          {{-- ảnh hover --}}
           @if(!empty($images[0]))
-            <img 
-              src="{{ asset('uploads/products/'.trim($images[0])) }}" 
+            <img
+              src="{{ asset('uploads/products/'.trim($images[0])) }}"
               width="330" height="400"
               class="pc__img hover-img">
           @endif
@@ -725,9 +689,8 @@
 
       </a>
     </div>
-
-    {{-- CÁC ẢNH PHỤ --}}
-    @foreach($images as $img)
+    @foreach($images as $key => $img)
+      @if($key > 0)
       <div class="swiper-slide">
         <a href="{{route('shop.product.details',['product_slug'=>$product->slug])}}">
           <img loading="lazy"
@@ -736,6 +699,7 @@
                class="pc__img">
         </a>
       </div>
+      @endif
     @endforeach
 
   </div>
@@ -823,41 +787,15 @@
     data-description="{{ $product->short_description }}"
     data-sizes='@json($sizeOptions)'
     data-colors='@json($colorOptions)'
+    data-variants='@json($product->variants)'
 >
     Mua Ngay
 </button>
 @endif
     </div>
-    {{-- @if(Cart::instance('wishlist')->content()->where('id', $product->id)->count() > 0)
-    <form method="POST" action="{{ route('wishlist.item.remove',['rowId'=>Cart::instance('wishlist')->content()->where('id', $product->id)->first()->rowId]) }}">
-      @csrf
-      @method('DELETE')
-    <button type="submit" class="pc__btn-wl position-absolute top-0 end-0 bg-transparent border-0 js-add-wishlist filled-heart" title="Remove To Wishlist">
-        <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <use href="#icon_heart" />
-        </svg>
-    </button>
-    </form>
-@else
 
-   <form method="POST" action="{{ route('wishlist.add') }}">
-    @csrf
-    <input type="hidden" name="id" value="{{ $product->id }}" />
-    <input type="hidden" name="name" value="{{ $product->name }}" />
-    <input type="hidden" name="price" value="{{ $product->sale_price == '' ? $product->regular_price : $product->sale_price }}" />
-    <input type="hidden" name="quantity" value="1" />
-    <button type="submit" class="pc__btn-wl bg-transparent border-0">
-        <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <use href="#icon_heart" />
-        </svg>
-    </button>
-</form>
-@endif --}}
+    <div class="pc__info">
 
-    <!-- INFO -->
- <div class="pc__info">
-
-  <!-- CATEGORY + WISHLIST -->
   <div class="d-flex justify-content-between align-items-center">
     
     <p class="pc__category mb-0">
@@ -905,14 +843,12 @@
 
   </div>
 
-  <!-- TITLE -->
   <h6 class="pc__title mt-1">
     <a href="{{route('shop.product.details',['product_slug'=>$product->slug])}}">
       {{$product->name}}
     </a>
   </h6>
 
-  <!-- PRICE -->
   <div class="product-card__price d-flex">
     <span class="money price">
       @if($product->sale_price)
@@ -924,24 +860,23 @@
     </span>
   </div>
 
-  <!-- RATING -->
-          @php
+  @php
               $rating = $product->rating ?? 0;
           @endphp
 
           <div class="d-flex align-items-center gap-1 mt-1">
 
-            <div class="d-flex text-warning">
-              @for ($i = 1; $i <= 5; $i++)
-                  @if ($i <= floor($rating))
-                      ⭐
-                  {{-- @elseif ($i - $rating < 1)
-                      ✨ --}}
-                  @else
-                      ☆
-                  @endif
-              @endfor
-            </div>
+   <div class="d-flex text-warning">
+    @for ($i = 1; $i <= 5; $i++)
+        @if ($i <= floor($rating))
+            <i class="fa fa-star"></i>
+        @elseif ($i - $rating < 1 && $i - $rating > 0)
+            <i class="fa fa-star-half-o"></i>
+        @else
+            <i class="fa fa-star-o"></i>
+        @endif
+    @endfor
+</div>
 
             <span class="text-muted small">
               {{ number_format($rating, 1) }} · {{ $product->reviews_count }} đánh giá
@@ -982,32 +917,26 @@
 
         <div class="modal-body">
 
-            <!-- LEFT -->
             <div class="product-preview">
                 <img id="modalImage" src="" alt="Product">
 
-                <!-- thumbnails -->
-                {{-- <div class="thumbnail-list" id="thumbnailList"></div> --}}
-            </div>
+    
+                           </div>
 
-            <!-- RIGHT -->
             <div class="product-info">
 
                 <h4 id="modalName" class="product-title"></h4>
 
-                <!-- ⭐ rating -->
                 <div class="rating">
                     <span id="modalStars"></span>
                     <span id="modalReviewCount"></span>
                 </div>
 
-                <!-- 💰 price -->
                 <div class="product-single__price">
                     <span id="modalRegularPrice" class="old-price"></span>
                     <span id="modalSalePrice" class="current-price"></span>
                 </div>
 
-                <!-- 📝 description -->
                 <p id="modalDescription" class="product-desc"></p>
 
                 <form action="{{ route('buy.now') }}" method="POST" id="buyNowForm">
@@ -1017,38 +946,44 @@
                     <input type="hidden" name="size" id="selectedSize">
                     <input type="hidden" name="color" id="selectedColor">
 
-                    <!-- SIZE -->
                     <div class="variant-section">
                         <label>Kích thước</label>
                         <div class="swatch-group" id="sizeOptions"></div>
                     </div>
+                    <div id="sizeError" style="color:red; margin-top:10px; display:none;">
+                       Vui lòng chọn Size
+                  </div>
 
-                    <!-- COLOR -->
+
                     <div class="variant-section">
                         <label>Màu sắc</label>
                         <div class="swatch-group" id="colorOptions"></div>
                     </div>
+                    <div id="colorError" style="color:red; margin-top:5px; display:none;">
+                        Vui lòng chọn Màu sắc
+                    </div>
 
                     <!-- QTY -->
-                    <div class="qty-buy-row">
-
-    <div class="quantity-picker">
-        <button type="button" class="qty-btn minus">-</button>
-
-        <input type="number"
-               name="quantity"
-               id="quantityInput"
-               value="1"
-               min="1"
-               readonly>
-
-        <button type="button" class="qty-btn plus">+</button>
+               <div class="qty-section">
+    <div class="qty-title">
+        Số lượng
     </div>
-
-    <button type="submit" class="btn-buy-now">
-        Mua ngay
-    </button>
-
+    <div class="qty-buy-row">
+        <div class="quantity-picker">
+            <button type="button" class="qty-btn minus">-</button>
+            <input type="number"
+                   name="quantity"
+                   id="quantityInput"
+                   value="1"
+                   min="1"
+                   readonly>
+            <button type="button" class="qty-btn plus">+</button>
+        </div>
+        <button type="submit" class="btn-buy-now">
+            Mua ngay
+        </button>
+    </div>
+    <div id="qtyToast" class="qty-toast"></div>
 </div>
 
                 </form>
@@ -1062,10 +997,7 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-
-  /* ======================
-     BUY NOW MODAL
-  ====================== */
+  let maxStock = 0;
   const modal = document.getElementById('buyNowModal');
   const closeBtn = modal ? modal.querySelector('#closeModal') : null;
   const qtyInput = document.getElementById('quantityInput');
@@ -1122,6 +1054,37 @@ document.addEventListener('DOMContentLoaded', function () {
           container.appendChild(button);
       });
   };
+  function updateStock() {
+    const size = document.getElementById('selectedSize')?.value;
+    const color = document.getElementById('selectedColor')?.value;
+
+    const qtyInput = document.getElementById('quantityInput');
+    const qtyError = document.getElementById('qtyError');
+
+    if (!window.currentVariants) return;
+
+    const found = window.currentVariants.find(v =>
+        (!size || (v.size?.name ?? v.size) == size) &&
+        (!color || (v.color?.name ?? v.color) == color)
+    );
+
+    maxStock = found ? parseInt(found.quantity) : 0;
+
+    if (maxStock <= 0) {
+        qtyInput.value = 0;
+        if (qtyError) {
+            qtyError.style.display = "block";
+            qtyError.innerText = "Biến thể này đã hết hàng 😢";
+        }
+        return;
+    }
+
+    if (qtyError) qtyError.style.display = "none";
+
+    if (parseInt(qtyInput.value) > maxStock) {
+        qtyInput.value = maxStock;
+    }
+}
 
   const fillModal = (target) => {
       if (!target) return;
@@ -1136,6 +1099,8 @@ document.addEventListener('DOMContentLoaded', function () {
       const starsEl = document.getElementById('modalStars');
       const reviewEl = document.getElementById('modalReviewCount');
       const descEl = document.getElementById('modalDescription');
+      const variants = target.dataset.variants ? JSON.parse(target.dataset.variants) : [];
+       window.currentVariants = variants;
 
       if (modalIdInput) modalIdInput.value = target.dataset.id || '';
       if (modalNameEl) modalNameEl.innerText = target.dataset.name || '';
@@ -1158,21 +1123,20 @@ document.addEventListener('DOMContentLoaded', function () {
       }
 
       const sizes = parseVariantValues(target.dataset.sizes || '[]');
-      renderVariantButtons(sizeBox, sizes, value => {
-          if (selectedSize) selectedSize.value = value;
-      });
+     renderVariantButtons(sizeBox, sizes, value => {
+    if (selectedSize) selectedSize.value = value;
+    updateStock();
+});
 
       const colors = parseVariantValues(target.dataset.colors || '[]');
       renderVariantButtons(colorBox, colors, value => {
-          let label = value;
-          const map = {
-              do: 'Đỏ',
-              den: 'Đen',
-              xanh: 'Xanh'
-          };
-          label = map[label.toLowerCase()] || label;
-          if (selectedColor) selectedColor.value = label;
-      });
+    let label = value;
+    const map = { do:'Đỏ', den:'Đen', xanh:'Xanh' };
+    label = map[label.toLowerCase()] || label;
+
+    if (selectedColor) selectedColor.value = label;
+    updateStock();
+});
 
       if (starsEl && reviewEl) {
           const rating = parseFloat(target.dataset.rating) || 0;
@@ -1221,10 +1185,17 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 
   if (plusBtn && qtyInput) {
-      plusBtn.addEventListener('click', function () {
-          qtyInput.value = (parseInt(qtyInput.value, 10) || 1) + 1;
-      });
-  }
+    plusBtn.addEventListener('click', function () {
+        let current = parseInt(qtyInput.value, 10) || 1;
+
+        if (current >= maxStock) {
+            showToast(`Chỉ còn ${maxStock} sản phẩm trong kho `);
+            return;
+        }
+
+        qtyInput.value = current + 1;
+    });
+}
 
   if (minusBtn && qtyInput) {
       minusBtn.addEventListener('click', function () {
@@ -1235,16 +1206,13 @@ document.addEventListener('DOMContentLoaded', function () {
       });
   }
 
-  document.querySelectorAll('.buy-now-btn').forEach(btn => {
-      btn.addEventListener('click', function () {
-          fillModal(this);
-          setModalVisible(true);
-      });
-  });
+ document.querySelectorAll('.buy-now-btn').forEach(btn => {
+    btn.addEventListener('click', function () {
+        fillModal(this);
+        setModalVisible(true);
+    });
+});
 
-  /* ======================
-     SWIPER
-  ====================== */
   document.querySelectorAll('.js-swiper-slider').forEach(function (el) {
 
     let settings = {};
@@ -1297,17 +1265,6 @@ document.addEventListener('DOMContentLoaded', function () {
               $("#frmfilter").submit();
           }, 50);
       });
-
-      // $("input[name='categories']").on("change", function() {
-      //     var categories = "";
-      //     $("input[name='categories']:checked").each(function() {
-      //         categories += (categories === "" ? "" : ",") + $(this).val();
-      //     });
-      //     $("#hdnCategories").val(categories);
-      //     setTimeout(() => {
-      //         $("#frmfilter").submit();
-      //     }, 50);
-      // });
       $("input[name='categories[]']").on("change", function() {
     var categories = "";
     $("input[name='categories[]']:checked").each(function() {
@@ -1335,6 +1292,86 @@ document.addEventListener('DOMContentLoaded', function () {
           $("#frmfilter").submit();
       });
   });
+  const form = document.getElementById('buyNowForm');
+  const sizeError = document.getElementById('sizeError');
+const colorError = document.getElementById('colorError');
+
+if (form) {
+    form.addEventListener('submit', function (e) {
+
+        const size = document.getElementById('selectedSize')?.value;
+        const color = document.getElementById('selectedColor')?.value;
+
+        const sizeError = document.getElementById('sizeError');
+        const colorError = document.getElementById('colorError');
+
+        sizeError.style.display = 'none';
+        colorError.style.display = 'none';
+
+        let hasError = false;
+
+        if (!size) {
+            sizeError.style.display = 'block';
+            hasError = true;
+        }
+
+        if (!color) {
+            colorError.style.display = 'block';
+            hasError = true;
+        }
+
+        if (hasError) {
+            e.preventDefault();
+            return;
+        }
+    });
+}
+if (form) {
+    form.addEventListener('submit', function (e) {
+        const qty = parseInt(qtyInput.value) || 0;
+
+        const size = document.getElementById('selectedSize')?.value;
+        const color = document.getElementById('selectedColor')?.value;
+
+        sizeError.style.display = 'none';
+        colorError.style.display = 'none';
+
+        let hasError = false;
+
+        if (!size) {
+            sizeError.style.display = 'block';
+            hasError = true;
+        }
+
+        if (!color) {
+            colorError.style.display = 'block';
+            hasError = true;
+        }
+
+        if (qty > maxStock) {
+            showToast(`Chỉ còn ${maxStock} sản phẩm thôi nha 😭`);
+            hasError = true;
+        }
+
+        if (hasError) e.preventDefault();
+    });
+}
+function showToast(msg, type = "error") {
+    const t = document.getElementById("qtyToast");
+    if (!t) return;
+
+    t.innerText = msg;
+    t.style.display = "block";
+
+       t.classList.remove("error", "success");
+    t.classList.add(type);
+
+    clearTimeout(t._timer);
+
+    t._timer = setTimeout(() => {
+        t.style.display = "none";
+    }, 2000);
+}
         
 </script>
 @endpush

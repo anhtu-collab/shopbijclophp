@@ -13,7 +13,9 @@ use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\Review;
 use App\Models\Slide;
+use App\Models\Trade;
 use App\Models\Transaction;
+use App\Models\Size;
 use App\Models\Address;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -31,11 +33,11 @@ class AdminController extends Controller
     {
         $orders = Order::orderBy('created_at', 'DESC')->get()->take(10);
         $dashboardDatas = DB::select("Select sum(total) AS TotalAmount,
-                                    sum(if(status='ordered', total, 0)) AS TotalOrderedAmount,
+                                    sum(if(status IN ('pending','confirmed','processing','shipping'), total, 0)) AS TotalOrderedAmount,
                                     sum(if(status='delivered', total, 0)) AS TotalDeliveredAmount,
                                     sum(if(status='canceled', total, 0)) AS TotalCanceledAmount,
                                     Count(*) AS Total,
-                                    sum(if(status='ordered', 1, 0)) AS TotalOrdered,
+                                    sum(if(status IN ('pending','confirmed','processing','shipping'), 1, 0)) AS TotalOrdered,
                                     sum(if(status='delivered', 1, 0)) AS TotalDelivered,
                                     sum(if(status='canceled', 1, 0)) AS TotalCanceled
                                     From Orders
@@ -49,7 +51,7 @@ class AdminController extends Controller
                          LEFT JOIN (Select DATE_FORMAT(created_at, '%b') As MonthName,
                          MONTH(created_at) As MonthNo,
                          sum(total) As TotalAmount,
-                         sum(if(status='ordered',total,0)) As TotalOrderedAmount,
+                         sum(if(status IN ('pending','confirmed','processing','shipping'),total,0)) As TotalOrderedAmount,
                          sum(if(status='delivered',total,0)) As TotalDeliveredAmount,
                          sum(if(status='canceled',total,0)) As TotalCanceledAmount
                          From Orders 
@@ -80,17 +82,40 @@ return view('admin.index', compact(
     
 ));
     }
-    public function order_tracking()
+public function order_tracking(Request $request)
 {
-   $orders = Order::where('status', 'ordered')->orderBy('id', 'desc')->paginate(10);
+    $search = $request->search;
+    $latestId = session('last_updated_order_id') ?? $request->highlight;
+
+    $orders = Order::where('status', 'pending')
+        ->when($search, function($q) use ($search) {
+            $q->where(function($query) use ($search) {
+                $query->where('id', 'LIKE', "%{$search}%")
+                      ->orWhere('customer_name', 'LIKE', "%{$search}%")
+                      ->orWhere('customer_phone', 'LIKE', "%{$search}%")
+                      ->orWhere('customer_address', 'LIKE', "%{$search}%");
+            });
+        })
+        ->orderByRaw("CASE WHEN id = ? THEN 0 ELSE 1 END", [$latestId])
+        ->orderByDesc('id')
+        ->paginate(10);
 
     return view('admin.order-tracking', compact('orders'));
 }
     
      
-    public function brands()
+    public function brands(Request $request)
     {
-        $brands = Brand::orderBy('id','DESC')->paginate(10);
+        $search = $request->search;
+
+        if ($search) {
+            $brands = Brand::where('name', 'LIKE', "%{$search}%")
+                         ->orderBy('id','DESC')
+                         ->paginate(10);
+        } else {
+            $brands = Brand::orderBy('id','DESC')->paginate(10);
+        }
+
         return view('admin.brands',compact('brands'));
     }
     public function add_brand()
@@ -166,9 +191,18 @@ return view('admin.index', compact(
             $brand->delete();
             return redirect()->route('admin.brands')->with('status','Đã Xóa Thành Công!');
     }
-    public function categories()
+    public function categories(Request $request)
     {
-        $categories = Category::orderBy('id','DESC')->paginate(10);
+        $search = $request->search;
+
+        if ($search) {
+            $categories = Category::where('name', 'LIKE', "%{$search}%")
+                               ->orderBy('id','DESC')
+                               ->paginate(10);
+        } else {
+            $categories = Category::orderBy('id','DESC')->paginate(10);
+        }
+
         return view('admin.categories',compact('categories'));
     }
     public function category_add()
@@ -245,11 +279,23 @@ return view('admin.index', compact(
             return redirect()->route('admin.categories')->with('status','Đã Xóa Thành Công!');
 
     }
-    public function products()
+    public function products(Request $request)
     {
-        $products = Product::with(['variants.size', 'variants.color'])
-            ->orderBy('created_at','DESC')
-            ->paginate(10);
+        $search = $request->search;
+
+        if ($search) {
+            $products = Product::with(['variants.size', 'variants.color'])
+                ->where('name', 'LIKE', "%{$search}%")
+                ->orWhere('sku', 'LIKE', "%{$search}%")
+                ->orWhere('short_description', 'LIKE', "%{$search}%")
+                ->orderBy('created_at','DESC')
+                ->paginate(10);
+        } else {
+            $products = Product::with(['variants.size', 'variants.color'])
+                ->orderBy('created_at','DESC')
+                ->paginate(10);
+        }
+
         return view('admin.products',compact('products'));
     }
     public function product_add()
@@ -271,8 +317,10 @@ return view('admin.index', compact(
             'SKU' => 'required',
             'stock_status' => 'required',
             'featured' => 'required',
-            // 'quantity' => 'required',
+            
             'image' => 'required|mimes:png,jpg,jpeg|max:2048',
+            'images' => 'nullable|array',
+            'images.*' => 'mimes:png,jpg,jpeg|max:2048',
             'category_id' => 'required',
             'brand_id' => 'required',
         ]);
@@ -291,7 +339,6 @@ return view('admin.index', compact(
         $product->brand_id = $request->brand_id;
         $current_timestamp = Carbon::now()->timestamp;
 
-        // Xử lý ảnh chính (Main Image)
         if($request->hasFile('image')) {
             $image = $request->file('image');
             $imageName = $current_timestamp . '.' . $image->extension();
@@ -299,7 +346,7 @@ return view('admin.index', compact(
             $product->image = $imageName;
         }
 
-        // Xử lý Gallery ảnh
+        
         $gallery_arr = array();
         $gallery_images = "";
         $counter = 1;
@@ -321,16 +368,14 @@ return view('admin.index', compact(
         }
         $product->images = $gallery_images;
         $product->save();
-  // 1. Giải mã chuỗi JSON từ Frontend gửi lên thành mảng PHP
 $inputSizes  = json_decode($request->input('sizes'), true) ?? [];   
 $inputColors = json_decode($request->input('colors'), true) ?? [];  
 
-// 2. Chuyển đổi tên Size -> Lấy Size ID
 $sizeIds = [];
 foreach ($inputSizes as $sItem) {
     $sizeName = trim(strtoupper($sItem['size'])); 
     if (!empty($sizeName)) {
-        // Tìm size theo tên, nếu không có sẽ tự động tạo mới
+        
         $sizeModel = \App\Models\Size::firstOrCreate(['name' => $sizeName]); 
         $sizeIds[] = [
             'id'       => $sizeModel->id,
@@ -339,18 +384,17 @@ foreach ($inputSizes as $sItem) {
     }
 }
 
-// 3. Chuyển đổi tên Màu -> Lấy Color ID
+
 $colorIds = [];
 foreach ($inputColors as $colorName) {
     $colorName = trim(mb_convert_case($colorName, MB_CASE_TITLE, "UTF-8")); 
     if (!empty($colorName)) {
-        // Tìm hoặc tạo mới màu trong bảng colors
+        
         $colorModel = \App\Models\Color::firstOrCreate(['name' => $colorName]);
         $colorIds[] = $colorModel->id;
     }
 }
 
-// 4. Tiến hành lặp và lưu vào bảng product_variants
 if (count($sizeIds) > 0 && count($colorIds) > 0) {
     foreach ($sizeIds as $sIdData) {
         foreach ($colorIds as $cId) {
@@ -385,28 +429,7 @@ if (count($sizeIds) > 0 && count($colorIds) > 0) {
         return redirect()->route('admin.products')->with('status', 'Đã Thêm Thành Công!');
     }
 
-    // public function GenerateProductThumbnailsImage($image, $imageName)
-    // {
-    //     $destinationPathThumbnail = public_path('uploads/products/thumbnails');
-    //     $destinationPath = public_path('uploads/products');
-        
-    //     // Tạo thư mục nếu chưa có
-    //     if (!File::exists($destinationPathThumbnail)) {
-    //         File::makeDirectory($destinationPathThumbnail, 0755, true);
-    //     }
 
-    //     $img = Image::read($image->path());
-
-    //     // Ảnh gốc được resize theo kích thước chuẩn e-commerce (540x689)
-    //     $img->cover(540, 689, "top");
-    //     $img->save($destinationPath . '/' . $imageName);
-
-    //     // Ảnh Thumbnail nhỏ (104x104)
-    //     $img->resize(104, 104, function($constraint){
-    //         $constraint->aspectRatio();
-    //     })->save($destinationPathThumbnail . '/' . $imageName);
-    // }
-    // Thêm vào AdminController.php
         public function GenerateProductThumbnailsImage($image, $imageName)
 {
     $destinationPathThumbnail = public_path('uploads/products/thumbnails');
@@ -418,12 +441,12 @@ if (count($sizeIds) > 0 && count($colorIds) > 0) {
 
     $img = Image::read($image->path());
 
-    // 🔥 Ảnh gốc
+    
     $imgOriginal = clone $img;
     $imgOriginal->cover(540, 689, "top")
                 ->save($destinationPath . '/' . $imageName);
 
-    // 🔥 Thumbnail
+    
     $imgThumb = clone $img;
     $imgThumb->cover(104, 104, "top")
              ->save($destinationPathThumbnail . '/' . $imageName);
@@ -431,12 +454,12 @@ if (count($sizeIds) > 0 && count($colorIds) > 0) {
 
 public function product_edit($id)
 {
-    // Sử dụng with() để nạp sẵn liên kết variants, tránh lỗi chậm trang
+    
     $product = Product::with(['variants.size', 'variants.color'])->findOrFail($id);
     $categories = Category::select('id', 'name')->orderBy('name')->get();
     $brands = Brand::select('id', 'name')->orderBy('name')->get();
 
-    // Gom dữ liệu Size cũ thành mảng chuẩn
+    
     $oldSizes = $product->variants->whereNotNull('size_id')->map(function($v) {
         return [
             'size' => $v->size ? $v->size->name : 'N/A',
@@ -444,7 +467,7 @@ public function product_edit($id)
         ];
     })->unique('size')->values()->toArray();
 
-    // Gom dữ liệu Màu sắc cũ thành mảng chuẩn (nếu có dùng)
+    
     $oldColors = $product->variants->whereNotNull('color_id')->map(function($v) {
         return $v->color ? $v->color->name : 'N/A';
     })->unique()->values()->toArray();
@@ -464,13 +487,13 @@ public function product_update(Request $request)
         'SKU' => 'required',
         'stock_status' => 'required',
         'featured' => 'required',
-        // 'quantity' => 'required',
         'image' => 'mimes:png,jpg,jpeg|max:2048',
+        'images' => 'nullable|array',
+        'images.*' => 'mimes:png,jpg,jpeg|max:2048',
         'category_id' => 'required',
         'brand_id' => 'required',
         'sizes' => 'nullable|string',
         'colors' => 'nullable|string',
-
     ]);
 
     $product = Product::find($request->id);
@@ -487,9 +510,7 @@ public function product_update(Request $request)
     $product->brand_id = $request->brand_id;
     $current_timestamp = Carbon::now()->timestamp;
 
-    // Xử lý ảnh chính khi có thay đổi
     if ($request->hasFile('image')) {
-        // Xóa ảnh cũ nếu tồn tại
         if (File::exists(public_path('uploads/products') . '/' . $product->image)) {
             File::delete(public_path('uploads/products') . '/' . $product->image);
         }
@@ -503,20 +524,27 @@ public function product_update(Request $request)
         $product->image = $imageName;
     }
 
-    // Xử lý Gallery ảnh khi có thay đổi
-    if ($request->hasFile('images')) {
-        // Xóa tất cả ảnh gallery cũ
-        foreach (explode(',', $product->images) as $ofile) {
-            if (File::exists(public_path('uploads/products') . '/' . $ofile)) {
-                File::delete(public_path('uploads/products') . '/' . $ofile);
-            }
-            if (File::exists(public_path('uploads/products/thumbnails') . '/' . $ofile)) {
-                File::delete(public_path('uploads/products/thumbnails') . '/' . $ofile);
-            }
-        }
+    $removedImages = json_decode($request->input('removed_images', '[]'), true) ?? [];
+    $existingImages = !empty($product->images) ? explode(',', $product->images) : [];
 
-        $gallery_arr = array();
-        $counter = 1;
+    foreach ($removedImages as $rimg) {
+        $rimg = trim($rimg);
+        if (File::exists(public_path('uploads/products') . '/' . $rimg)) {
+            File::delete(public_path('uploads/products') . '/' . $rimg);
+        }
+        if (File::exists(public_path('uploads/products/thumbnails') . '/' . $rimg)) {
+            File::delete(public_path('uploads/products/thumbnails') . '/' . $rimg);
+        }
+    }
+
+    $keepImages = array_filter($existingImages, function($img) use ($removedImages) {
+        return !in_array(trim($img), $removedImages);
+    });
+
+    $gallery_arr = array_values($keepImages);
+    $counter = 1;
+
+    if ($request->hasFile('images')) {
         $files = $request->file('images');
         foreach ($files as $file) {
             $gextension = $file->getClientOriginalExtension();
@@ -525,17 +553,16 @@ public function product_update(Request $request)
             array_push($gallery_arr, $gfilename);
             $counter++;
         }
-        $product->images = implode(',', $gallery_arr);
     }
 
+    $product->images = implode(',', $gallery_arr);
+
     $product->save();
-    // decode JSON
 $inputSizes = json_decode($request->sizes, true) ?? [];
 $inputColors = json_decode($request->colors, true) ?? [];
-// xoá hết variant cũ
+    
 $product->variants()->delete();
 
-// thêm lại
 $sizeIds = [];
     foreach ($inputSizes as $sItem) {
         if (empty($sItem['size'])) continue;
@@ -548,7 +575,6 @@ $sizeIds = [];
         ];
     }
 
-    // 4. Xử lý chuẩn hóa dữ liệu Tên Màu -> Trả về mảng chứa Color ID
     $colorIds = [];
     foreach ($inputColors as $colorName) {
         if (empty($colorName)) continue;
@@ -558,9 +584,7 @@ $sizeIds = [];
         $colorIds[] = $colorModel->id;
     }
 
-    // 5. Tiến hành lặp phối hợp các cặp Thuộc tính để lưu vào bảng product_variants
     if (count($sizeIds) > 0 && count($colorIds) > 0) {
-        // Trường hợp có cả Size lẫn Màu sắc (Tạo ma trận phối hợp đầy đủ)
         foreach ($sizeIds as $sIdData) {
             foreach ($colorIds as $cId) {
                 \App\Models\ProductVariant::create([
@@ -572,7 +596,6 @@ $sizeIds = [];
             }
         }
     } elseif (count($sizeIds) > 0) {
-        // Trường hợp sản phẩm chỉ áp dụng quản lý theo Size
         foreach ($sizeIds as $sIdData) {
             \App\Models\ProductVariant::create([
                 'product_id' => $product->id,
@@ -582,26 +605,24 @@ $sizeIds = [];
             ]);
         }
     } elseif (count($colorIds) > 0) {
-        // Trường hợp sản phẩm chỉ áp dụng cấu hình theo Màu sắc
         foreach ($colorIds as $cId) {
             \App\Models\ProductVariant::create([
                 'product_id' => $product->id,
                 'size_id'    => null,
                 'color_id'   => $cId,
-                'quantity'   => 0, // Mặc định hoặc lấy theo giá trị kho chung của sản phẩm
+                'quantity'   => 0, 
             ]);
         }
     }
 
     return redirect()->route('admin.products')->with('status', 'Đã Cập Nhật Sản Phẩm Thành Công!');
 }
-// Thêm vào AdminController.php
+
 
 public function product_delete($id)
 {
     $product = Product::find($id);
 
-    // 1. Xóa ảnh chính và ảnh thumbnail chính
     if (File::exists(public_path('uploads/products') . '/' . $product->image)) {
         File::delete(public_path('uploads/products') . '/' . $product->image);
     }
@@ -609,7 +630,6 @@ public function product_delete($id)
         File::delete(public_path('uploads/products/thumbnails') . '/' . $product->image);
     }
 
-    // 2. Xóa các ảnh trong gallery (bao gồm cả thumbnail của gallery)
     if (!empty($product->images)) {
         foreach (explode(',', $product->images) as $gfile) {
             $gfile = trim($gfile);
@@ -622,7 +642,6 @@ public function product_delete($id)
         }
     }
 
-    // 3. Xóa bản ghi trong Database
     $product->delete();
     
     return redirect()->route('admin.products')->with('status', 'Đã Xóa Thành Công!');
@@ -645,10 +664,20 @@ public function variant_store(Request $request)
 
     return back()->with('status', 'OK');
 }
-public function coupons()
+public function coupons(Request $request)
 {
-    // Lấy danh sách coupon, sắp xếp theo ngày hết hạn mới nhất và phân trang
-    $coupons = Coupon::orderBy('expiry_date', 'DESC')->paginate(12);
+    $search = $request->search;
+
+    if ($search) {
+        $coupons = Coupon::where('code', 'LIKE', "%{$search}%")
+                         ->orWhere('type', 'LIKE', "%{$search}%")
+                         ->orWhere('value', 'LIKE', "%{$search}%")
+                         ->orderBy('expiry_date', 'DESC')
+                         ->paginate(12);
+    } else {
+        $coupons = Coupon::orderBy('expiry_date', 'DESC')->paginate(12);
+    }
+
     return view('admin.coupons', compact('coupons'));
 }
 public function coupon_add() {
@@ -687,10 +716,8 @@ public function coupon_edit($id) {
     return view('admin.coupon-edit', compact('coupon'));
 }
 
-// 2. Hàm lưu dữ liệu mới
 public function coupon_update(Request $request)
 {
-    // Bước 1: Validate dữ liệu đầu vào từ form
     $request->validate([
         'code'=> 'required',
         'type'=> 'required',
@@ -699,10 +726,7 @@ public function coupon_update(Request $request)
         'expiry_date'=> 'required|date'
     ]);
 
-    // Bước 2: Tìm Coupon dựa trên ID truyền lên
     $coupon = Coupon::find($request->id);
-
-    // Bước 3: Gán giá trị mới cho các cột trong Database
     $coupon->code        = $request->code;
     $coupon->type        = $request->type;
     $value = preg_replace('/[^\d]/', '', $request->value);
@@ -716,40 +740,70 @@ $coupon->value = $value;
     $coupon->cart_value  = $request->cart_value;
     $coupon->expiry_date = $request->expiry_date;
 
-    // Bước 4: Lưu thay đổi
     $coupon->save();
 
-    // Bước 5: Chuyển hướng về trang danh sách kèm thông báo
     return redirect()->route('admin.coupons')->with('status', 'Đã Cập Nhật Thành Công!');
+}
+public function coupon_details($id)
+{
+    $coupon = \App\Models\Coupon::findOrFail($id);
+
+    $orderQuery = \App\Models\Order::where('coupon_id', $id)
+        ->with(['user', 'coupon']);
+
+    $totalOrders = $orderQuery->count();
+    $totalDiscount = $orderQuery->sum('discount');
+
+    $orders = $orderQuery
+        ->latest()
+        ->paginate(12);
+
+    return view('admin.coupons-details', compact(
+        'coupon',
+        'orders',
+        'totalOrders',
+        'totalDiscount'
+    ));
 }
 
 
 public function coupon_delete($id)
 {
-    // Tìm coupon theo ID
     $coupon = Coupon::find($id);
     
-    // Thực hiện xóa
     $coupon->delete();
     
-    // Quay lại trang danh sách với thông báo thành công
     return redirect()->route('admin.coupons')->with('status', 'Đã Xóa Thành Công!');
 }
- public function orders()
+    
+public function orders(Request $request)
 {
-    // Lấy danh sách đơn hàng, sắp xếp mới nhất trước và phân trang 12 mục
-$latestId = session('last_updated_order_id');
+    $latestId = session('last_updated_order_id') ?? $request->highlight;
+    $search = $request->search;
 
-    $orders = Order::orderByRaw("
-        CASE 
-            WHEN id = ? THEN 0
-            ELSE 1
-        END
-    ", [$latestId])
-    ->orderByDesc('id')
-    ->paginate(12);
+    $query = Order::where('status', '!=', 'pending');
+    
 
-    // 🔥 xoá session sau khi dùng
+    if ($search) {
+        $query->where(function($q) use ($search) {
+            $q->where('id', 'LIKE', "%{$search}%")
+              ->orWhere('name', 'LIKE', "%{$search}%")
+              ->orWhere('phone', 'LIKE', "%{$search}%")
+              ->orWhere('address', 'LIKE', "%{$search}%")
+              ->orWhere('total', 'LIKE', "%{$search}%");
+        });
+    }
+
+    $orders = $query
+        ->orderByRaw("
+            CASE
+                WHEN id = ? THEN 0
+                ELSE 1
+            END
+        ", [$latestId])
+        ->orderByDesc('id')
+        ->paginate(12);
+
     session()->forget('last_updated_order_id');
 
     return view('admin.orders', compact('orders'));
@@ -764,7 +818,7 @@ public function order_details($order_id) {
     
     return view('admin.order-details', compact('order', 'orderItems', 'transaction','addresses'));
 }
-// app/Http/Controllers/AdminController.php
+    
 
 public function update_order_status(Request $request)
 {
@@ -778,22 +832,32 @@ public function update_order_status(Request $request)
     $newStatus = $request->order_status;
 
     $order->status = $newStatus;
-
-    // =========================
-    // HANDLE DATE
-    // =========================
-    if ($newStatus == 'delivered') {
-        $order->delivered_date = Carbon::now();
-    } elseif ($newStatus == 'canceled') {
-        $order->canceled_date = Carbon::now();
+    switch ($newStatus) {
+        case 'confirmed':
+            $order->confirmed_date = Carbon::now();
+            break;
+        case 'processing':
+            $order->processing_date = Carbon::now();
+            break;
+        case 'shipping':
+            $order->shipping_date = Carbon::now();
+            break;
+        case 'delivered':
+            $order->delivered_date = Carbon::now();
+            break;
+        case 'completed':
+            $order->completed_date = Carbon::now();
+            break;
+        case 'canceled':
+            $order->canceled_date = Carbon::now();
+            break;
+        case 'returned':
+            $order->returned_date = Carbon::now();
+            break;
     }
 
-    // =========================
-    // STOCK HANDLING
-    // =========================
-    $orderItems = OrderItem::where('order_id', $order->id)->get();
 
-    // 🔥 HOÀN KHO nếu bị hủy
+    $orderItems = OrderItem::where('order_id', $order->id)->get();
                 if ($newStatus == 'canceled' && $oldStatus != 'canceled') {
 
                     foreach ($orderItems as $item) {
@@ -812,24 +876,25 @@ public function update_order_status(Request $request)
 
     $order->save();
 
-    // =========================
-    // TRANSACTION
-    // =========================
     $transaction = Transaction::where('order_id', $order->id)->first();
 
     if ($transaction) {
-        if ($newStatus == 'delivered') {
-            $transaction->status = 'approved';
-        } elseif ($newStatus == 'canceled') {
-            $transaction->status = 'declined';
-        }
-
-        $transaction->save();
+    if ($newStatus == 'delivered') {
+        $transaction->status = 'approved';
+    } 
+    elseif ($newStatus == 'canceled') {
+        $transaction->status = 'declined';
+    }
+    elseif ($newStatus == 'returned') {
+        $transaction->status = 'refunded';
     }
 
-    session(['last_updated_order_id' => $order->id]);
+    $transaction->save();
+}
 
-    return back()->with('status', 'Cập Nhật Thành Công!');
+    session(['last_updated_order_id' => $order->id]);
+    return redirect()->route('admin.orders', ['highlight' => $order->id])
+        ->with('success', 'Cập nhật trạng thái đơn hàng thành công!');
 }
 
 public function order_invoice($order_id)
@@ -850,8 +915,20 @@ public function order_invoice($order_id)
     }
     return view('admin.invoice', compact('order', 'transaction', 'isPaid'));
 }
-public function slides() {
-    $slides = Slide::orderBy('id', 'DESC')->paginate(10);
+public function slides(Request $request) {
+    $search = $request->search;
+
+    if ($search) {
+        $slides = Slide::where('title', 'LIKE', "%{$search}%")
+                      ->orWhere('tagline', 'LIKE', "%{$search}%")
+                      ->orWhere('subtitle', 'LIKE', "%{$search}%")
+                      ->orWhere('link', 'LIKE', "%{$search}%")
+                      ->orderBy('id', 'DESC')
+                      ->paginate(10);
+    } else {
+        $slides = Slide::orderBy('id', 'DESC')->paginate(10);
+    }
+
     return view('admin.slides', compact('slides'));
 }
 public function slide_add() {
@@ -945,8 +1022,22 @@ public function slide_delete($id)
     $slide->delete();
     return redirect()->route('admin.slides')->with("status", "Đã Xóa Thành Công!");
 }
-public function contacts() {
-    $contacts = Contact::orderBy('created_at', 'DESC')->paginate(10);
+public function contacts(Request $request) {
+    $search = $request->search;
+
+    if ($search) {
+        $contacts = Contact::where(function($q) use ($search) {
+            $q->where('name', 'LIKE', "%{$search}%")
+              ->orWhere('email', 'LIKE', "%{$search}%")
+              ->orWhere('subject', 'LIKE', "%{$search}%")
+              ->orWhere('message', 'LIKE', "%{$search}%");
+        })
+        ->orderBy('created_at', 'DESC')
+        ->paginate(10);
+    } else {
+        $contacts = Contact::orderBy('created_at', 'DESC')->paginate(10);
+    }
+
     return view('admin.contacts', compact('contacts'));
 }
 
@@ -980,12 +1071,22 @@ public function search(Request $request)
 
     return response()->json($results);
 }
- public function users() {
-        $users = User::orderBy('id', 'DESC')->paginate(10);
+ public function users(Request $request) {
+        $search = $request->search;
+
+        if ($search) {
+            $users = User::where('name', 'LIKE', "%{$search}%")
+                        ->orWhere('email', 'LIKE', "%{$search}%")
+                        ->orWhere('mobile', 'LIKE', "%{$search}%")
+                        ->orderBy('id', 'DESC')
+                        ->paginate(10);
+        } else {
+            $users = User::orderBy('id', 'DESC')->paginate(10);
+        }
+
         return view('admin.users', compact('users'));
     }
 
-    // FORM ADD
 public function users_add()
 {
     return view('admin.users-add');
@@ -1001,61 +1102,49 @@ public function users_store(Request $request)
         'utype'    => 'required|in:ADM,USR',
     ]);
 
+    if ($request->is_root == 1) {
+        return back()->with('error', 'Chỉ có 1 admin gốc!');
+    }
+
     User::create([
         'name'     => $request->name,
         'email'    => $request->email,
         'mobile'   => $request->mobile,
         'password' => Hash::make($request->password),
         'utype'    => $request->utype,
+        'is_root'  => 0
     ]);
 
     return redirect()->route('admin.users')
                      ->with('status', 'Thêm người dùng thành công!');
 }
 
-
-// STORE
-public function user_store(Request $request) {
-    $request->validate([
-        'name' => 'required',
-        'email' => 'required|email|unique:users,email',
-        'password' => 'required|min:6',
-        'utype' => 'required',
-        
-    ]);
-
-    $user = new User();
-    $user->name = $request->name;
-    $user->email = $request->email;
-    $user->password = Hash::make($request->password);
-    $user->utype = $request->utype;
-
-    
-
-    $user->save();
-
-    return redirect()->route('admin.users')->with("status", "Người dùng đã được thêm thành công!");
-}
-
-// EDIT
 public function users_edit($id)
 {
     $user = User::findOrFail($id);
+
+    if ($user->is_root) {
+        return redirect()->route('admin.users')
+            ->with('error', 'Không thể chỉnh sửa admin này');
+    }
+
     return view('admin.users-edit', compact('user'));
 }
 
-// UPDATE
 public function users_update(Request $request)
 {
     $request->validate([
         'name'     => 'required|string|max:255',
         'email'    => 'required|email|unique:users,email,'.$request->id,
-        'mobile' => 'nullable|string|max:20|unique:users,mobile,'.$request->id,
+        'mobile'   => 'nullable|string|max:20|unique:users,mobile,'.$request->id,
         'password' => 'nullable|min:6',
         'utype'    => 'required|in:ADM,USR',
     ]);
 
     $user = User::findOrFail($request->id);
+    if ($user->is_root) {
+        return back()->with('error', 'Không thể sửa admin này');
+    }
     $user->name   = $request->name;
     $user->email  = $request->email;
     $user->mobile = $request->mobile;
@@ -1071,35 +1160,25 @@ public function users_update(Request $request)
                      ->with('status', 'Cập nhật người dùng thành công!');
 }
 
-// public function users_store(Request $request)
-// {
-//     $request->validate([
-//         'name'     => 'required|string|max:255',
-//         'email'    => 'required|email|unique:users,email',
-//         'mobile'   => 'nullable|string|max:20|unique:users,mobile', // thêm unique
-//         'password' => 'required|min:6',
-//         'utype'    => 'required|in:ADM,USR',
-//     ]);
 
-//     User::create([
-//         'name'     => $request->name,
-//         'email'    => $request->email,
-//         'mobile'   => $request->mobile,
-//         'password' => Hash::make($request->password),
-//         'utype'    => $request->utype,
-//     ]);
-
-//     return redirect()->route('admin.users')
-//                      ->with('status', 'Thêm người dùng thành công!');
-// }
-
-// DELETE
 public function users_delete($id) {
     $user = User::findOrFail($id);
 
-    if($user->image && File::exists(public_path('uploads/users/'.$user->image))) {
+
+    if ($user->is_root) {
+        return back()->with('error', 'Không thể xoá admin này');
+    }
+
+
+    if (auth()->id() == $user->id) {
+        return back()->with('error', 'Không thể tự xoá tài khoản này');
+    }
+
+
+    if ($user->image && File::exists(public_path('uploads/users/'.$user->image))) {
         File::delete(public_path('uploads/users/'.$user->image));
     }
+
 
     $user->delete();
 
@@ -1113,6 +1192,11 @@ public function user_detail($id)
         'orders.items.product.brand'
     ])->findOrFail($id);
 
+       if ($user->is_root) {
+        return redirect()->route('admin.users')
+            ->with('error', 'Không thể xem thông tin admin này!');
+    }
+
     $orders = Order::where('user_id', $id)->latest()->paginate(10);
 
     $totalSpent = Order::where('user_id', $id)
@@ -1121,9 +1205,10 @@ public function user_detail($id)
 
     $totalOrders = Order::where('user_id', $id)->count();
 
-    $totalProducts = OrderItem::whereHas('order', function ($q) use ($id) {
-        $q->where('user_id', $id);
-    })->sum('quantity');
+  $totalProducts = OrderItem::whereHas('order', function ($q) use ($id) {
+    $q->where('user_id', $id)
+      ->whereIn('status', ['delivered', 'completed']);
+})->sum('quantity');
 
     $lastOrder = Order::where('user_id', $id)->latest()->first();
 
@@ -1164,20 +1249,27 @@ if ($lastOrder) {
     ));
 }
 
-
-// Danh sách blog
-public function blogs()
+public function blogs(Request $request)
 {
-    $blogs = Blog::orderBy('created_at', 'desc')->paginate(10);
+    $search = $request->search;
+
+    if ($search) {
+        $blogs = Blog::where('title', 'LIKE', "%{$search}%")
+                    ->orWhere('category', 'LIKE', "%{$search}%")
+                    ->orderBy('created_at', 'desc')
+                    ->paginate(10);
+    } else {
+        $blogs = Blog::orderBy('created_at', 'desc')->paginate(10);
+    }
+
     return view('admin.blogs', compact('blogs'));
 }
 
-// Form thêm blog
 public function blog_add()
 {
     return view('admin.blog-add');
 }
-// Lưu blog mới
+    
 public function blog_store(Request $request)
 {
     $request->validate([
@@ -1195,7 +1287,6 @@ public function blog_store(Request $request)
     $blog->excerpt  = $request->excerpt;
     $blog->content  = $request->content;
     $blog->category = $request->category;
-    // $blog->author   = auth()->user()->name;
     $blog->status   = $request->status;
 
     if ($request->hasFile('thumbnail')) {
@@ -1210,14 +1301,14 @@ public function blog_store(Request $request)
                      ->with('status', 'Thêm bài viết thành công!');
 }
 
-// Form edit blog
+
 public function blog_edit($id)
 {
     $blog = Blog::findOrFail($id);
     return view('admin.blog-edit', compact('blog'));
 }
 
-// Cập nhật blog
+
 public function blog_update(Request $request)
 {
     $request->validate([
@@ -1232,7 +1323,6 @@ public function blog_update(Request $request)
     $blog = Blog::findOrFail($request->id);
     $blog->title    = $request->title;
     $blog->excerpt  = $request->excerpt;
-    // $blog->content  = $request->content;
     $blog->category = $request->category;
     $blog->status   = $request->status;
 
@@ -1251,7 +1341,6 @@ public function blog_update(Request $request)
                      ->with('status', 'Cập nhật bài viết thành công!');
 }
 
-// Xóa blog
 public function blog_delete($id)
 {
     $blog = Blog::findOrFail($id);
@@ -1265,15 +1354,45 @@ public function blog_delete($id)
 }
 
 
-        public function trades() {
-        
+        public function trades(Request $request) {
+            $search = $request->search;
+
+            if ($search) {
+                $trades = Trade::where(function($q) use ($search) {
+                    $q->where('name', 'LIKE', "%{$search}%")
+                      ->orWhere('email', 'LIKE', "%{$search}%")
+                      ->orWhere('phone', 'LIKE', "%{$search}%")
+                      ->orWhere('amount', 'LIKE', "%{$search}%");
+                })
+                ->orderBy('id', 'DESC')
+                ->paginate(10);
+            } else {
+                $trades = Trade::orderBy('id', 'DESC')->paginate(10);
+            }
+
             return view('admin.trades', compact('trades'));
         }
-        public function reviews()
+        public function reviews(Request $request)
     {
-        $reviews = Review::with('product')
-                    ->latest()
-                    ->paginate(10);
+        $search = $request->search;
+
+        if ($search) {
+            $reviews = Review::with('product')
+                        ->where(function($q) use ($search) {
+                            $q->where('customer_name', 'LIKE', "%{$search}%")
+                              ->orWhere('customer_email', 'LIKE', "%{$search}%")
+                              ->orWhere('review', 'LIKE', "%{$search}%")
+                              ->orWhereHas('product', function($pq) use ($search) {
+                                  $pq->where('name', 'LIKE', "%{$search}%");
+                              });
+                        })
+                        ->latest()
+                        ->paginate(10);
+        } else {
+            $reviews = Review::with('product')
+                        ->latest()
+                        ->paginate(10);
+        }
 
         return view('admin.reviews', compact('reviews'));
     }
@@ -1288,12 +1407,135 @@ public function blog_delete($id)
         $review->status = $request->status;
         $review->save();
 
-        return back()->with('status', 'Đã cập nhật review!');
+        return back()->with('status', 'Đã cập nhật đánh giá!');
     }
+
+    public function review_approve_all()
+    {
+        Review::query()->update(['status' => 'approved']);
+
+        return back()->with('status', 'Đã duyệt tất cả đánh giá.');
+    }
+
     public function review_delete($id)
     {
         Review::findOrFail($id)->delete();
         return back();
+    }
+     public function product_stock(Request $request)
+    {
+        $query = Product::with(['Category', 'brand']);
+
+        if ($request->filled('name')) {
+            $query->where('name', 'like', '%' . $request->name . '%');
+        }
+
+        if ($request->filled('category_id')) {
+            $query->where('category_id', $request->category_id);
+        }
+
+        if ($request->filled('brand_id')) {
+            $query->where('brand_id', $request->brand_id);
+        }
+
+        if ($request->filled('stock_status')) {
+            $query->where('stock_status', $request->stock_status);
+        }
+
+        if ($request->filled('from_date')) {
+            $query->whereDate('created_at', '>=', $request->from_date);
+        }
+        if ($request->filled('to_date')) {
+            $query->whereDate('created_at', '<=', $request->to_date);
+        }
+
+        $products = $query->orderBy('id', 'desc')->paginate(10)->withQueryString();
+
+        $categories = Category::all();
+        $brands = Brand::all();
+
+        return view('admin.products', compact('products', 'categories', 'brands'));
+    }
+
+    public function trade()
+    {
+
+        return view('admin.trade');
+    }
+
+
+    public function stock(Request $request)
+    {
+        $search = $request->get('search');
+
+        $sizes = Size::orderBy('name')->get();
+
+        $products = Product::with(['variants.size', 'variants.color'])
+            ->when($search, function ($q) use ($search) {
+                $q->where('name', 'like', '%' . $search . '%')
+                    ->orWhere('SKU', 'like', '%' . $search . '%');
+            })
+            ->orderBy('SKU')
+            ->get();
+
+        $rows = [];
+
+        foreach ($products as $product) {
+            $byColor = $product->variants->groupBy('color_id');
+
+            foreach ($byColor as $colorId => $variantGroup) {
+                $colorName = $variantGroup->first()->color?->name ?? '—';
+                $colorHex = $variantGroup->first()->color?->hex ?? null;
+
+                $sizeQty = [];
+                foreach ($variantGroup as $v) {
+                    $sizeQty[$v->size_id] = $v->quantity;
+                }
+
+                $rows[] = [
+                    'sku' => $product->SKU,
+                    'name' => $product->name,
+                    'color_name' => $colorName,
+                    'color_hex' => $colorHex,
+                    'size_qty' => $sizeQty,
+                    'total' => $variantGroup->sum('quantity'),
+                ];
+            }
+        }
+
+        $colTotals = [];
+        foreach ($sizes as $size) {
+            $colTotals[$size->id] = collect($rows)->sum(fn($r) => $r['size_qty'][$size->id] ?? 0);
+        }
+        $grandTotal = collect($rows)->sum('total');
+
+        return view('admin.stock', compact('sizes', 'rows', 'colTotals', 'grandTotal', 'search'));
+    }
+
+
+    public function transaction(Request $request)
+    {
+        $phone = $request->get('phone');
+        $orders = collect();
+        $customer = null;
+
+        if ($phone) {
+            $orders = Order::with(['orderItems.product', 'transaction'])
+                ->where('phone', 'like', '%' . trim($phone) . '%')
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            
+            if ($orders->isNotEmpty()) {
+                $first = $orders->first();
+                $customer = [
+                    'name' => $first->name,
+                    'phone' => $first->phone,
+                ];
+            }
+        }
+
+        return view('admin.transaction', compact('orders', 'customer', 'phone'));
     }
         
 

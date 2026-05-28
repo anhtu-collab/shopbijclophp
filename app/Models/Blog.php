@@ -1,5 +1,4 @@
 <?php
-// app/Models/Blog.php
 
 namespace App\Models;
 
@@ -12,7 +11,6 @@ use Illuminate\Support\Str;
         'content', 'category', 'author', 'status'
     ];
 
-   // Tự tạo slug từ title
     public static function generateSlug($title)
     {
         $slug = Str::slug($title);

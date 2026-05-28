@@ -13,7 +13,7 @@
                                vertical-align: middle !important;
                            }
                            
-                           /* ===== PRODUCT NAME CELL ===== */
+                    
                            .pname {
                                display: flex;
                                align-items: center;
@@ -36,13 +36,12 @@
                                line-height: 1.2;
                                margin-bottom: 0 !important;
                            }
-                           
-                           /* CENTER TEXT CELLS */
+                   
                            td.text-center {
                                word-break: break-word;
                            }
                            
-                           /* BADGE STYLE */
+                
                            .badge {
                                display: inline-block;
                                margin: 2px;
@@ -101,13 +100,34 @@
                                              <tr>
                                                  <th>Trạng Thái Đơn</th>
                                                  <td colspan="5">
-                                                     @if($order->status == 'delivered')
-                                                         <span class="badge bg-success">Đã Giao</span>
-                                                     @elseif($order->status == 'canceled')
-                                                         <span class="badge bg-danger">Đã Hủy</span>
-                                                     @else
-                                                         <span class="badge bg-warning">Đang Xử Lý</span>
-                                                     @endif
+                                                     @switch($order->status)
+                                                         @case('pending')
+                                                             <span class="badge bg-secondary">Chờ Xác Nhận</span>
+                                                             @break
+                                                         @case('confirmed')
+                                                             <span class="badge bg-info">Đã Xác Nhận</span>
+                                                             @break
+                                                         @case('processing')
+                                                             <span class="badge bg-primary">Đang Chuẩn Bị Hàng</span>
+                                                             @break
+                                                         @case('shipping')
+                                                             <span class="badge bg-warning">Đang Giao Hàng</span>
+                                                             @break
+                                                         @case('delivered')
+                                                             <span class="badge bg-success">Đã Giao</span>
+                                                             @break
+                                                         @case('completed')
+                                                             <span class="badge bg-success text-dark">Hoàn Tất</span>
+                                                             @break
+                                                         @case('canceled')
+                                                             <span class="badge bg-danger">Đã Hủy</span>
+                                                             @break
+                                                         @case('returned')
+                                                             <span class="badge bg-warning text-dark">Trả Hàng</span>
+                                                             @break
+                                                         @default
+                                                             <span class="badge bg-secondary">Chờ Xác Nhận</span>
+                                                     @endswitch
                                                  </td>
                                              </tr>
                                         </table>
@@ -175,27 +195,12 @@
                                     </div>
                                 </div>
 
-                                <!-- <div class="wg-box mt-5">
-                                    <h5>Địa Chỉ Giao Hàng</h5>
-                                    <div class="my-account__address-item col-md-6">
-                                        <div class="my-account__address-item__detail">
-                                            <p>{{ $order->name }}</p>
-                                            <p>{{ $order->address }}</p>
-                                            <p>{{ $order->locality }}</p>
-                                            <p>{{ $order->city }}, {{ $order->country }}</p>
-                                            <p>{{ $order->landmark }}</p>
-                                            <p>{{ $order->zip }}</p>
-                                            <br>
-                                            <p>SĐT: {{ $order->phone }}</p>
-                                            
-                                        </div>
-                                    </div>
-                                </div> -->
+            
                                 <div class="wg-box mt-5">
                                         <h5>Thông tin đặt hàng</h5>
 
                                         <div class="row">
-                                            <!-- ĐỊA CHỈ MẶC ĐỊNH -->
+                                           
                                             <div class="col-md-6">
                                                     <h6>Địa Chỉ Mặc Định</h6>
 
@@ -226,7 +231,7 @@
                                                         <p>Không có địa chỉ mặc định</p>
                                                     @endif
                                                 </div>
-                                            <!-- ĐỊA CHỈ NHẬN HÀNG -->
+                                           
                                             <div class="col-md-6">
                                                 <h6>Địa Chỉ Nhận Hàng</h6>
                                                 <div class="my-account__address-item__detail">
@@ -278,7 +283,7 @@
                                                <th>Trạng Thái</th>
                                                <td>
                                                    @if($transaction?->status == 'approved')
-                                                       <span class="badge bg-success">Đã Duyệt</span>
+                                                       <span class="badge bg-success">Đã Thanh Toán</span>
                                                    @elseif($transaction?->status == 'declined')
                                                        <span class="badge bg-danger">Từ Chối</span>
                                                    @elseif($transaction?->status == 'refunded')
@@ -303,22 +308,29 @@
                                             <div class="col-md-3">
                                                 <div class="select">
                                                     <select name="order_status" id="order_status">
-                                                        <option value="ordered" {{ $order->status == 'ordered' ? "selected" : "" }}>Đang Xử Lý</option>
+                                                        <option value="pending" {{ $order->status == 'pending' ? "selected" : "" }}>Chờ Xác Nhận</option>
+                                                        <option value="confirmed" {{ $order->status == 'confirmed' ? "selected" : "" }}>Đã Xác Nhận</option>
+                                                        <option value="processing" {{ $order->status == 'processing' ? "selected" : "" }}>Đang Chuẩn Bị Hàng</option>
+                                                        <option value="shipping" {{ $order->status == 'shipping' ? "selected" : "" }}>Đang Giao Hàng</option>
                                                         <option value="delivered" {{ $order->status == 'delivered' ? "selected" : "" }}>Đã Giao</option>
+                                                        <option value="completed" {{ $order->status == 'completed' ? "selected" : "" }}>Hoàn Tất</option>
                                                         <option value="canceled" {{ $order->status == 'canceled' ? "selected" : "" }}>Đã Hủy</option>
+                                                        <option value="returned" {{ $order->status == 'returned' ? "selected" : "" }}>Trả Hàng</option>
                                                     </select>
                                                 </div>
                                             </div>
                                             <div class="col-md-3">
                                                 <button type="submit" class="btn btn-primary tf-button w208">Cập Nhật</button>
                                             </div>
+                                            @if($order->status != 'canceled')
                                             <div class="col-md-3">
                                                 <a href="{{ route('admin.order.invoice', $order->id) }}"
-                                                   target="_blank"
-                                                   class="btn btn-dark tf-button w208">
+                                                target="_blank"
+                                                class="btn btn-dark tf-button w208">
                                                     In Hóa Đơn
                                                 </a>
                                             </div>
+                                            @endif
                                         </div>
                                     </form>     
                                 </div>

@@ -24,7 +24,7 @@
     font-style: normal;
     cursor: pointer;
     font-weight: bold;
-    
+
 }
 .size-item-box{
     display: flex;
@@ -68,6 +68,44 @@
     align-items: center;
     font-size: 12px;
     cursor: pointer;
+}
+
+.gitems {
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--Input);
+}
+
+.gitems img {
+    width: 100%;
+    height: 206px;
+    object-fit: cover;
+    display: block;
+}
+
+.btn-remove-gallery {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    width: 28px;
+    height: 28px;
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.gitems:hover .btn-remove-gallery {
+    opacity: 1;
 }
 </style>
 <div class="main-content-inner">
@@ -137,8 +175,9 @@
                     <div class="body-title mb-10">Ảnh Sản Phẩm Gốc<span class="tf-color-1">*</span></div>
                     <div class="upload-image flex-grow">
                         @if($product->image)
-                        <div class="item" id="imgpreview">
+                        <div class="item" id="imgpreview" style="position:relative;">
                             <img src="{{asset('uploads/products')}}/{{$product->image}}" class="effect8" alt="">
+                            <button type="button" class="btn-remove-main-image" onclick="removeMainImage()" style="position:absolute;top:5px;right:5px;width:28px;height:28px;background:#dc3545;color:white;border:none;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;">×</button>
                         </div>
                         @endif
                         <div id="upload-file" class="item up-load">
@@ -158,9 +197,10 @@
                             <div class="upload-image">
                                 <div id="galpreview" class="flex-grow flex-wrap gap10" style="display:flex">
                                     @if($product->images)
-                                        @foreach(explode(',', $product->images) as $img)
-                                            <div class="item gitems">
-                                                <img src="{{asset('uploads/products')}}/{{trim($img)}}">
+                                        @foreach(array_values(array_filter(array_map('trim', explode(',', $product->images)))) as $img)
+                                            <div class="item gitems" data-old-image="{{$img}}">
+                                                <img src="{{asset('uploads/products')}}/{{$img}}">
+                                                <button type="button" class="btn-remove-gallery" onclick="removeOldGalleryImage(this)">×</button>
                                             </div>
                                         @endforeach
                                     @endif
@@ -193,10 +233,7 @@
                         <div class="body-title mb-10">Mã Sản Phẩm<span class="tf-color-1">*</span></div>
                         <input type="text" name="SKU" value="{{$product->SKU}}">
                     </fieldset>
-                    <!-- <fieldset class="name">
-                        <div class="body-title mb-10">Số Lượng<span class="tf-color-1">*</span></div>
-                        <input type="text" name="quantity" value="{{$product->quantity}}">
-                    </fieldset> -->
+        
                                  </div>
                                 <div class="mb-3">
                                     <div class="body-title mb-10">Kích thước & Số lượng</div>
@@ -252,67 +289,123 @@
 
 @push('scripts')
 <script>
+    let existingFiles = [];
+    let removedOldImages = []; 
+
     $(function(){
-        // Xem trước ảnh đại diện chính khi thay đổi file
+      
         $("#myFile").on("change", function(e){
             const [file] = this.files;
             if(file){
+                if (!$("#imgpreview").length) {
+                    $("#upload-file").before(`<div class="item" id="imgpreview" style="position:relative;">
+                        <img src="" class="effect8" alt="">
+                        <button type="button" class="btn-remove-main-image" onclick="removeMainImage()" style="position:absolute;top:5px;right:5px;width:28px;height:28px;background:#dc3545;color:white;border:none;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;">×</button>
+                    </div>`);
+                }
                 $("#imgpreview img").attr('src', URL.createObjectURL(file));
                 $("#imgpreview").show();
             }
         });
 
-        // Xem trước danh sách bộ sưu tập ảnh (Gallery)
+        window.removeMainImage = function() {
+            $("#myFile").val('');
+            $("#imgpreview").hide();
+        };
+
+       
+        let fileIndex = 0;
         $("#gFile").on("change", function(e){
             const gphotos = this.files;
-            // $("#galpreview").html(""); 
             $.each(gphotos, function(key, val){
-                $("#galpreview").append(`<div class="item gitems"><img src="${URL.createObjectURL(val)}"></div>`);
+               
+                const fileExists = existingFiles.some(f => f.name === val.name && f.size === val.size);
+              
+                const alreadyShown = $(`[data-file-name="${val.name}-${val.size}"]`).length > 0;
+
+                if (!fileExists && !alreadyShown) {
+                    existingFiles.push(val);
+                    const currentIndex = fileIndex++;
+                    $("#galpreview").append(`
+                        <div class="item gitems" data-new-index="${currentIndex}" data-file-name="${val.name}-${val.size}">
+                            <img src="${URL.createObjectURL(val)}">
+                            <button type="button" class="btn-remove-gallery" onclick="removeNewGalleryImage(${currentIndex})">×</button>
+                        </div>
+                    `);
+                }
             });
+            this.value = '';
         });
 
-        // Tự động cập nhật Slug theo Tên sản phẩm
+        window.removeOldGalleryImage = function(btn) {
+            const $item = $(btn).closest('.gitems');
+            const oldImg = $item.data('old-image');
+            removedOldImages.push(oldImg);
+            $item.remove();
+        };
+
+        window.removeNewGalleryImage = function(index) {
+            existingFiles = existingFiles.filter((f, i) => i !== index);
+            $(`[data-new-index="${index}"]`).remove();
+        };
+
+        $('form.form-add-product').on('submit', function(e) {
+            if (existingFiles.length > 0) {
+                const dataTransfer = new DataTransfer();
+                existingFiles.forEach(file => {
+                    dataTransfer.items.add(file);
+                });
+                document.getElementById('gFile').files = dataTransfer.files;
+            }
+
+    
+            if (removedOldImages.length > 0) {
+                $('<input>').attr({
+                    type: 'hidden',
+                    name: 'removed_images',
+                    value: JSON.stringify(removedOldImages)
+                }).appendTo('form.form-add-product');
+            }
+        });
+
+    
         $("input[name='name']").on("change", function(){
             $("input[name='slug']").val(StringToSlug($(this).val()));
         });
-        
+
     });
 
-    // Hàm chuyển đổi tiếng Việt có dấu thành chuỗi Slug không dấu
+    
     function StringToSlug(str) {
         str = str.toLowerCase();
 
-        // bỏ dấu tiếng Việt
+   
         str = str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
         str = str.replace(/đ/g, "d");
 
-        // xoá ký tự đặc biệt
+      
         str = str.replace(/[^a-z0-9\s-]/g, "");
 
-        // thay khoảng trắng thành dấu -
+     
         str = str.replace(/\s+/g, "-");
 
-        // xoá nhiều dấu - liên tiếp
+        
         str = str.replace(/-+/g, "-");
 
         return str.trim("-");
     }
 
-    // Tự động định dạng dấu chấm phân tách phần nghìn cho giá tiền
+  
     $('.price-input').on('input', function () {
         let value = $(this).val().replace(/\D/g, ''); // chỉ lấy số
         value = new Intl.NumberFormat('vi-VN').format(value);
         $(this).val(value);
     });
 
-    // =======================================================
-    // 1. XỬ LÝ BIẾN THỂ SIZE & SỐ LƯỢNG (ĐỒNG BỘ TỪ BẢNG VARIANTS)
-    // =======================================================
-    
-    // Nạp dữ liệu Size & Số lượng cũ của sản phẩm từ mối quan hệ bảng ProductVariant
+ 
   let sizes = @json($oldSizes ?? []);
 
-    // Sự kiện nhấn Enter tại ô nhập số lượng kho để kích hoạt thêm nhanh
+
     $("#stockInput").on("keypress", function(e){
         if(e.which === 13){
             e.preventDefault();
@@ -321,7 +414,6 @@
     });
     
 
-    // Hàm thêm mới hoặc cộng dồn số lượng Size
     function addSize() {
         let size = $("#sizeInput").val().trim().toUpperCase();
         let quantity = $("#stockInput").val().trim();
@@ -333,7 +425,7 @@
                 return;
             }
 
-            // Nếu size đã tồn tại trong danh sách, tiến hành cộng dồn số lượng
+          
             let existing = sizes.find(s => s.size === size);
             if (existing) {
                 existing.quantity = parseInt(existing.quantity) + qtyInt;
@@ -351,7 +443,7 @@
         }
     }
 
-    // Hàm hiển thị danh sách Size kèm ô chỉnh sửa số lượng trực quan
+  
     function renderSizes() {
         $("#sizeList").html('');
 
@@ -369,32 +461,26 @@
             `);
         });
 
-        // Đồng bộ mảng Object thành chuỗi JSON nạp vào input ẩn gửi lên Backend
+      
         $("#sizes").val(JSON.stringify(sizes));
     }
 
-    // Hàm cập nhật số lượng trực tiếp khi người dùng thay đổi giá trị trong ô input của box
     function updateQuantity(index, newQty) {
         let qtyInt = parseInt(newQty);
         if (isNaN(qtyInt) || qtyInt < 1) qtyInt = 1;
         
         sizes[index].quantity = qtyInt;
         
-        // Cập nhật giá trị chuỗi JSON mà không cần render lại giao diện (để giữ con trỏ focus của người dùng)
+  
         $("#sizes").val(JSON.stringify(sizes));
     }
 
-    // Hàm xóa Size khỏi danh sách
+
     function removeSize(index){
         sizes.splice(index, 1);
         renderSizes();
     }
 
-    // =======================================================
-    // 2. XỬ LÝ BIẾN THỂ MÀU SẮC (COLOR)
-    // =======================================================
-    
-    // Nạp danh sách tên màu cũ của sản phẩm từ bảng ProductVariant
    let colors = @json($oldColors ?? []);
 
 
@@ -402,16 +488,16 @@
     renderSizes();
     renderColors();
 
-    // Chốt chặn cuối cùng kiểm tra dữ liệu trước khi submit form
+   
     $("form").on("submit", function(e) {
-        // Kiểm tra xem mảng dữ liệu size có bị rỗng không
+    
         if (typeof sizes === 'undefined' || sizes.length === 0) {
             alert("Vui lòng thêm ít nhất một Size và Số lượng trước khi lưu sản phẩm!");
-            e.preventDefault(); // Dừng việc gửi form lại
+            e.preventDefault();
             return false;
         }
 
-        // Ép dữ liệu mảng đối tượng thành chuỗi JSON nạp vào input ẩn
+    
         $("#sizes").val(JSON.stringify(sizes));
         $("#colors").val(JSON.stringify(colors));
         
@@ -420,13 +506,13 @@
 });
     
 
-    // Sự kiện nhấn Enter tại ô Màu sắc để thêm nhanh
+
     $("#colorInput").on("keypress", function(e){
         if(e.which === 13){
             e.preventDefault();
 
             let val = $(this).val().trim();
-            // Chuẩn hóa chữ cái đầu viết hoa cho màu sắc đẹp hơn (ví dụ: trắng -> Trắng)
+           
             if (val) {
                 val = val.charAt(0).toUpperCase() + val.slice(1);
             }
@@ -439,7 +525,6 @@
         }
     });
 
-    // Hàm hiển thị danh sách Màu sắc dạng Tag-chip
     function renderColors(){
         $("#colorList").html('');
 
@@ -452,11 +537,10 @@
             `);
         });
 
-        // Nạp chuỗi JSON mảng màu vào input ẩn gửi lên Backend
+     
         $("#colors").val(JSON.stringify(colors));
     }
 
-    // Hàm xóa Màu sắc khỏi danh sách
     function removeColor(index){
         colors.splice(index, 1);
         renderColors();

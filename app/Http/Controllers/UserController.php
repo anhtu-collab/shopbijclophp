@@ -47,7 +47,7 @@ class UserController extends Controller
 {
     $user = Auth::user();
 
-    // 1. lấy địa chỉ
+    
     if ($request->address_id) {
         $address = Address::where('id', $request->address_id)
                     ->where('user_id', $user->id)
@@ -62,7 +62,7 @@ class UserController extends Controller
         return back()->with('error', 'Chưa có địa chỉ giao hàng!');
     }
 
-    // 2. tạo order
+    
     $order = new Order();
 
     $order->user_id = $user->id;
@@ -80,7 +80,7 @@ class UserController extends Controller
     $order->address_id = $address->id;
     $order->address_type = $address->is_default ? 'default' : 'custom';
 
-    // 3. tính cart (GIẢ SỬ BẠN DÙNG SESSION CART)
+    
     $cart = session()->get('cart', []);
 
     $subtotal = 0;
@@ -94,10 +94,10 @@ class UserController extends Controller
     $order->tax = 0;
     $order->total = $subtotal;
 
-    $order->status = 'ordered';
+    $order->status = 'pending';
     $order->save();
 
-    // 4. tạo order items
+    
     foreach ($cart as $item) {
         OrderItem::create([
             'order_id' => $order->id,
@@ -107,33 +107,13 @@ class UserController extends Controller
         ]);
     }
 
-    // 5. clear cart
+    
     session()->forget('cart');
 
     return redirect()->route('user.orders')
         ->with('success', 'Đặt hàng thành công!');
 }
-//     public function order_cancel(Request $request)
-// {
-//     $order = Order::find($request->order_id);
 
-//     if (!$order) {
-//         return back()->with('error', 'Không tìm thấy đơn hàng!');
-//     }
-
-//     if ($order->user_id != Auth::id()) {
-//         return back()->with('error', 'Không có quyền hủy đơn này!');
-//     }
-//     if ($order->status != 'pending') {
-//     return back()->with('error', 'Không thể hủy đơn này!');
-// }
-
-//     $order->status = "canceled";
-//     $order->canceled_date = Carbon::now();
-//     $order->save();
-
-//     return back()->with('status', 'Đã hủy thành công!');
-// }
 public function order_cancel(Request $request)
 {
     $order = Order::where('id', $request->order_id)
@@ -143,10 +123,9 @@ public function order_cancel(Request $request)
     if (!$order) {
         return back()->with('error', 'Không tìm thấy đơn hàng!');
     }
-
-    if ($order->status !== 'ordered') {
-        return back()->with('error', 'Không thể hủy đơn này!');
-    }
+    if ($order->status !== 'processing') {
+        return back()->with('error', 'Chỉ có thể hủy đơn đang xử lý!');
+}
 
     $order->update([
         'status' => 'canceled',
@@ -269,10 +248,10 @@ public function update(Request $request)
     $user->email = $request->email;
     $user->mobile = $request->mobile;
 
-    // nếu có đổi password
+    
     if ($request->filled('new_password')) {
 
-        // check password cũ
+        
         if (!Hash::check($request->old_password, $user->password)) {
             return back()->with('error', 'Mật khẩu cũ không đúng!');
         }

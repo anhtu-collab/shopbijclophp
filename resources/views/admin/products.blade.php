@@ -22,10 +22,10 @@
                                 <div class="wg-box">
                                     <div class="flex items-center justify-between gap10 flex-wrap">
                                         <div class="wg-filter flex-grow">
-                                            <form class="form-search">
+                                            <form class="form-search" method="GET" action="{{ route('admin.products') }}">
                                                 <fieldset class="name">
-                                                    <input type="text" placeholder="Tìm Kiếm..." class="" name="name"
-                                                        tabindex="2" value="" aria-required="true" required="">
+                                                    <input type="text" placeholder="Tìm Kiếm..." class="" name="search"
+                                                        tabindex="2" value="{{ request('search') }}" aria-required="true" required="">
                                                 </fieldset>
                                                 <div class="button-submit">
                                                     <button class="" type="submit"><i class="icon-search"></i></button>
@@ -63,7 +63,9 @@
                                                             <img src="{{asset('uploads/products/thumbnails')}}/{{$product->image}}" alt="{{$product->name}}" class="image">
                                                         </div>
                                                         <div class="name">
-                                                            <a href="#" class="body-title-2">{{$product->name}}</a>
+                                                            <div style="display: flex; align-items: center; gap: 5px; flex-wrap: wrap;">
+                                                                <a href="#" class="body-title-2">{{$product->name}}</a>
+                                                            </div>
                                                             <div class="text-tiny mt-3">{{$product->slug}}</div>
                                                         </div>
                                                     </td>
@@ -72,21 +74,7 @@
                                                     <td>{{$product->SKU}}</td>
                                                     <td>{{$product->Category->name}}</td>
                                                     <td>{{$product->brand->name}}</td>
-                                                    {{-- <td>
-                                                        @php
-                                                            $variantSizes = $product->variants->whereNotNull('size_id')
-                                                                ->groupBy(function ($variant) {
-                                                                    return $variant->size ? strtoupper($variant->size->name) : 'N/A';
-                                                                })
-                                                                ->map(function ($group, $sizeName) {
-                                                                    return $sizeName . ' [' . $group->sum('quantity') . ']';
-                                                                })
-                                                                ->values()
-                                                                ->toArray();
-                                                        @endphp
-
-                                                        {{ count($variantSizes) > 0 ? implode(', ', $variantSizes) : 'Không có' }}
-                                                    </td> --}}
+                                                
                                                     <td class="mb-3">
                                                         <select name="size_id" id="sizeSelect" class="form-control">
 
@@ -106,19 +94,7 @@
                                                     </td>
 
 
-                                                    {{-- <td>
-                                                        @php
-                                                            $variantColors = $product->variants->whereNotNull('color_id')
-                                                                ->map(function ($variant) {
-                                                                    return $variant->color ? $variant->color->name : 'N/A';
-                                                                })
-                                                                ->unique()
-                                                                ->values()
-                                                                ->toArray();
-                                                        @endphp
-
-                                                        {{ count($variantColors) > 0 ? implode(', ', $variantColors) : 'Không có' }}
-                                                    </td>     --}}
+                                                 
                                                     <td class="mb-5">
                                                         @php
                                                             $variantColors = $product->variants
@@ -139,7 +115,7 @@
                                                         @endif
                                                     </td>
                                                     <td>{{$product->featured == 0? "không":"có"}}</td>
-                                                    <!-- <td>{{$product->stock_status}}</td> -->
+                                                   
                                                     <td>
                                                         @php
                                                             $totalQuantity = $product->variants->sum('quantity');
@@ -161,11 +137,7 @@
                                                     
                                                         <td>
                                                          <div class="list-icon-function">
-                                                            <!-- <a href="#" target="_blank">
-                                                                <div class="item eye">
-                                                                    <i class="icon-eye"></i>
-                                                                </div>
-                                                            </a> --}} -->
+                                                          
                                                             <a href="{{ route('admin.product.edit', ['id'=>$product->id]) }}">
                                                                 <div class="item edit">
                                                                     <i class="icon-edit-3"></i>

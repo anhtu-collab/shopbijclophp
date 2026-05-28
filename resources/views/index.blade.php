@@ -302,33 +302,77 @@
                 <div class="swiper-wrapper">
                   @foreach($sproducts as $sproduct)
                   <div class="swiper-slide product-card product-card_style3">
-                    <div class="pc__img-wrapper">
-                      @if($sproduct->sale_price && $sproduct->regular_price > 0)
-                          @php
-                              $discount = round(100 - ($sproduct->sale_price / $sproduct->regular_price * 100));
-                          @endphp
-                          <span class="discount-badge">-{{$discount}}%</span>
-                      @endif
-                      <a href="{{ route('shop.product.details', ['product_slug' => $sproduct->slug]) }}">
-                        <img loading="lazy" src="{{ asset('uploads/products') }}/{{ $sproduct->image }}"  width="258" height="313"
-                          alt="{{$sproduct->name}}" class="pc__img">
-                           @if(!empty($sproduct->images) && $sproduct->image !== $sproduct->images)
-                            <img loading="lazy"
-                                src="/uploads/products/{{ $sproduct->images }}"
-                                width="258" height="313"
-                                alt="{{ $sproduct->name }}"
-                                class="pc__img img-hover">
-                          @endif
-                      </a>
-                       @if($sproduct->is_out_of_stock)
-                            <div class="sold-out-glass">
-                                <span>HẾT HÀNG</span>
-                            </div>
-                        @endif
+                   <div class="pc__img-wrapper">
+
+    {{-- DISCOUNT BADGE --}}
+    @if($sproduct->sale_price 
+        && $sproduct->regular_price > 0 
+        && $sproduct->sale_price < $sproduct->regular_price)
+
+        @php
+            $discount = round(
+                (($sproduct->regular_price - $sproduct->sale_price) 
+                / $sproduct->regular_price) * 100
+            );
+        @endphp
+
+        <span class="discount-badge">-{{ $discount }}%</span>
+    @endif
 
 
-                      
-                    </div>
+    {{-- SPLIT IMAGES STRING --}}
+    @php
+        $images = !empty($sproduct->images)
+            ? explode(',', $sproduct->images)
+            : [];
+    @endphp
+
+
+    {{-- PRODUCT LINK --}}
+    <a href="{{ route('shop.product.details', ['product_slug' => $sproduct->slug]) }}">
+
+        {{-- MAIN IMAGE --}}
+        <img
+            loading="lazy"
+            src="{{ asset('uploads/products/' . $sproduct->image) }}"
+            width="258"
+            height="313"
+            alt="{{ $sproduct->name }}"
+            class="pc__img"
+        >
+
+        {{-- HOVER IMAGE (SAFE) --}}
+        @if(!empty($images[0]) && $images[0] !== $sproduct->image)
+            <img
+                loading="lazy"
+                src="{{ asset('uploads/products/' . $images[0]) }}"
+                width="258"
+                height="313"
+                alt="{{ $sproduct->name }}"
+                class="pc__img img-hover"
+            >
+        @elseif(!empty($images[1]))
+            <img
+                loading="lazy"
+                src="{{ asset('uploads/products/' . $images[1]) }}"
+                width="258"
+                height="313"
+                alt="{{ $sproduct->name }}"
+                class="pc__img img-hover"
+            >
+        @endif
+
+    </a>
+
+
+    {{-- SOLD OUT --}}
+    @if(!empty($sproduct->is_out_of_stock))
+        <div class="sold-out-glass">
+            <span>HẾT HÀNG</span>
+        </div>
+    @endif
+
+</div>
 
                     <div class="pc__info position-relative">
                       <h6 class="pc__title"><a href="{{ route('shop.product.details', ['product_slug' => $sproduct->slug]) }}">{{$sproduct->name}}</a></h6>
@@ -411,7 +455,7 @@
             $images = json_decode($fproduct->images, true);
 
             if(!$images){
-                $images = explode(',', $fproduct->images);
+                $images = array_values(array_filter(array_map('trim', explode(',', $fproduct->images))));
             }
         }
     @endphp

@@ -48,13 +48,13 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
-    // 📍 addresses
+
 public function addresses()
 {
     return $this->hasMany(Address::class, 'user_id');
 }
 
-// 📦 orders
+
 public function orders()
 {
     return $this->hasMany(Order::class, 'user_id');

@@ -53,14 +53,19 @@
             </ul>
         </div>
 
-        @if(session('status'))
-            <div class="alert alert-success">{{ session('status') }}</div>
+        @if(session('success'))
+            <div class="alert alert-success">{{ session('success') }}</div>
+        @endif
+        @if(session('error'))
+            <div class="alert alert-danger">{{ session('error') }}</div>
+        @endif
+        @if(request('highlight'))
         @endif
 
         <div class="wg-box">
             <div class="flex items-center justify-between gap10 flex-wrap">
                 <div class="wg-filter flex-grow">
-                    <form class="form-search" method="GET">
+                    <form class="form-search" method="GET" action="{{ route('admin.order.tracking') }}">
                         <fieldset class="name">
                             <input type="text" placeholder="Tìm Kiếm..." name="search"
                                 value="{{ request('search') }}" required>
@@ -77,7 +82,6 @@
                     <table class="table table-striped table-bordered">
                         <thead>
                             <tr>
-                               <tr>
                                 <th>STT</th>
                                 <th>Tên Người Nhận</th>
                                 <th>Số Điện Thoại</th>
@@ -86,8 +90,6 @@
                                 <th>Tổng Tiền</th>
                                 <th>Trạng Thái</th>
                                 <th>Ngày Đặt</th>
-                                {{-- <th>Số lượng</th> --}}
-                                {{-- <th>Ngày Giao / Hủy</th> --}}
                                 <th>Hành Động</th>
                             </tr>
                         </thead>
@@ -101,46 +103,68 @@
                                 <td class="text-center">{{ number_format($order->tax ?? 0, 0, ',', '.') }} đ</td>
                                 <td class="text-center">{{ number_format($order->total ?? 0, 0, ',', '.') }} đ</td>
                                 <td class="text-center">
-                                   @if($order->status == 'delivered')
-                                        <span class="badge bg-success">Đã Giao</span>
-                                    @elseif($order->status == 'canceled')
-                                        <span class="badge bg-danger">Đã Hủy</span>
-                                    @else
-                                        <span class="badge bg-warning text-dark">Đang Xử Lý</span>
-                                    @endif
+                                   @switch($order->status)
+                                        @case('pending')
+                                            <span class="badge bg-secondary">Chờ Xác Nhận</span>
+                                            @break
+                                        @case('confirmed')
+                                            <span class="badge bg-info">Đã Xác Nhận</span>
+                                            @break
+                                        @case('processing')
+                                            <span class="badge bg-primary">Đang Chuẩn Bị Hàng</span>
+                                            @break
+                                        @case('shipping')
+                                            <span class="badge bg-warning">Đang Giao Hàng</span>
+                                            @break
+                                        @case('delivered')
+                                            <span class="badge bg-success">Đã Giao</span>
+                                            @break
+                                        @case('completed')
+                                            <span class="badge bg-success text-dark">Hoàn Tất</span>
+                                            @break
+                                        @case('canceled')
+                                            <span class="badge bg-danger">Đã Hủy</span>
+                                            @break
+                                        @case('returned')
+                                            <span class="badge bg-warning text-dark">Trả Hàng</span>
+                                            @break
+                                        @default
+                                            <span class="badge bg-secondary">Chờ Xác Nhận</span>
+                                    @endswitch
                                 </td>
                                 <td class="text-center">{{ $order->created_at->format('d/m/Y H:i') }}</td>
-                                {{-- <td class="text-center">{{ $order->orderItems->count() }}</td> --}}
-                                {{-- <td class="text-center">
-                                    @if($order->status == 'delivered')
-                                        {{ $order->delivered_date ? $order->delivered_date->format('d/m/Y H:i') : '-' }}
-                                    @elseif($order->status == 'canceled')
-                                        {{ $order->canceled_date ? $order->canceled_date->format('d/m/Y H:i') : '-' }}
-                                    @else
-                                        -
-                                    @endif
-                                </td> --}}
                                 <td class="text-center">
-                                    @if($order->status == 'ordered')
-                                    <form action="{{ route('admin.order.status.update') }}" method="POST" class="d-flex gap-1">
-                                        @csrf
-                                        @method('PUT')
-                                        <input type="hidden" name="order_id" value="{{ $order->id }}">
-                                        <select name="order_status" class="form-select form-select-sm">
-                                            <option value="ordered" {{ $order->status == 'ordered' ? 'selected' : '' }}>Đang Xử Lý</option>
-                                            <option value="delivered" {{ $order->status == 'delivered' ? 'selected' : '' }}>Đã Giao</option>
-                                            <option value="canceled" {{ $order->status == 'canceled' ? 'selected' : '' }}>Đã Hủy</option>
-                                        </select>
-                                        <button type="submit" class="btn btn-sm btn-primary">Cập Nhật</button>
-                                    </form>
+                                    @if(in_array($order->status, ['pending', 'confirmed', 'processing', 'shipping']))
+                                        <form action="{{ route('admin.order.status.update') }}" method="POST" class="d-flex gap-1 auto-confirm">
+                                            @csrf
+                                            @method('PUT')
+                                            <input type="hidden" name="order_id" value="{{ $order->id }}">
+                                            <select name="order_status" class="form-select form-select-sm">
+                                                @if($order->status == 'pending')
+                                                    <option value="pending" {{ $order->status == 'pending' ? 'selected' : '' }}>Chờ Xác Nhận</option>
+                                                    <option value="confirmed">Xác Nhận</option>
+                                                @elseif($order->status == 'confirmed')
+                                                    <option value="confirmed" {{ $order->status == 'confirmed' ? 'selected' : '' }}>Đã Xác Nhận</option>
+                                                    <option value="processing">Chuẩn Bị Hàng</option>
+                                                @elseif($order->status == 'processing')
+                                                    <option value="processing" {{ $order->status == 'processing' ? 'selected' : '' }}>Đang Chuẩn Bị Hàng</option>
+                                                    <option value="shipping">Giao Hàng</option>
+                                                @elseif($order->status == 'shipping')
+                                                    <option value="shipping" {{ $order->status == 'shipping' ? 'selected' : '' }}>Đang Giao Hàng</option>
+                                                    <option value="delivered">Đã Giao</option>
+                                                @endif
+                                                <option value="canceled">Hủy Đơn</option>
+                                            </select>
+                                            <button type="submit" class="btn btn-sm btn-primary">Cập Nhật</button>
+                                        </form>
                                     @else
-                                        <em>Không Có Thao Tác</em>
+                                        <span class="text-muted small">Đơn đã hoàn tất</span>
                                     @endif
                                 </td>
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="11" class="text-center">Không có đơn hàng nào</td>
+                                <td colspan="9" class="text-center">Không có đơn hàng nào</td>
                             </tr>
                             @endforelse
                         </tbody>
@@ -155,4 +179,33 @@
         </div>
     </div>
 </div>
+    <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    const highlightId = {{ request('highlight') ? request('highlight') : 'null' }};
+                    const rows = document.querySelectorAll('tbody tr');
+                    rows.forEach(row => {
+                        const orderIdCell = row.querySelector('td:nth-child(1)');
+                        if (highlightId !== null && orderIdCell && orderIdCell.textContent.trim() === highlightId.toString()) {
+                            row.style.backgroundColor = '#fff3cd';
+                            row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                            // Xóa highlight sau 3 giây
+                            setTimeout(() => {
+                                row.style.backgroundColor = '';
+                            }, 3000);
+                        }
+                    });
+
+                    const autoConfirmForm = document.querySelector('form.auto-confirm');
+                    if (autoConfirmForm) {
+                        setTimeout(() => {
+                            const select = autoConfirmForm.querySelector('select[name="order_status"]');
+                            if (select) {
+                                select.value = 'confirmed';
+                                autoConfirmForm.submit();
+                            }
+                        }, 3000);
+                    }
+                });
+            </script>
 @endsection

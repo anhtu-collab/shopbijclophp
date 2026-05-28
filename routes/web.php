@@ -99,6 +99,7 @@ Route::middleware(['auth'])->group(function() {
    
    Route::get('/admin/coupons', [AdminController::class, 'coupons'])->name('admin.coupons');
    Route::get('/admin/coupon/add', [AdminController::class, 'coupon_add'])->name('admin.coupon.add');
+   Route::get('/admin/coupon/details/{id}', [AdminController::class, 'coupon_details'])->name('admin.coupon.details');
    Route::post('/admin/coupon/store', [AdminController::class, 'coupon_store'])->name('admin.coupon.store');
    Route::get('/admin/coupon/{id}/edit', [AdminController::class, 'coupon_edit'])->name('admin.coupon.edit');
    Route::put('/admin/coupon/update', [AdminController::class, 'coupon_update'])->name('admin.coupon.update');
@@ -123,13 +124,18 @@ Route::middleware(['auth'])->group(function() {
 
     Route::get('/admin/reviews', [AdminController::class, 'reviews'])->name('admin.reviews');
     Route::put('/admin/review/{id}/status', [AdminController::class, 'review_update_status'])->name('admin.review.status');
+    Route::put('/admin/reviews/approve-all', [AdminController::class, 'review_approve_all'])->name('admin.reviews.approve_all');
     Route::delete('/admin/review/{id}/delete', [AdminController::class, 'review_delete'])->name('admin.review.delete');
 
     Route::get('/admin/search', [AdminController::class, 'search'])->name('admin.search');
+     Route::get('/admin/stock', [AdminController::class, 'stock'])->name('admin.stock');
+
+    Route::get('/admin/trade', [AdminController::class, 'trade'])->name('admin.trade');
+    Route::get('/admin/product_stock', [AdminController::class, 'product_stock'])->name('admin.product_stock');
         });
     
 
-        //cổng thanh toán
+        
     Route::get('/admin/users', [AdminController::class, 'users'])->name('admin.users');
     Route::get('/admin/user/{id}/detail', [AdminController::class, 'user_detail'])->name('admin.users.detail');
     Route::get('/admin/users/add', [AdminController::class, 'users_add'])->name('admin.users.add');
@@ -149,14 +155,12 @@ Route::middleware(['auth'])->group(function() {
     Route::put('/blog/update', [AdminController::class, 'blog_update'])->name('admin.blog.update');
     Route::delete('/blog/delete/{id}', [AdminController::class, 'blog_delete'])->name('admin.blog.delete');
 
+    Route::get('/admin/transaction', [AdminController::class, 'transaction'])->name('admin.transaction');
+
 
 });
 
-        //cổng thanh toán
-    // // Route::get('/vnpay/return', [PaymentController::class, 'vnpayReturn'])->name('payment.vnpay.return');
-    // Route::get('/vnpay_payment',[PaymentController::class, 'vnpay_payment'])->name('payment.vnpay');
 
-    // routes/web.php
     Route::get('/payment/vnpay', [PaymentController::class, 'vnpay_payment'])->name('payment.vnpay');
      Route::get('/payment/vnpay/return', [PaymentController::class, 'vnpay_return'])->name('payment.vnpay.return');
     
@@ -171,9 +175,10 @@ Route::middleware(['auth'])->group(function() {
      Route::get('/product/quickview/{id}', [ShopController::class, 'quickView'])->name('shop.product.quickview');
       
 
-    Route::get('/chat/messages', [ChatController::class, 'fetchMessages']);
-    Route::post('/chat/send', [ChatController::class, 'sendMessage']);
-     
+    Route::prefix('chat')->group(function () {
+    Route::get('/messages', [ChatController::class, 'fetchMessages']);
+    Route::post('/send', [ChatController::class, 'sendMessage']);
+});
 
     
     

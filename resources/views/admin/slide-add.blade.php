@@ -4,7 +4,7 @@
                             <!-- main-content-wrap -->
                             <div class="main-content-wrap">
                                 <div class="flex items-center flex-wrap justify-between gap20 mb-27">
-                                    <h3>THÊM ẢNH QUẢNG CÁO </h3>
+                                    <h3>THÊM BANNER</h3>
                                     <ul class="breadcrumbs flex items-center flex-wrap justify-start gap10">
                                         <li>
                                             <a href="{{route('admin.index')}}">
@@ -16,18 +16,18 @@
                                         </li>
                                         <li>
                                             <a href="{{route('admin.slide.add')}}">
-                                                <div class="text-tiny">Tất Cả Ảnh Quảng Cáo</div>
+                                                <div class="text-tiny">Tất Cả Banner</div>
                                             </a>
                                         </li>
                                         <li>
                                             <i class="icon-chevron-right"></i>
                                         </li>
                                         <li>
-                                            <div class="text-tiny">Thêm Ảnh Quảng Cáo</div>
+                                            <div class="text-tiny">Thêm Banner</div>
                                         </li>
                                     </ul>
                                 </div>
-                                <!-- new-category -->
+                             
                                 <div class="wg-box">
                                     <form class="form-new-product form-style-1" action="{{ route('admin.slide.store') }}" method="POST" enctype="multipart/form-data">
                                         @csrf
@@ -52,7 +52,7 @@
                                         </fieldset>
                                          @error('link')<span class="alert alert-danger text-center">{{ $message }}</span>@enderror
                                         <fieldset>
-                                            <div class="body-title">Ảnh Quảng Cáo <span class="tf-color-1">*</span>
+                                            <div class="body-title">Hình Ảnh <span class="tf-color-1">*</span>
                                             </div>
                                             <div class="upload-image flex-grow">
                                                 <div class="item" id="imgpreview" style="display:none;">

@@ -34,11 +34,6 @@
         <div id="page" class="">
             <div class="layout-wrap">
 
-                <!-- <div id="preload" class="preload-container">
-    <div class="preloading">
-        <span></span>
-    </div>
-</div> -->
 
                 <div class="section-menu-left">
                     <div class="box-logo">
@@ -64,6 +59,29 @@
                         </div>
                         <div class="center-item">
                             <ul class="menu-list">
+                                <li class="menu-item has-children">
+                                    <a href="javascript:void(0);" class="menu-item-button">
+                                        <div class="icon"><i class="icon-layers"></i></div>
+                                        <div class="text">Giao dịch</div>
+                                    </a>
+                                    <ul class="sub-menu">
+                                        <li class="sub-menu-item">
+                                            <a href="{{route('admin.trade')}}" class="">
+                                                <div class="text">Bán hang</div>
+                                            </a>
+                                        </li>
+                                        <li class="sub-menu-item">
+                                            <a href="{{route('admin.transaction')}}" class="">
+                                                <div class="text">Tra cứu giao dịch</div>
+                                            </a>
+                                        </li>
+                                        <li class="sub-menu-item">
+                                            <a href="{{route('admin.stock')}}" class="">
+                                                <div class="text">Tra hàng tồn</div>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </li>
                                 <li class="menu-item has-children">
                                     <a href="javascript:void(0);" class="menu-item-button">
                                         <div class="icon"><i class="icon-shopping-cart"></i></div>
@@ -140,7 +158,7 @@
                                 <li class="menu-item">
                                     <a href="{{route('admin.slides')}}" class="">
                                         <div class="icon"><i class="icon-image"></i></div>
-                                        <div class="text">Ảnh Quảng Cáo</div>
+                                        <div class="text">Banner</div>
                                     </a>
                                 </li>
                                 <li class="menu-item">
@@ -152,7 +170,7 @@
                                  <li class="menu-item">
                                     <a href="{{route('admin.contacts')}}" class="">
                                         <div class="icon"><i class="icon-mail"></i></div>
-                                        <div class="text">Bình Luận</div>
+                                        <div class="text">Liên Hệ</div>
                                     </a>
                                 </li>
                               <li class="menu-item">
@@ -169,38 +187,7 @@
                                     </a>
                                 </li>
 
-                                <li class="menu-item has-children">
-                                    <a href="javascript:void(0);" class="menu-item-button">
-                                        <div class="icon"><i class="icon-layers"></i></div>
-                                        <div class="text">Giao dịch</div>
-                                    </a>
-                                    <ul class="sub-menu">
-                                        <li class="sub-menu-item">
-                                            <a href="{{route('admin.category.add')}}" class="">
-                                                <div class="text">Bán hang</div>
-                                            </a>
-                                        </li>
-                                        <li class="sub-menu-item">
-                                            <a href="{{route('admin.categories')}}" class="">
-                                                <div class="text">Hóa đơn</div>
-                                            </a>
-                                        </li>
-                                        <li class="sub-menu-item">
-                                            <a href="{{route('admin.categories')}}" class="">
-                                                <div class="text">E-invoice</div>
-                                            </a>
-                                        </li>
-                                        <li class="sub-menu-item">
-                                            <a href="{{route('admin.categories')}}" class="">
-                                                <div class="text">Phiếu chốt quỹ hằng ngày</div>
-                                            </a>
-                                        </li>
-                                        <li class="sub-menu-item">
-                                            <a href="{{route('admin.categories')}}" class="">
-                                                <div class="text">Tra hàng tồn</div>
-                                            </a>
-                                        </li>
-                                    </ul>
+                           
                                 </li>
                                 <li class="menu-item">
                                     <a href="{{route('admin.users')}}" class="">
@@ -252,73 +239,6 @@
                             </div>
                             <div class="header-grid">
 
-                                {{-- <div class="popup-wrap message type-header">
-                                    <div class="dropdown">
-                                        <button class="btn btn-secondary dropdown-toggle" type="button"
-                                            id="dropdownMenuButton2" data-bs-toggle="dropdown" aria-expanded="false">
-                                            <span class="header-item">
-                                                <span class="text-tiny">1</span>
-                                                <i class="icon-bell"></i>
-                                            </span>
-                                        </button>
-                                        {{-- <ul class="dropdown-menu dropdown-menu-end has-content"
-                                            aria-labelledby="dropdownMenuButton2">
-                                            <li>
-                                                <h6>Notifications</h6>
-                                            </li>
-                                            <li>
-                                                <div class="message-item item-1">
-                                                    <div class="image">
-                                                        <i class="icon-noti-1"></i>
-                                                    </div>
-                                                    <div>
-                                                        <div class="body-title-2">Discount available</div>
-                                                        <div class="text-tiny">Morbi sapien massa, ultricies at rhoncus
-                                                            at, ullamcorper nec diam</div>
-                                                    </div>
-                                                </div>
-                                            </li>
-                                            <li>
-                                                <div class="message-item item-2">
-                                                    <div class="image">
-                                                        <i class="icon-noti-2"></i>
-                                                    </div>
-                                                    <div>
-                                                        <div class="body-title-2">Account has been verified</div>
-                                                        <div class="text-tiny">Mauris libero ex, iaculis vitae rhoncus
-                                                            et</div>
-                                                    </div>
-                                                </div>
-                                            </li>
-                                            <li>
-                                                <div class="message-item item-3">
-                                                    <div class="image">
-                                                        <i class="icon-noti-3"></i>
-                                                    </div>
-                                                    <div>
-                                                        <div class="body-title-2">Order shipped successfully</div>
-                                                        <div class="text-tiny">Integer aliquam eros nec sollicitudin
-                                                            sollicitudin</div>
-                                                    </div>
-                                                </div>
-                                            </li>
-                                            <li>
-                                                <div class="message-item item-4">
-                                                    <div class="image">
-                                                        <i class="icon-noti-4"></i>
-                                                    </div>
-                                                    <div>
-                                                        <div class="body-title-2">Order pending: <span>ID 305830</span>
-                                                        </div>
-                                                        <div class="text-tiny">Ultricies at rhoncus at ullamcorper</div>
-                                                    </div>
-                                                </div>
-                                            </li>
-                                            <li><a href="#" class="tf-button w-full">View all</a></li>
-                                        </ul> --}}
-                                    {{-- </div>
-                                </div> --}}
-
                                 <div class="popup-wrap user type-header">
                                     <div class="dropdown">
                                         <button class="btn btn-secondary dropdown-toggle" type="button"
@@ -333,58 +253,7 @@
                                                 </span>
                                             </span>
                                         </button>
-                                        {{-- <ul class="dropdown-menu dropdown-menu-end has-content"
-                                            aria-labelledby="dropdownMenuButton3">
-                                           <li>
-                                                <a href="{{route('admin.users')}}" class="user-item">
-                                                    <div class="icon">
-                                                        <i class="icon-user"></i>
-                                                    </div>
-                                                    <div class="body-title-2">Account</div>
-                                                </a>
-                                            </li>
-                                         <a href="{{ route('admin.contacts') }}" class="user-item">
-                                                        <div class="icon">
-                                                            <i class="icon-mail"></i>
-                                                        </div>
-
-                                                        <div class="body-title-2">Inbox</div>
-
-                                                        <div class="number">
-                                                            {{ $inboxCount ?? 0 }}
-                                                        </div>
-                                                    </a>
-                                                </li>
-                                            <li>
-                                                <a href="#" class="user-item">
-                                                    <div class="icon">
-                                                        <i class="icon-file-text"></i>
-                                                    </div>
-                                                    <div class="body-title-2">Taskboard</div>
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <a href="#" class="user-item">
-                                                    <div class="icon">
-                                                        <i class="icon-headphones"></i>
-                                                    </div>
-                                                    <div class="body-title-2">Support</div>
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <a href="#" class="user-item"
-                                                onclick="event.preventDefault(); document.getElementById('logout-form-3').submit();">
-                                                    <div class="icon">
-                                                        <i class="icon-log-out"></i>
-                                                    </div>
-                                                    <div class="body-title-2">Đăng xuất</div>
-                                                </a>
-
-                                                <form id="logout-form-3" action="{{ route('logout') }}" method="POST" style="display:none;">
-                                                    @csrf
-                                                </form>
-                                            </li>
-                                        </ul> --}}
+                    
                                     </div>
                                 </div>
 
@@ -421,13 +290,12 @@
                 data: { query: searchQuery },
                 dataType: 'json',
                 success: function (data) {
-                    $("#box-content-search").html(''); // Xóa kết quả cũ
+                    $("#box-content-search").html(''); 
                     $.each(data, function (index, item) {
-                        // Tạo URL Edit động bằng cách thay thế ID
+                    
                         var url = "{{ route('admin.product.edit', ['id' => 'product_id']) }}";
                         var link = url.replace('product_id', item.id);
 
-                        // Render HTML cho từng mục kết quả
                         $("#box-content-search").append(`
                             <li>
     <ul>
